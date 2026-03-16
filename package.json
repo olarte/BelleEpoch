@@ -1,0 +1,35 @@
+{
+  "name": "belle-epoch",
+  "version": "0.1.0",
+  "description": "Continuous Clearing Auctions for Agent Services",
+  "main": "engine/index.js",
+  "scripts": {
+    "start": "node api/index.js",
+    "engine": "node engine/index.js",
+    "test": "node engine/test.js",
+    "test:x402": "node engine/test-x402.js",
+    "test:identity": "node engine/test-identity.js",
+    "test:autonomy": "node engine/test-autonomy.js",
+    "test:uniswap": "node engine/test-uniswap.js",
+    "test:provider": "node sdk/provider/test.js",
+    "test:agent": "node sdk/agent/test.js",
+    "compile": "npx hardhat compile",
+    "deploy:base": "npx hardhat run scripts/deploy.js --network base",
+    "deploy:celo": "npx hardhat run scripts/deploy.js --network celo",
+    "register:belle": "npx hardhat run scripts/register-belle.js --network base"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.1.3",
+    "@x402/core": "^2.6.0",
+    "@x402/evm": "^2.6.0",
+    "@x402/express": "^2.6.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "ethers": "^6.16.0",
+    "express": "^5.2.1",
+    "hardhat": "^2.28.6",
+    "ioredis": "^5.10.0",
+    "jsonwebtoken": "^9.0.3"
+  }
+}

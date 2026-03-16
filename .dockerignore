@@ -1,0 +1,9 @@
+.env
+.env.*
+node_modules
+artifacts
+contracts
+scripts
+hardhat.config.js
+CLAUDE.md
+*.md

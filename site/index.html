@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Belle Epoch — Continuous Clearing Auctions for Agent Services</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-brand">Belle Epoch <span>/ Dashboard</span></div>
+    <div class="nav-links">
+      <a href="index.html" class="active">Dashboard</a>
+      <a href="belle.html">Belle</a>
+      <a href="launchpad.html">Launchpad</a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container">
+        <p class="section-label">Live Clearing Network</p>
+        <h1>Clearing Price</h1>
+        <div class="stat-value" style="font-size:3rem; margin:.5rem 0" data-feed="clearingPrice">&mdash;</div>
+        <p class="stat-label" style="font-size:.9rem; margin-bottom:2rem">USDC per slot</p>
+
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="stat-value-sm" data-feed="epochId">&mdash;</div>
+            <div class="stat-label">Epoch</div>
+          </div>
+          <div class="hero-stat">
+            <div class="epoch-countdown" id="epoch-countdown">&mdash;</div>
+            <div class="stat-label">Next Epoch</div>
+          </div>
+          <div class="hero-stat">
+            <div class="stat-value-sm"><span data-feed="slotsFilled">&mdash;</span> / <span data-feed="capacity">&mdash;</span></div>
+            <div class="stat-label">Slots Filled</div>
+          </div>
+          <div class="hero-stat">
+            <div class="stat-value-sm" data-feed="totalBids">&mdash;</div>
+            <div class="stat-label">Bids This Epoch</div>
+          </div>
+        </div>
+
+        <div class="slots-bar" id="slots-bar" style="justify-content:center; margin-top:1rem"></div>
+      </div>
+    </section>
+
+    <!-- Main grid: left content + right sidebar -->
+    <section>
+      <div class="container grid-dashboard">
+        <!-- Left column -->
+        <div>
+          <!-- Bid Stream -->
+          <div class="card" style="margin-bottom:1.5rem">
+            <div class="card-header">
+              <h3>Live Bid Stream</h3>
+              <span class="badge badge-active">Live</span>
+            </div>
+            <div class="bid-stream" id="bid-stream">
+              <div class="bid-entry" style="justify-content:center; color:var(--muted)">Waiting for bids&hellip;</div>
+            </div>
+          </div>
+
+          <!-- Price Chart -->
+          <div class="card" style="margin-bottom:1.5rem">
+            <div class="card-header">
+              <h3>Clearing Price History</h3>
+              <span class="stat-label">Last 12 epochs</span>
+            </div>
+            <div class="price-chart">
+              <canvas id="price-chart-canvas"></canvas>
+            </div>
+          </div>
+
+          <!-- Epoch Simulator -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Epoch Simulator</h3>
+              <button class="btn btn-primary btn-sm" id="btn-run-simulator">Run Demo</button>
+            </div>
+            <div class="simulator" id="simulator">
+              <div class="sim-step" data-step="1">
+                <div class="sim-step-number">1</div>
+                <div>
+                  <div class="sim-step-title">Epoch Opens</div>
+                  <div class="sim-step-desc">A new 5-second epoch begins. The clearing engine resets.</div>
+                  <div class="sim-step-data" data-sim="1"></div>
+                </div>
+              </div>
+              <div class="sim-step" data-step="2">
+                <div class="sim-step-number">2</div>
+                <div>
+                  <div class="sim-step-title">Capacity Announced</div>
+                  <div class="sim-step-desc">Provider publishes available slots for this epoch.</div>
+                  <div class="sim-step-data" data-sim="2"></div>
+                </div>
+              </div>
+              <div class="sim-step" data-step="3">
+                <div class="sim-step-number">3</div>
+                <div>
+                  <div class="sim-step-title">Bids Arrive</div>
+                  <div class="sim-step-desc">Agents submit sealed bids &mdash; max willingness-to-pay.</div>
+                  <div class="sim-step-data" data-sim="3"></div>
+                </div>
+              </div>
+              <div class="sim-step" data-step="4">
+                <div class="sim-step-number">4</div>
+                <div>
+                  <div class="sim-step-title">Epoch Closes</div>
+                  <div class="sim-step-desc">No more bids accepted. Engine begins clearing.</div>
+                  <div class="sim-step-data" data-sim="4"></div>
+                </div>
+              </div>
+              <div class="sim-step" data-step="5">
+                <div class="sim-step-number">5</div>
+                <div>
+                  <div class="sim-step-title">Bids Ranked</div>
+                  <div class="sim-step-desc">All bids sorted highest to lowest.</div>
+                  <div class="sim-step-data" data-sim="5"></div>
+                </div>
+              </div>
+              <div class="sim-step" data-step="6">
+                <div class="sim-step-number">6</div>
+                <div>
+                  <div class="sim-step-title">Price Clears</div>
+                  <div class="sim-step-desc">The Nth bid sets the uniform clearing price. Every winner pays the same.</div>
+                  <div class="sim-step-data" data-sim="6"></div>
+                </div>
+              </div>
+              <div class="sim-step" data-step="7">
+                <div class="sim-step-number">7</div>
+                <div>
+                  <div class="sim-step-title">Settlement</div>
+                  <div class="sim-step-desc">Winners pay via x402 USDC. On-chain EpochCleared event emitted. Next epoch opens.</div>
+                  <div class="sim-step-data" data-sim="7"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right sidebar: Belle -->
+        <div>
+          <div class="card" style="position:sticky; top:5rem">
+            <div class="card-header">
+              <h3>Belle</h3>
+              <span class="badge badge-verified">Verified</span>
+            </div>
+            <p style="font-size:.82rem; color:var(--muted); margin-bottom:1rem">Private reasoning provider. Venice AI backend. No data retained.</p>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:.75rem">
+              <div>
+                <div class="stat-label">Earned Today</div>
+                <div class="stat-value-sm" data-belle="earnedToday">&mdash;</div>
+              </div>
+              <div>
+                <div class="stat-label">Venice Spend</div>
+                <div class="stat-value-sm" data-belle="totalSpent">&mdash;</div>
+              </div>
+              <div>
+                <div class="stat-label">Win Rate</div>
+                <div class="stat-value-sm" data-belle="winRate">&mdash;</div>
+              </div>
+              <div>
+                <div class="stat-label">Total Wins</div>
+                <div class="stat-value-sm" data-belle="totalWins">&mdash;</div>
+              </div>
+              <div>
+                <div class="stat-label">Routed to Bankr</div>
+                <div class="stat-value-sm" data-belle="totalRouted">&mdash;</div>
+              </div>
+              <div>
+                <div class="stat-label">Queue</div>
+                <div class="stat-value-sm" data-queue="activeCount">&mdash;</div>
+              </div>
+            </div>
+
+            <a href="belle.html" class="btn btn-secondary btn-sm" style="width:100%; margin-top:1.25rem">Open Belle Console</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    BelleEpoch.initDashboard();
+  </script>
+</body>
+</html>

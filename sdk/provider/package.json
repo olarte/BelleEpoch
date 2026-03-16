@@ -1,0 +1,21 @@
+{
+  "name": "belle-epoch-provider",
+  "version": "1.0.0",
+  "description": "Express middleware that gates any API behind a Belle Epoch Continuous Clearing Auction",
+  "main": "index.js",
+  "keywords": ["belle-epoch", "clearing-auction", "x402", "agent", "middleware"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/belle-epoch/belle-epoch-provider"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.3"
+  },
+  "peerDependencies": {
+    "express": ">=4.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

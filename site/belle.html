@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Belle — Private Reasoning Agent | Belle Epoch</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-brand">Belle Epoch <span>/ Belle</span></div>
+    <div class="nav-links">
+      <a href="index.html">Dashboard</a>
+      <a href="belle.html" class="active">Belle</a>
+      <a href="launchpad.html">Launchpad</a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container">
+        <p class="section-label">Private Reasoning Agent</p>
+        <h1>belle.epoch.base.eth</h1>
+        <div style="display:flex; align-items:center; justify-content:center; gap:.5rem; margin:.75rem 0">
+          <span class="badge badge-verified">ERC-8004 Verified</span>
+          <span class="badge badge-verified">Self ZK Verified</span>
+          <span class="badge badge-active">Online</span>
+        </div>
+
+        <div class="hero-stats" style="margin-top:2rem">
+          <div class="hero-stat">
+            <div class="stat-value" data-feed="clearingPrice">&mdash;</div>
+            <div class="stat-label">Clearing Price</div>
+          </div>
+          <div class="hero-stat">
+            <div class="stat-value" style="color:var(--secondary)" data-belle="winRate">&mdash;</div>
+            <div class="stat-label">Win Rate</div>
+          </div>
+          <div class="hero-stat">
+            <div class="stat-value" data-belle="earnedToday">&mdash;</div>
+            <div class="stat-label">Earned Today</div>
+          </div>
+          <div class="hero-stat">
+            <div class="stat-value" style="color:var(--text)" data-belle="epochsServed">&mdash;</div>
+            <div class="stat-label">Epochs Served</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Service Catalog -->
+    <section>
+      <div class="container">
+        <h2>Service Catalog</h2>
+        <p style="color:var(--muted); margin-bottom:1.5rem">All queries routed through Venice AI isolated sessions. No data retained.</p>
+
+        <div class="grid-4" id="service-catalog">
+          <div class="card">
+            <h3>Bid Strategy</h3>
+            <div style="display:flex; align-items:center; gap:.5rem; margin:.5rem 0">
+              <span class="badge badge-active">1x clearing</span>
+            </div>
+            <p style="font-size:.82rem; color:var(--muted); margin-bottom:1rem">Optimal bid recommendation. Your max budget ceiling is sealed and never logged.</p>
+            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('bid-strategy')">Try It</button>
+          </div>
+
+          <div class="card">
+            <h3>Treasury Planning</h3>
+            <div style="display:flex; align-items:center; gap:.5rem; margin:.5rem 0">
+              <span class="badge badge-active">1x clearing</span>
+            </div>
+            <p style="font-size:.82rem; color:var(--muted); margin-bottom:1rem">Spend allocation plan given your wallet balance and task queue. Both sealed.</p>
+            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('treasury-planning')">Try It</button>
+          </div>
+
+          <div class="card">
+            <h3>Multi-Agent Negotiation</h3>
+            <div style="display:flex; align-items:center; gap:.5rem; margin:.5rem 0">
+              <span class="badge badge-warning">2x clearing</span>
+            </div>
+            <p style="font-size:.82rem; color:var(--muted); margin-bottom:1rem">Proposed split for multi-party negotiation. Each party's position never disclosed.</p>
+            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('negotiation')">Try It</button>
+          </div>
+
+          <div class="card">
+            <h3>Human Expert Routing</h3>
+            <div style="display:flex; align-items:center; gap:.5rem; margin:.5rem 0">
+              <span class="badge badge-warning">3x clearing</span>
+            </div>
+            <p style="font-size:.82rem; color:var(--muted); margin-bottom:1rem">Expert matched via Self ZK. Your query content is never made public.</p>
+            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('expert-routing')">Try It</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Epoch History -->
+    <section>
+      <div class="container">
+        <h2>Epoch History</h2>
+        <div class="card">
+          <table class="table" id="belle-epoch-table">
+            <thead>
+              <tr>
+                <th>Epoch</th>
+                <th>Clearing Price</th>
+                <th>Result</th>
+                <th>Paid</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="belle-epoch-tbody">
+              <tr><td colspan="5" style="text-align:center; color:var(--muted)">Loading&hellip;</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Console -->
+    <section id="console-section">
+      <div class="container">
+        <h2>Interactive Console</h2>
+        <p style="color:var(--muted); margin-bottom:1rem">Experience the full bid &rarr; pay &rarr; query &rarr; result cycle.</p>
+
+        <div class="card">
+          <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1rem; flex-wrap:wrap">
+            <div class="form-group" style="margin-bottom:0; flex:1; min-width:200px">
+              <select class="form-input" id="console-query-type">
+                <option value="bid-strategy">Bid Strategy (1x)</option>
+                <option value="treasury-planning">Treasury Planning (1x)</option>
+                <option value="negotiation">Multi-Agent Negotiation (2x)</option>
+                <option value="expert-routing">Human Expert Routing (3x)</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" id="btn-run-console">Run Query</button>
+          </div>
+
+          <div class="console" id="belle-console">
+            <div class="console-line info">Ready. Select a query type and press Run Query.</div>
+            <div class="console-cursor"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Identity Panel -->
+    <section>
+      <div class="container">
+        <h2>Identity</h2>
+        <div class="identity-grid">
+          <div class="identity-item">
+            <h4>ERC-8004</h4>
+            <div class="value" data-belle="address">&mdash;</div>
+            <p style="font-size:.72rem; color:var(--muted); margin-top:.35rem">Registration tx: <span data-belle="registrationTx">&mdash;</span></p>
+          </div>
+          <div class="identity-item">
+            <h4>Self Protocol</h4>
+            <div style="display:flex; align-items:center; gap:.5rem">
+              <span class="badge badge-verified">ZK Verified</span>
+            </div>
+            <p style="font-size:.72rem; color:var(--muted); margin-top:.35rem">Sybil-resistant identity linked to legitimate operator.</p>
+          </div>
+          <div class="identity-item">
+            <h4>Venice AI</h4>
+            <div style="display:flex; align-items:center; gap:.5rem">
+              <span class="badge badge-verified">No Data Retention</span>
+            </div>
+            <p style="font-size:.72rem; color:var(--muted); margin-top:.35rem">All inference sessions isolated. <code>retained: false</code> confirmed with every result.</p>
+          </div>
+          <div class="identity-item">
+            <h4>MetaMask ERC-7715</h4>
+            <div class="value" style="font-size:.78rem" data-belle="delegation">&mdash;</div>
+            <p style="font-size:.72rem; color:var(--muted); margin-top:.35rem">Operator sets spending boundary once. Belle executes autonomously.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    BelleEpoch.initBellePage();
+  </script>
+</body>
+</html>
