@@ -4,7 +4,7 @@
   "description": "Continuous Clearing Auctions for Agent Services",
   "main": "engine/index.js",
   "scripts": {
-    "start": "node api/index.js",
+    "start": "node engine/index.js",
     "engine": "node engine/index.js",
     "test": "node engine/test.js",
     "test:x402": "node engine/test-x402.js",

@@ -1,0 +1,15 @@
+{
+  "rewrites": [
+    { "source": "/feed",              "destination": "https://belle-api-production.up.railway.app/feed" },
+    { "source": "/feed/(.*)",         "destination": "https://belle-api-production.up.railway.app/feed/$1" },
+    { "source": "/bid",               "destination": "https://belle-api-production.up.railway.app/bid" },
+    { "source": "/query",             "destination": "https://belle-api-production.up.railway.app/query" },
+    { "source": "/query/(.*)",        "destination": "https://belle-api-production.up.railway.app/query/$1" },
+    { "source": "/providers/register","destination": "https://belle-api-production.up.railway.app/providers/register" },
+    { "source": "/epoch/(.*)",        "destination": "https://belle-api-production.up.railway.app/epoch/$1" },
+    { "source": "/delegation",        "destination": "https://belle-api-production.up.railway.app/delegation" },
+    { "source": "/bankr/(.*)",        "destination": "https://belle-api-production.up.railway.app/bankr/$1" },
+    { "source": "/health",            "destination": "https://belle-api-production.up.railway.app/health" },
+    { "source": "/agent_log.json",    "destination": "https://belle-api-production.up.railway.app/agent_log.json" }
+  ]
+}
