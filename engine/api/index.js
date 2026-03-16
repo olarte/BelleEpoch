@@ -9,8 +9,8 @@ const cors = require('cors');
 const { addBid, getBids, getAgentHistory, getEpochHistory, getEpochResult, markPaid, getPaymentState, redis } = require('../bids');
 const engine = require('../clearing');
 const { createPaymentRequest, verifyPayment, settlePayment, signAccessToken, verifyAccessToken } = require('../x402');
-const erc8004 = require('../../identity/erc8004');
-const self = require('../../identity/self');
+const erc8004 = require('../identity/erc8004');
+const self = require('../identity/self');
 const delegation = require('../delegation');
 const bankr = require('../bankr');
 const venice = require('../venice');
@@ -23,7 +23,10 @@ app.use(express.json());
 const PORT = parseInt(process.env.PORT || '3001', 10);
 
 // Serve site static files (before API routes — explicit API paths take priority)
-app.use(express.static(path.join(__dirname, '..', '..', 'site')));
+const siteDir = path.join(__dirname, '..', '..', 'site');
+if (fs.existsSync(siteDir)) {
+  app.use(express.static(siteDir));
+}
 
 // Track first-time bidders for Sybil check (in-memory cache, Redis-backed)
 const knownAgents = new Set();
@@ -650,23 +653,30 @@ app.get('/bankr/routing', async (req, res) => {
 // ─── GET /skill.md ───────────────────────────────────────────────────────────
 // Machine-readable agent onboarding document
 app.get('/skill.md', (req, res) => {
-  const skillPath = path.join(__dirname, '..', '..', 'site', 'skill.md');
-  if (fs.existsSync(skillPath)) {
-    res.type('text/plain').sendFile(skillPath);
-  } else {
-    res.status(404).type('text/plain').send('skill.md not found');
+  // Try engine/skill.md first (Railway), then site/skill.md (local dev)
+  const paths = [
+    path.join(__dirname, '..', 'skill.md'),
+    path.join(__dirname, '..', '..', 'site', 'skill.md'),
+    path.join(__dirname, '..', '..', 'skill.md'),
+  ];
+  for (const p of paths) {
+    if (fs.existsSync(p)) return res.type('text/plain').sendFile(p);
   }
+  res.status(404).type('text/plain').send('skill.md not found');
 });
 
 // ─── GET /agent.json ─────────────────────────────────────────────────────────
 // Belle's agent manifest
 app.get('/agent.json', (req, res) => {
-  const agentPath = path.join(__dirname, '..', '..', 'site', 'agent.json');
-  if (fs.existsSync(agentPath)) {
-    res.type('application/json').sendFile(agentPath);
-  } else {
-    res.status(404).json({ error: 'agent.json not found' });
+  const paths = [
+    path.join(__dirname, '..', 'agent.json'),
+    path.join(__dirname, '..', '..', 'site', 'agent.json'),
+    path.join(__dirname, '..', '..', 'agent.json'),
+  ];
+  for (const p of paths) {
+    if (fs.existsSync(p)) return res.type('application/json').sendFile(p);
   }
+  res.status(404).json({ error: 'agent.json not found' });
 });
 
 // ─── GET /feed/metrics ──────────────────────────────────────────────────────

@@ -5,7 +5,7 @@
 
 const crypto = require('crypto');
 const { redis } = require('./bids');
-const self = require('../identity/self');
+const self = require('./identity/self');
 const bankr = require('./bankr');
 
 const VENICE_API_URL = process.env.VENICE_API_URL || 'https://api.venice.ai/api/v1';

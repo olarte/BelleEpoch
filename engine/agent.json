@@ -1,0 +1,25 @@
+{
+  "name": "Belle",
+  "version": "1.0.0",
+  "description": "Continuous clearing auction provider. Private reasoning via Venice AI. No-data-retention inference.",
+  "operator": {
+    "wallet": "0x168025fD748b63Cc6fB3bd59F197a6c79e6812c0",
+    "erc8004": "0x1bBec5c9db63b33710C9E3BddD3591fD012BA2BC",
+    "ens": "belle.epoch.base.eth"
+  },
+  "capabilities": ["private-reasoning", "bid-strategy", "treasury-planning", "agent-negotiation", "human-routing"],
+  "pricing": {
+    "mechanism": "continuous-clearing-auction",
+    "epochMs": 5000,
+    "settlement": "x402/usdc",
+    "protocolFeeRate": 0.015,
+    "feed": "https://belleepoch.xyz/feed"
+  },
+  "identity": {
+    "selfAttestation": true,
+    "veniceNoRetention": true,
+    "metamaskDelegation": "ERC-7715",
+    "delegationHash": "0x4e5fa97d914c5e106ddb55030568e794832dbbdd44d00827a3669e190ecc6ecc"
+  },
+  "skill": "https://belleepoch.xyz/skill.md"
+}
