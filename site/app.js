@@ -297,7 +297,7 @@ const BelleEpoch = (() => {
     if (!container) return;
 
     if (!events || events.length === 0) {
-      container.innerHTML = '<div style="text-align:center; color:var(--g30); padding:1rem; font-size:.82rem">No events yet</div>';
+      container.innerHTML = '<div style="text-align:center; color:var(--g30); padding:1rem; font-size:.9rem">No events yet</div>';
       return;
     }
 
@@ -336,10 +336,10 @@ const BelleEpoch = (() => {
         <div class="card queue-item" style="margin-bottom:.5rem">
           <div style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap">
             <span class="badge ${typeBadge}">${item.type || 'unknown'}</span>
-            <span style="font-family:var(--mono); font-size:.78rem; color:var(--g30)">Epoch #${item.epochId || '\u2014'}</span>
-            <span style="font-size:.78rem; color:${statusColor}">${item.status}</span>
-            <span style="font-size:.72rem; color:var(--g30)">Venice: ${item.veniceSessionOpen ? 'open' : 'closed'}</span>
-            <span style="font-size:.72rem; color:var(--g30); margin-left:auto">[REDACTED &mdash; returned once to winner]</span>
+            <span style="font-family:var(--mono); font-size:.85rem; color:var(--g30)">Epoch #${item.epochId || '\u2014'}</span>
+            <span style="font-size:.85rem; color:${statusColor}">${item.status}</span>
+            <span style="font-size:.8rem; color:var(--g30)">Venice: ${item.veniceSessionOpen ? 'open' : 'closed'}</span>
+            <span style="font-size:.8rem; color:var(--g30); margin-left:auto">[REDACTED &mdash; returned once to winner]</span>
           </div>
         </div>`;
     }).join('');
@@ -409,12 +409,12 @@ const BelleEpoch = (() => {
 
       const initial = (p.name || p.ens || p.id || '?')[0].toUpperCase();
       const verified = p.selfVerified ? '<span class="badge badge-verified">Self Verified</span>' : '';
-      const featured = p.id === 'belle' ? '<span class="badge badge-warning" style="font-size:.6rem">Featured</span>' : '';
+      const featured = p.id === 'belle' ? '<span class="badge badge-warning" style="font-size:.75rem">Featured</span>' : '';
 
       // Check if human capacity
       const isHuman = p.resource === 'human-capacity' || p.epochMs >= 60000;
       const humanBadges = isHuman
-        ? '<span class="badge badge-verified" style="font-size:.6rem">Self Verified</span><span class="badge badge-online" style="font-size:.6rem">Online</span>'
+        ? '<span class="badge badge-verified" style="font-size:.75rem">Self Verified</span><span class="badge badge-online" style="font-size:.75rem">Online</span>'
         : '';
 
       card.innerHTML = `
@@ -422,7 +422,7 @@ const BelleEpoch = (() => {
           <div class="provider-avatar">${initial}</div>
           <div>
             <h3 style="margin-bottom:.15rem">${p.name || p.ens || p.id}</h3>
-            <span style="font-size:.78rem; color:var(--g30)">${p.resource || '\u2014'}</span>
+            <span style="font-size:.85rem; color:var(--g30)">${p.resource || '\u2014'}</span>
             ${featured}${verified}
           </div>
         </div>
@@ -467,8 +467,8 @@ const BelleEpoch = (() => {
     ghost.innerHTML = `
       <div style="text-align:center; padding:2rem 1rem">
         <h3 style="color:var(--g30)">Your service here</h3>
-        <div class="terminal" style="font-size:.78rem; margin:.75rem 0">curl -s belleepoch.xyz/skill.md | launch</div>
-        <p style="font-size:.78rem; color:var(--g30)">Click to register</p>
+        <div class="terminal" style="font-size:.85rem; margin:.75rem 0">curl -s belleepoch.xyz/skill.md | launch</div>
+        <p style="font-size:.85rem; color:var(--g30)">Click to register</p>
       </div>
     `;
     ghost.addEventListener('click', () => showPage('agents'));
@@ -946,7 +946,7 @@ const BelleEpoch = (() => {
         ? `<div class="credential-line">\u26A0 Self-attested: ${p.credentialClaim}</div>`
         : '';
       const linkedin = p.linkedinUrl
-        ? `<a href="${p.linkedinUrl}" target="_blank" rel="noopener" style="font-size:.78rem">LinkedIn</a>`
+        ? `<a href="${p.linkedinUrl}" target="_blank" rel="noopener" style="font-size:.85rem">LinkedIn</a>`
         : '';
       const price = p.currentClearingPrice != null ? formatUsdc(p.currentClearingPrice) : '\u2014';
       const epochLabel = p.epochMs >= 3600000 ? (p.epochMs / 3600000) + 'h epochs'
@@ -1042,7 +1042,7 @@ const BelleEpoch = (() => {
           const qrContainer = $('#self-qr-container');
           qrContainer.innerHTML = `
             <div style="text-align:center">
-              <div style="width:200px; height:200px; border:2px dashed var(--g50); border-radius:0; display:flex; align-items:center; justify-content:center; margin:0 auto; color:var(--g30); font-size:.82rem; padding:1rem">
+              <div style="width:200px; height:200px; border:2px dashed var(--g50); border-radius:0; display:flex; align-items:center; justify-content:center; margin:0 auto; color:var(--g30); font-size:.9rem; padding:1rem">
                 Self QR Code<br>
                 <span style="font-size:.7rem">Scope: belle-epoch-humans</span><br>
                 <span style="font-size:.7rem">Wallet: ${truncateAddr(addr)}</span>

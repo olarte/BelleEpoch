@@ -18,10 +18,10 @@
   --g70:       #1a1a1a;
   --g60:       #252525;
   --g50:       #333333;
-  --g40:       #444444;
-  --g30:       #666666;
-  --g20:       #999999;
-  --g10:       #cccccc;
+  --g40:       #555555;
+  --g30:       #888888;
+  --g20:       #aaaaaa;
+  --g10:       #d4d4d4;
   --white:     #f0ece6;
 
   /* Red palette */
@@ -32,7 +32,7 @@
 
   /* On red — text colors */
   --on-red:    rgba(255,255,255,0.85);
-  --on-red-dim:rgba(255,255,255,0.50);
+  --on-red-dim:rgba(255,255,255,0.65);
 
   /* Semantic */
   --green:     #27ae60;
@@ -54,8 +54,8 @@ body {
   background: var(--black);
   color: var(--g10);
   font-family: var(--mono);
-  font-size: 13px;
-  line-height: 1.65;
+  font-size: 14px;
+  line-height: 1.7;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
@@ -99,8 +99,8 @@ nav#nav {
 }
 .nav-tab {
   font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
+  font-size: 11px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--g30);
   background: transparent;
@@ -122,8 +122,8 @@ nav#nav {
 
 .nav-cta {
   font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
+  font-size: 11px;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
   padding: 9px 22px;
   background: var(--red);
@@ -204,8 +204,8 @@ section {
 }
 
 .sbar-label {
-  font-size: 10px;
-  letter-spacing: 0.18em;
+  font-size: 12px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--g20);
   font-family: var(--mono);
@@ -218,8 +218,8 @@ section {
 .sec-red .sbar-label .num { color: #fff; }
 
 .sbar-status {
-  font-size: 9px;
-  letter-spacing: 0.16em;
+  font-size: 11px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--g30);
   display: flex;
@@ -238,8 +238,8 @@ section {
   background: var(--g80);
   margin: 0 calc(-1 * var(--pad-x));
   margin-bottom: 32px;
-  font-size: 10px;
-  letter-spacing: 0.18em;
+  font-size: 12px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--g20);
   font-family: var(--mono);
@@ -289,8 +289,8 @@ section {
 
 /* Eyebrow / category label */
 .eyebrow {
-  font-size: 10px;
-  letter-spacing: 0.20em;
+  font-size: 12px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--redhi);
   margin-bottom: 14px;
@@ -324,14 +324,14 @@ section {
 
 /* Data label */
 .data-label {
-  font-size: 9px;
-  letter-spacing: 0.16em;
+  font-size: 11px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--g30);
   margin-bottom: 5px;
   font-family: var(--mono);
 }
-.sec-red .data-label { color: rgba(255,255,255,0.4); }
+.sec-red .data-label { color: rgba(255,255,255,0.6); }
 
 /* General headings */
 h1 {
@@ -363,9 +363,9 @@ h3 {
 }
 
 .section-label {
-  font-size: 10px;
+  font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.20em;
+  letter-spacing: 0.16em;
   color: var(--redhi);
   margin-bottom: 14px;
   font-family: var(--mono);
@@ -523,7 +523,7 @@ h3 {
 .agents-step-num {
   font-family: var(--mono);
   font-weight: 700;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--on-red-dim);
   min-width: 24px;
   letter-spacing: 0.1em;
@@ -560,7 +560,7 @@ h3 {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--on-red);
   padding: 8px 16px;
   border: 1px solid rgba(0,0,0,0.25);
@@ -597,9 +597,9 @@ h3 {
   justify-content: space-between;
   padding: 0 20px;
   height: var(--bar-h);
-  font-size: 10px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   color: var(--g20);
   border-bottom: 1px solid var(--g50);
   background: var(--g90);
@@ -621,8 +621,8 @@ h3 {
 .stat-block:nth-last-child(-n+2) { border-bottom: none; }
 
 .stat-block .stat-label {
-  font-size: 9px;
-  letter-spacing: 0.16em;
+  font-size: 11px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--g30);
   margin-bottom: 5px;
@@ -662,10 +662,10 @@ h3 {
 }
 
 .stat-label {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--g30);
   text-transform: uppercase;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   margin-top: 6px;
   font-family: var(--mono);
 }
@@ -698,10 +698,10 @@ h3 {
 
 .event-row:hover { background: rgba(255,255,255,0.02); }
 
-.event-epoch { color: var(--g40); font-size: 11px; }
+.event-epoch { color: var(--g30); font-size: 12px; }
 .event-provider { color: var(--g10); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .event-price { color: var(--redhi); font-weight: 600; }
-.event-time { color: var(--g40); font-size: 10px; }
+.event-time { color: var(--g30); font-size: 11px; }
 
 .next-epoch-bar {
   display: flex;
@@ -736,8 +736,8 @@ h3 {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
-  font-size: 9px;
+  padding: 5px 12px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.10em;
@@ -801,7 +801,7 @@ h3 {
   background: rgba(184, 150, 90, 0.08);
   color: var(--gold);
   border-color: rgba(184, 150, 90, 0.25);
-  font-size: 8px;
+  font-size: 11px;
 }
 
 @keyframes pulse-dot {
@@ -825,8 +825,8 @@ h3 {
   justify-content: center;
   gap: 8px;
   font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
   padding: 12px 28px;
   border: none;
@@ -853,8 +853,8 @@ h3 {
   color: var(--white);
 }
 
-.btn-sm { padding: 8px 18px; font-size: 9px; }
-.btn-lg { padding: 14px 36px; font-size: 11px; }
+.btn-sm { padding: 8px 18px; font-size: 11px; }
+.btn-lg { padding: 14px 36px; font-size: 13px; }
 
 /* On red sections */
 .sec-red .btn-primary { background: rgba(0,0,0,0.3); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
@@ -1101,10 +1101,10 @@ h3 {
 .provider-card .provider-stats > div:nth-last-child(-n+2) { border-bottom: none; }
 
 .provider-card .provider-stat-label {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--g30);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.10em;
   font-family: var(--mono);
   margin-bottom: 4px;
 }
@@ -1161,7 +1161,7 @@ h3 {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 12px;
   flex-shrink: 0;
   font-family: var(--mono);
 }
@@ -1169,7 +1169,7 @@ h3 {
 .ticker-name { color: var(--white); font-weight: 600; }
 .ticker-resource { color: var(--g30); }
 .ticker-price { font-weight: 600; color: var(--redhi); }
-.ticker-delta { font-size: 10px; font-weight: 600; }
+.ticker-delta { font-size: 11px; font-weight: 600; }
 .ticker-delta.up   { color: var(--green); }
 .ticker-delta.down { color: var(--redhi); }
 
@@ -1209,7 +1209,7 @@ h3 {
 
 .bid-entry .bid-agent {
   color: var(--g30);
-  font-size: 11px;
+  font-size: 12px;
   max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1222,8 +1222,8 @@ h3 {
 }
 
 .bid-entry .bid-time {
-  font-size: 10px;
-  color: var(--g40);
+  font-size: 11px;
+  color: var(--g30);
 }
 
 @keyframes slide-in {
@@ -1274,7 +1274,7 @@ h3 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   font-family: var(--mono);
   background: var(--g50);
@@ -1301,7 +1301,7 @@ h3 {
 .sim-step-desc { font-size: 12px; color: var(--g20); margin-top: 2px; }
 .sim-step-data {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--redhi);
   margin-top: 6px;
 }
@@ -1319,9 +1319,9 @@ h3 {
 .table th {
   text-align: left;
   padding: 10px 14px;
-  font-size: 9px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.10em;
   color: var(--g30);
   border-bottom: 1px solid var(--g50);
   font-family: var(--mono);
@@ -1344,11 +1344,11 @@ h3 {
 
 .form-group label {
   display: block;
-  font-size: 9px;
-  color: var(--g30);
+  font-size: 11px;
+  color: var(--g20);
   margin-bottom: 6px;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.10em;
   font-family: var(--mono);
 }
 
@@ -1401,7 +1401,7 @@ select.form-input {
 }
 
 .form-help {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--g30);
   margin-top: 4px;
 }
@@ -1509,13 +1509,13 @@ select.form-input {
   border: 1px solid var(--g50);
   background: transparent;
   color: var(--g30);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s;
   font-family: var(--mono);
   text-transform: uppercase;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.08em;
 }
 
 .filter-btn:hover,
@@ -1541,7 +1541,7 @@ select.form-input {
 }
 
 .reg-step-dot {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--g30);
   display: flex;
   align-items: center;
@@ -1549,19 +1549,19 @@ select.form-input {
   transition: color 0.15s;
   font-family: var(--mono);
   text-transform: uppercase;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.08em;
 }
 
 .reg-step-dot span {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   background: var(--g50);
   font-weight: 700;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 12px;
   color: var(--g30);
   transition: all 0.15s;
 }
@@ -1614,7 +1614,7 @@ select.form-input {
 }
 
 .human-card .credential-line {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--g30);
   margin-bottom: 8px;
 }
@@ -1634,10 +1634,10 @@ select.form-input {
 .human-card .human-stats > div:nth-last-child(-n+2) { border-bottom: none; }
 
 .human-card .human-stat-label {
-  font-size: 8px;
+  font-size: 11px;
   color: var(--g30);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   font-family: var(--mono);
 }
 
@@ -1667,9 +1667,9 @@ select.form-input {
 }
 
 .identity-item h4 {
-  font-size: 9px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   color: var(--g30);
   margin-bottom: 8px;
   font-family: var(--mono);
@@ -1703,10 +1703,10 @@ select.form-input {
 .delegation-row:last-child { border-bottom: none; }
 
 .delegation-label {
-  color: var(--g30);
-  font-size: 9px;
+  color: var(--g20);
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.10em;
   font-family: var(--mono);
 }
 
@@ -1758,7 +1758,7 @@ select.form-input {
 }
 
 .lifecycle-label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   margin-bottom: 4px;
   font-family: var(--disp);
@@ -1767,7 +1767,7 @@ select.form-input {
 
 .lifecycle-time {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 12px;
   color: var(--g30);
 }
 
@@ -1795,9 +1795,9 @@ select.form-input {
 }
 
 .skillmd-nav h4 {
-  font-size: 9px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   color: var(--g30);
   margin-bottom: 12px;
   font-family: var(--mono);
@@ -1988,7 +1988,7 @@ select.form-input {
 
   .nav, nav#nav { padding: 0 20px; }
   .nav-tabs { gap: 0; }
-  .nav-tab { font-size: 9px; padding: 0 10px; letter-spacing: 0.08em; }
+  .nav-tab { font-size: 10px; padding: 0 10px; letter-spacing: 0.08em; }
   .nav-logo, .nav-brand { font-size: 18px; }
 
   .container { padding: 0 20px; }
@@ -2020,7 +2020,7 @@ select.form-input {
 
 @media (max-width: 480px) {
   .nav-brand span { display: none; }
-  .nav-tab { font-size: 8px; padding: 0 8px; }
+  .nav-tab { font-size: 9px; padding: 0 8px; }
   .hero-headline { font-size: clamp(40px, 14vw, 64px); }
   h1 { font-size: clamp(32px, 10vw, 48px); }
 }
