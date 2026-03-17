@@ -312,19 +312,27 @@ app.get('/feed/history', async (req, res) => {
 });
 
 // ─── GET /feed/queue ─────────────────────────────────────────────────────────
-// Returns count of active Venice queries
+// Returns anonymized active query queue with individual items
 app.get('/feed/queue', async (req, res) => {
   try {
     const keys = await redis.keys('query:*');
     let active = 0;
+    const items = [];
     for (const key of keys) {
       const raw = await redis.get(key);
       if (raw) {
         const data = JSON.parse(raw);
         if (data.status === 'processing') active++;
+        items.push({
+          queryId: key.replace('query:', ''),
+          type: data.type || data.queryType || 'bid-strategy',
+          epochId: data.epochId || null,
+          status: data.status || 'unknown',
+          veniceSessionOpen: data.status === 'processing',
+        });
       }
     }
-    res.json({ activeCount: active, timestamp: new Date().toISOString() });
+    res.json({ activeCount: active, items, timestamp: new Date().toISOString() });
   } catch (err) {
     console.error('[GET /feed/queue] error:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -684,8 +692,41 @@ app.get('/agent.json', (req, res) => {
   res.status(404).json({ error: 'agent.json not found' });
 });
 
+// ─── GET /feed/events ──────────────────────────────────────────────────────
+// Returns last N EpochCleared events across all providers
+app.get('/feed/events', async (req, res) => {
+  try {
+    const n = Math.min(parseInt(req.query.n || '20', 10), 100);
+    let events = [];
+    try {
+      const raw = await redis.lrange('feed:events', 0, n - 1);
+      events = raw.map(r => JSON.parse(r));
+    } catch (e) { /* feed:events may not exist yet */ }
+
+    // Fallback: build from epoch history if feed:events is empty
+    if (events.length === 0) {
+      const history = await getEpochHistory(n);
+      events = history.map(h => ({
+        epochId: h.epochId,
+        provider: 'belle',
+        providerEns: 'belle.epoch.base.eth',
+        clearingPrice: h.clearingPrice,
+        slotsFilled: h.slotsFilled || 0,
+        totalBids: h.totalBids || 0,
+        chain: 'base',
+        timestamp: h.timestamp || new Date().toISOString(),
+      }));
+    }
+
+    res.json(events);
+  } catch (err) {
+    console.error('[GET /feed/events] error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ─── GET /feed/metrics ──────────────────────────────────────────────────────
-// Live metrics for agent_log.json regeneration and Protocol Labs submission
+// Live metrics: network-wide aggregate stats
 app.get('/feed/metrics', async (req, res) => {
   try {
     const epochId = engine.getCurrentEpochId();
@@ -716,6 +757,24 @@ app.get('/feed/metrics', async (req, res) => {
       ? parseFloat(((earned - veniceSpend) / earned).toFixed(4))
       : 0;
 
+    // Count providers online
+    let providersOnline = 1; // Belle is always online
+    try {
+      const raw = await redis.lrange('self:providers', 0, -1);
+      for (const entry of raw) {
+        const p = JSON.parse(entry);
+        if (p.active) providersOnline++;
+      }
+    } catch (e) { /* ignore */ }
+
+    // Today's stats
+    const todayUTC = new Date().toISOString().slice(0, 10);
+    const todayEpochs = epochHistory.filter(e => e.timestamp && e.timestamp.startsWith(todayUTC));
+    const epochsClearedToday = todayEpochs.length;
+    const usdcSettledToday = parseFloat(
+      todayEpochs.reduce((sum, e) => sum + (e.clearingPrice || 0) * (e.slotsFilled || 0), 0).toFixed(6)
+    );
+
     res.json({
       epochsServed: epochId - 1,
       totalVolumeUSDC,
@@ -723,6 +782,16 @@ app.get('/feed/metrics', async (req, res) => {
       autonomousHoursWithoutIntervention: autonomousHours,
       protocolFeeAccumulated: parseFloat(parseFloat(feesRaw || '0').toFixed(6)),
       belleMargin,
+      providersOnline,
+      epochsClearedToday,
+      usdcSettledToday,
+      totalEpochsAllTime: epochId - 1,
+      totalVolumeAllTime: totalVolumeUSDC,
+      belleWinRateToday: parseFloat(
+        (todayEpochs.length > 0
+          ? todayEpochs.filter(e => e.slotsFilled > 0).length / todayEpochs.length
+          : 0).toFixed(4)
+      ),
     });
   } catch (err) {
     console.error('[GET /feed/metrics] error:', err);

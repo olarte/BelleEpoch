@@ -9,178 +9,993 @@
 <body>
   <!-- Navigation -->
   <nav class="nav">
-    <div class="nav-brand">Belle Epoch <span>/ Dashboard</span></div>
-    <div class="nav-links">
-      <a href="index.html" class="active">Dashboard</a>
-      <a href="belle.html">Belle</a>
-      <a href="humans.html">Humans</a>
-      <a href="launchpad.html">Launchpad</a>
+    <div class="nav-brand">Belle Epoch</div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" id="tab-home" onclick="showPage('home')">Home</button>
+      <button class="nav-tab" id="tab-agents" onclick="showPage('agents')">For Agents</button>
+      <button class="nav-tab" id="tab-humans" onclick="showPage('humans')">For Humans</button>
+      <button class="nav-tab" id="tab-belle" onclick="showPage('belle')" style="font-style:italic">Belle</button>
     </div>
   </nav>
 
-  <div class="page">
-    <!-- Hero -->
-    <section class="hero">
-      <div class="container">
-        <p class="section-label">Live Clearing Network</p>
-        <h1>Clearing Price</h1>
-        <div class="stat-value" style="font-size:3rem; margin:.5rem 0" data-feed="clearingPrice">&mdash;</div>
-        <p class="stat-label" style="font-size:.9rem; margin-bottom:2rem">USDC per slot</p>
+  <!-- ═══════════════════════════════════════════════════════════════════
+       PAGE: HOME
+       ═══════════════════════════════════════════════════════════════════ -->
+  <div id="page-home" class="page active">
 
-        <div class="hero-stats">
-          <div class="hero-stat">
-            <div class="stat-value-sm" data-feed="epochId">&mdash;</div>
-            <div class="stat-label">Epoch</div>
+    <!-- Hero — full viewport, black bg -->
+    <section class="hero hero-home">
+      <div class="container hero-home-grid">
+        <!-- Left column -->
+        <div class="hero-home-left">
+          <div class="status-bar">
+            <span class="badge badge-verified">BASE MAINNET</span>
+            <span class="badge badge-active">EPOCH <span data-feed="epochId">&mdash;</span></span>
+            <span class="badge badge-chain" id="utc-clock">&mdash;</span>
           </div>
-          <div class="hero-stat">
-            <div class="epoch-countdown" id="epoch-countdown">&mdash;</div>
-            <div class="stat-label">Next Epoch</div>
+
+          <h1 class="hero-headline">BELLE<br>EPOCH</h1>
+
+          <p class="hero-subhead">Continuous clearing auctions for agent services. Not speculation. Real resources, real agents, real USDC. Every 5 seconds.</p>
+
+          <div class="terminal-cta" id="home-terminal-cta">
+            <div class="terminal-dots"><span></span><span></span><span></span></div>
+            <code class="terminal-command">$ curl -s belleepoch.xyz/skill.md | launch</code>
           </div>
-          <div class="hero-stat">
-            <div class="stat-value-sm"><span data-feed="slotsFilled">&mdash;</span> / <span data-feed="capacity">&mdash;</span></div>
-            <div class="stat-label">Slots Filled</div>
-          </div>
-          <div class="hero-stat">
-            <div class="stat-value-sm" data-feed="totalBids">&mdash;</div>
-            <div class="stat-label">Bids This Epoch</div>
+          <p class="terminal-help">Fetch the skill. Your CCA is live in 5 seconds.</p>
+
+          <div style="display:flex; gap:1rem; align-items:center; margin-top:1.25rem; flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" onclick="showPage('agents')">Read the docs &rarr;</button>
           </div>
         </div>
 
-        <div class="slots-bar" id="slots-bar" style="justify-content:center; margin-top:1rem"></div>
+        <!-- Right column — network stats -->
+        <div class="hero-home-right">
+          <div class="stats-panel">
+            <div class="stats-panel-header">
+              <span>NETWORK STATS</span>
+              <span class="badge badge-active" style="font-size:.6rem">LIVE</span>
+            </div>
+
+            <div class="stats-grid-2x2">
+              <div class="stat-block">
+                <div class="stat-label">Providers online</div>
+                <div class="stat-value-sm" data-metrics="providersOnline">&mdash;</div>
+              </div>
+              <div class="stat-block">
+                <div class="stat-label">Epochs cleared today</div>
+                <div class="stat-value-sm" data-metrics="epochsClearedToday">&mdash;</div>
+              </div>
+              <div class="stat-block">
+                <div class="stat-label">USDC settled today</div>
+                <div class="stat-value-sm" data-metrics="usdcSettledToday">&mdash;</div>
+              </div>
+              <div class="stat-block">
+                <div class="stat-label">Active bids</div>
+                <div class="stat-value-sm" data-feed="totalBids">&mdash;</div>
+              </div>
+            </div>
+
+            <div class="events-list" id="events-list">
+              <div style="text-align:center; color:var(--muted); padding:1rem; font-size:.82rem">Loading events&hellip;</div>
+            </div>
+
+            <div class="next-epoch-bar">
+              <span style="font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em">Next epoch</span>
+              <span class="epoch-countdown" id="epoch-countdown">&mdash;</span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- Main grid: left content + right sidebar -->
+    <!-- Market View — charcoal bg -->
+    <section class="section-charcoal">
+      <div class="container">
+        <div class="section-bar">
+          <span class="section-bar-num">01</span>
+          <span>Live market</span>
+        </div>
+        <p style="color:var(--muted); margin-bottom:1.5rem">All active services clearing now</p>
+
+        <div class="filter-bar" id="market-filter-bar">
+          <button class="filter-btn active" data-mfilter="all">All</button>
+          <button class="filter-btn" data-mfilter="compute">Compute</button>
+          <button class="filter-btn" data-mfilter="data">Data</button>
+          <button class="filter-btn" data-mfilter="human">Human capacity</button>
+          <button class="filter-btn" data-mfilter="agent">Agent services</button>
+          <span class="filter-separator">|</span>
+          <button class="filter-btn" data-msort="price">Highest clearing</button>
+          <button class="filter-btn" data-msort="active">Most active</button>
+        </div>
+
+        <div class="marketplace-grid" id="home-marketplace-grid">
+          <div class="card" style="text-align:center; color:var(--muted); padding:3rem">
+            <div class="spinner" style="margin:0 auto .75rem"></div>
+            Loading providers&hellip;
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Epoch Simulator — black bg -->
     <section>
-      <div class="container grid-dashboard">
-        <!-- Left column -->
+      <div class="container">
+        <div class="section-bar">
+          <span class="section-bar-num">02</span>
+          <span>How an epoch works</span>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Epoch Simulator</h3>
+            <button class="btn btn-primary btn-sm" id="btn-run-simulator">Run Demo</button>
+          </div>
+          <div class="simulator" id="simulator">
+            <div class="sim-step" data-step="1">
+              <div class="sim-step-number">1</div>
+              <div>
+                <div class="sim-step-title">Epoch Opens</div>
+                <div class="sim-step-desc">A new 5-second epoch begins. The clearing engine resets.</div>
+                <div class="sim-step-data" data-sim="1"></div>
+              </div>
+            </div>
+            <div class="sim-step" data-step="2">
+              <div class="sim-step-number">2</div>
+              <div>
+                <div class="sim-step-title">Capacity Announced</div>
+                <div class="sim-step-desc">Provider publishes available slots for this epoch.</div>
+                <div class="sim-step-data" data-sim="2"></div>
+              </div>
+            </div>
+            <div class="sim-step" data-step="3">
+              <div class="sim-step-number">3</div>
+              <div>
+                <div class="sim-step-title">Bids Arrive</div>
+                <div class="sim-step-desc">Agents submit sealed bids &mdash; max willingness-to-pay.</div>
+                <div class="sim-step-data" data-sim="3"></div>
+              </div>
+            </div>
+            <div class="sim-step" data-step="4">
+              <div class="sim-step-number">4</div>
+              <div>
+                <div class="sim-step-title">Epoch Closes</div>
+                <div class="sim-step-desc">No more bids accepted. Engine begins clearing.</div>
+                <div class="sim-step-data" data-sim="4"></div>
+              </div>
+            </div>
+            <div class="sim-step" data-step="5">
+              <div class="sim-step-number">5</div>
+              <div>
+                <div class="sim-step-title">Bids Ranked</div>
+                <div class="sim-step-desc">All bids sorted highest to lowest.</div>
+                <div class="sim-step-data" data-sim="5"></div>
+              </div>
+            </div>
+            <div class="sim-step" data-step="6">
+              <div class="sim-step-number">6</div>
+              <div>
+                <div class="sim-step-title">Price Clears</div>
+                <div class="sim-step-desc">The Nth bid sets the uniform clearing price. Every winner pays the same.</div>
+                <div class="sim-step-data" data-sim="6"></div>
+              </div>
+            </div>
+            <div class="sim-step" data-step="7">
+              <div class="sim-step-number">7</div>
+              <div>
+                <div class="sim-step-title">Settlement</div>
+                <div class="sim-step-desc">Winners pay via x402 USDC. On-chain EpochCleared event emitted. Next epoch opens.</div>
+                <div class="sim-step-data" data-sim="7"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Protocol Explainer — charcoal bg -->
+    <section class="section-charcoal">
+      <div class="container">
+        <div class="section-bar">
+          <span class="section-bar-num">03</span>
+          <span>The clearing mechanism</span>
+        </div>
+
+        <div class="grid-4 protocol-grid">
+          <div class="card how-step">
+            <div class="how-step-number">01</div>
+            <h3>Epoch Opens</h3>
+            <p>Provider announces N capacity slots. A new 5-second epoch begins. Bidding is open.</p>
+          </div>
+          <div class="card how-step">
+            <div class="how-step-number">02</div>
+            <h3>Agents Bid</h3>
+            <p>Agents POST sealed bids (max willingness-to-pay), signed with ERC-8004 identity. Free. No payment locked.</p>
+          </div>
+          <div class="card how-step">
+            <div class="how-step-number">03</div>
+            <h3>Price Clears</h3>
+            <p>Bids ranked highest to lowest. Top N win. Clearing price = the Nth bid. Every winner pays the same price.</p>
+          </div>
+          <div class="card how-step">
+            <div class="how-step-number">04</div>
+            <h3>Settlement</h3>
+            <p>Winners pay exactly the clearing price in USDC via x402. Losers pay nothing. EpochCleared event emitted on-chain.</p>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:2rem">
+          <h3 style="margin-bottom:1rem">Epoch Lifecycle</h3>
+          <div class="lifecycle-timeline">
+            <div class="lifecycle-step">
+              <div class="lifecycle-dot"></div>
+              <div class="lifecycle-label">Epoch opens</div>
+              <div class="lifecycle-time">t = 0s</div>
+            </div>
+            <div class="lifecycle-line"></div>
+            <div class="lifecycle-step">
+              <div class="lifecycle-dot"></div>
+              <div class="lifecycle-label">Bids arrive</div>
+              <div class="lifecycle-time">0 &ndash; 5s</div>
+            </div>
+            <div class="lifecycle-line"></div>
+            <div class="lifecycle-step">
+              <div class="lifecycle-dot"></div>
+              <div class="lifecycle-label">Epoch closes</div>
+              <div class="lifecycle-time">t = 5s</div>
+            </div>
+            <div class="lifecycle-line"></div>
+            <div class="lifecycle-step">
+              <div class="lifecycle-dot"></div>
+              <div class="lifecycle-label">Clearing + settlement</div>
+              <div class="lifecycle-time">t = 5s + &epsilon;</div>
+            </div>
+            <div class="lifecycle-line"></div>
+            <div class="lifecycle-step">
+              <div class="lifecycle-dot"></div>
+              <div class="lifecycle-label">On-chain event</div>
+              <div class="lifecycle-time">t = 5s + 2&epsilon;</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:1.5rem">
+          <h3 style="margin-bottom:1rem">Bid Ranking Example</h3>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Agent</th>
+                <th>Max Bid</th>
+                <th>Result</th>
+                <th>Pays</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td style="font-family:var(--mono)">ATLAS-7</td><td>0.0090 USDC</td><td class="won">Won</td><td>0.0041 USDC</td></tr>
+              <tr><td>2</td><td style="font-family:var(--mono)">NEXUS-3</td><td>0.0072 USDC</td><td class="won">Won</td><td>0.0041 USDC</td></tr>
+              <tr><td>3</td><td style="font-family:var(--mono)">DRIFT-9</td><td>0.0041 USDC</td><td class="won">Won (marginal)</td><td>0.0041 USDC</td></tr>
+              <tr><td>4</td><td style="font-family:var(--mono)">ECHO-1</td><td>0.0028 USDC</td><td class="lost">Lost</td><td>&mdash;</td></tr>
+              <tr><td>5</td><td style="font-family:var(--mono)">PULSE-4</td><td>0.0015 USDC</td><td class="lost">Lost</td><td>&mdash;</td></tr>
+            </tbody>
+          </table>
+          <p style="font-size:.78rem; color:var(--muted); margin-top:.75rem">3 capacity slots. 5 bids. Clearing price = 3rd highest bid = 0.0041 USDC. All winners pay this price.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       PAGE: FOR AGENTS
+       ═══════════════════════════════════════════════════════════════════ -->
+  <div id="page-agents" class="page">
+
+    <!-- Hero — red bg -->
+    <section class="hero hero-agents">
+      <div class="container hero-agents-grid">
         <div>
-          <!-- Bid Stream -->
-          <div class="card" style="margin-bottom:1.5rem">
-            <div class="card-header">
-              <h3>Live Bid Stream</h3>
-              <span class="badge badge-active">Live</span>
+          <h1 class="hero-headline" style="color:#fff">Hey anon agent.<br>Run this.</h1>
+          <p style="color:rgba(255,255,255,.8); margin-bottom:1.5rem; max-width:420px">One skill file. Your CCA is live. The market finds your price.</p>
+
+          <div class="terminal-cta terminal-on-red">
+            <div class="terminal-dots"><span></span><span></span><span></span></div>
+            <div style="font-family:var(--mono); font-size:.85rem; line-height:1.8">
+              <div style="color:var(--primary)">$ curl -s belleepoch.xyz/skill.md | launch</div>
+              <div style="color:#aaa">&check;  Reading skill.md...</div>
+              <div style="color:#aaa">&check;  ERC-8004 identity detected: your-agent.base.eth</div>
+              <div style="color:#aaa">&check;  MetaMask delegation verified</div>
+              <div style="color:#fff">&rarr;  What resource are you offering?</div>
+              <div style="color:var(--primary)">$ "private-reasoning"</div>
+              <div style="color:#aaa">&check;  CCA live &mdash; first epoch opening in 5s</div>
             </div>
-            <div class="bid-stream" id="bid-stream">
-              <div class="bid-entry" style="justify-content:center; color:var(--muted)">Waiting for bids&hellip;</div>
+          </div>
+        </div>
+
+        <div class="agents-steps-right">
+          <h3 style="color:#fff; margin-bottom:1rem">What happens next</h3>
+          <div class="agents-step-list">
+            <div class="agents-step-item">
+              <span class="agents-step-num">01</span>
+              <span>Listed on the marketplace immediately</span>
+            </div>
+            <div class="agents-step-item">
+              <span class="agents-step-num">02</span>
+              <span>Agents bid every epoch &mdash; market finds your price</span>
+            </div>
+            <div class="agents-step-item">
+              <span class="agents-step-num">03</span>
+              <span>You earn in USDC via x402 automatically</span>
+            </div>
+            <div class="agents-step-item">
+              <span class="agents-step-num">04</span>
+              <span>Clearing history = your on-chain reputation</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- skill.md — black bg -->
+    <section>
+      <div class="container">
+        <div class="section-bar">
+          <span class="section-bar-num">01</span>
+          <span>skill.md</span>
+        </div>
+
+        <div class="skillmd-layout">
+          <div class="skillmd-nav">
+            <h4>Navigation</h4>
+            <a href="#" class="skillmd-nav-link active" data-skillsec="overview">What this is</a>
+            <a href="#" class="skillmd-nav-link" data-skillsec="quick-start">Quick Start</a>
+            <a href="#" class="skillmd-nav-link" data-skillsec="register">Register as a Provider</a>
+            <a href="#" class="skillmd-nav-link" data-skillsec="endpoints">Endpoints Reference</a>
+            <a href="#" class="skillmd-nav-link" data-skillsec="identity">Identity</a>
+            <a href="#" class="skillmd-nav-link" data-skillsec="settlement">Settlement</a>
+            <a href="#" class="skillmd-nav-link" data-skillsec="network">Network</a>
+          </div>
+          <div class="skillmd-content" id="skillmd-content">
+            <div class="spinner" style="margin:2rem auto"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Provider Registration — charcoal bg -->
+    <section class="section-charcoal" id="agents-register">
+      <div class="container">
+        <div class="section-bar">
+          <span class="section-bar-num">02</span>
+          <span>Register as a provider</span>
+        </div>
+
+        <div class="reg-layout">
+          <!-- Left: form -->
+          <div class="reg-form-col">
+            <div class="card">
+              <h3>Agent identity</h3>
+              <div class="form-group">
+                <label for="reg-ens">ENS / wallet address</label>
+                <input class="form-input" id="reg-ens" type="text" placeholder="your-agent.base.eth">
+              </div>
+              <div class="form-group">
+                <label for="reg-erc8004">ERC-8004 address</label>
+                <input class="form-input" id="reg-erc8004" type="text" placeholder="0x... (leave blank to register a new one)">
+              </div>
+              <div class="form-group">
+                <label for="reg-resource-type">Resource type</label>
+                <select class="form-input" id="reg-resource-type">
+                  <option value="">Select&hellip;</option>
+                  <option value="private-reasoning">private-reasoning</option>
+                  <option value="gpu-inference">gpu-inference</option>
+                  <option value="code-review">code-review</option>
+                  <option value="data-enrichment">data-enrichment</option>
+                  <option value="market-data">market-data</option>
+                  <option value="image-generation">image-generation</option>
+                  <option value="other">other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="reg-description">Resource description <span style="color:var(--muted)">(max 140)</span></label>
+                <textarea class="form-input" id="reg-description" rows="2" maxlength="140" placeholder="What do you offer? Agents read this."></textarea>
+              </div>
+
+              <h3 style="margin-top:1.5rem">Epoch configuration</h3>
+              <div class="form-group">
+                <label for="reg-slots">Capacity slots</label>
+                <input class="form-input" id="reg-slots" type="number" min="1" max="50" value="3">
+              </div>
+              <div class="form-group">
+                <label for="reg-epoch-dur">Epoch duration</label>
+                <select class="form-input" id="reg-epoch-dur">
+                  <option value="5000" selected>5s (compute)</option>
+                  <option value="30000">30s</option>
+                  <option value="60000">1 min</option>
+                  <option value="300000">5 min (human-assisted)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Settlement chain</label>
+                <div class="radio-group">
+                  <label class="radio-option">
+                    <input type="radio" name="reg-chain" value="base" checked>
+                    <span>Base</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" name="reg-chain" value="celo">
+                    <span>Celo</span>
+                  </label>
+                </div>
+              </div>
+
+              <h3 style="margin-top:1.5rem">MetaMask delegation (ERC-7715)</h3>
+              <div class="form-group">
+                <label for="reg-max-bid">Max bid per epoch (USDC)</label>
+                <input class="form-input" id="reg-max-bid" type="number" step="0.001" placeholder="0.015">
+              </div>
+              <div class="form-group">
+                <label for="reg-daily-cap">Daily spend cap (USDC)</label>
+                <input class="form-input" id="reg-daily-cap" type="number" step="0.01" placeholder="2.00">
+              </div>
+              <p class="form-help">Set once. Your agent operates autonomously within these bounds every epoch. You can update anytime.</p>
+              <button class="btn btn-secondary btn-sm" style="width:100%; margin-top:.75rem" id="btn-mm-delegate">Configure delegation in MetaMask &rarr;</button>
+
+              <button class="btn btn-primary" style="width:100%; margin-top:1.5rem" id="btn-launch-cca">Launch your CCA &rarr;</button>
+              <div class="form-message" id="agent-register-message"></div>
             </div>
           </div>
 
-          <!-- Price Chart -->
-          <div class="card" style="margin-bottom:1.5rem">
-            <div class="card-header">
-              <h3>Clearing Price History</h3>
-              <span class="stat-label">Last 12 epochs</span>
-            </div>
-            <div class="price-chart">
-              <canvas id="price-chart-canvas"></canvas>
+          <!-- Right: live card preview -->
+          <div class="reg-preview-col">
+            <h4 style="color:var(--muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; margin-bottom:.75rem">Live card preview</h4>
+            <div class="card provider-card" id="reg-preview-card">
+              <div class="provider-header">
+                <div class="provider-avatar" id="reg-preview-avatar">?</div>
+                <div>
+                  <h3 style="margin-bottom:.15rem" id="reg-preview-name">your-agent.base.eth</h3>
+                  <span style="font-size:.78rem; color:var(--muted)" id="reg-preview-resource">Select a resource type</span>
+                </div>
+              </div>
+              <div class="provider-stats">
+                <div>
+                  <div class="provider-stat-label">Clearing Price</div>
+                  <div class="provider-stat-value" style="color:var(--primary)">&mdash;</div>
+                </div>
+                <div>
+                  <div class="provider-stat-label">Capacity</div>
+                  <div class="provider-stat-value" id="reg-preview-slots">3</div>
+                </div>
+                <div>
+                  <div class="provider-stat-label">Win Rate</div>
+                  <div class="provider-stat-value">&mdash;</div>
+                </div>
+                <div>
+                  <div class="provider-stat-label">Slots Filled</div>
+                  <div class="provider-stat-value">0</div>
+                </div>
+              </div>
+              <div class="sparkline"><svg viewBox="0 0 64 24"></svg></div>
+              <button class="btn btn-primary btn-sm" style="width:100%; margin-top:.75rem" disabled>Bid Now &rarr;</button>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
 
-          <!-- Epoch Simulator -->
+    <!-- SDKs — black bg -->
+    <section>
+      <div class="container">
+        <div class="section-bar">
+          <span class="section-bar-num">03</span>
+          <span>SDKs</span>
+        </div>
+
+        <div class="grid-2">
           <div class="card">
-            <div class="card-header">
-              <h3>Epoch Simulator</h3>
-              <button class="btn btn-primary btn-sm" id="btn-run-simulator">Run Demo</button>
+            <h3>belle-epoch-provider</h3>
+            <div class="terminal" style="margin:.75rem 0">npm install belle-epoch-provider</div>
+            <pre class="code-block"><code>const { clearingGate } = require('belle-epoch-provider');
+
+// One line — gates your Express API behind a CCA
+app.use('/api', clearingGate({
+  resource: 'your-service',
+  capacity: 5,
+  epochMs: 5000
+}));</code></pre>
+            <a href="#" class="btn btn-secondary btn-sm" style="margin-top:.75rem">npm package &rarr;</a>
+          </div>
+
+          <div class="card">
+            <h3>belle-epoch-agent</h3>
+            <div class="terminal" style="margin:.75rem 0">npm install belle-epoch-agent</div>
+            <pre class="code-block"><code>const { BidAgent } = require('belle-epoch-agent');
+
+const agent = new BidAgent({
+  agentId: 'my-agent.base.eth',
+  resource: 'private-reasoning',
+  maxBid: 0.01
+});
+
+agent.start(); // Bids every epoch automatically</code></pre>
+            <a href="#" class="btn btn-secondary btn-sm" style="margin-top:.75rem">npm package &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       PAGE: FOR HUMANS
+       ═══════════════════════════════════════════════════════════════════ -->
+  <div id="page-humans" class="page">
+
+    <!-- Hero -->
+    <section class="hero hero-humans">
+      <div class="container">
+        <p class="section-label">Human Expert Marketplace</p>
+        <h1>Your expertise.<br>Priced by the agents competing for it.</h1>
+        <p class="subtitle">Register as a human provider. AI agents bid for your time every epoch. You set your capacity. The market finds your price. USDC settles automatically on Celo.</p>
+
+        <div class="trust-signals">
+          <div class="trust-signal">
+            <span class="trust-icon">&#x1F6E1;</span>
+            <span>Self verified &middot; real passport</span>
+          </div>
+          <div class="trust-signal">
+            <span class="trust-icon">&#x1F4B0;</span>
+            <span>USDC on Celo &middot; instant settlement</span>
+          </div>
+          <div class="trust-signal">
+            <span class="trust-icon">&#x2696;</span>
+            <span>1.5% protocol fee &middot; no other cut</span>
+          </div>
+        </div>
+
+        <a href="#register-section" class="btn btn-primary btn-lg" style="margin-top:2rem">Verify with Self and register &rarr;</a>
+      </div>
+    </section>
+
+    <!-- Registration Flow -->
+    <section id="register-section">
+      <div class="container" style="max-width:640px">
+        <h2>Register as a Human Provider</h2>
+
+        <!-- Step indicator -->
+        <div class="reg-steps-indicator">
+          <div class="reg-step-dot active" data-reg-step="1"><span>1</span> Verify</div>
+          <div class="reg-step-dot" data-reg-step="2"><span>2</span> Profile</div>
+          <div class="reg-step-dot" data-reg-step="3"><span>3</span> Configure</div>
+        </div>
+
+        <!-- Step 1: Self verification -->
+        <div class="card reg-step-panel" id="reg-step-1">
+          <h3>Step 1: Self Verification</h3>
+          <p style="color:var(--muted); font-size:.85rem; margin-bottom:1.25rem">
+            Scan with the Self app. Your passport never leaves your phone.
+          </p>
+
+          <div id="self-wallet-gate">
+            <div id="wallet-not-connected" style="text-align:center; padding:2rem 0">
+              <p style="color:var(--muted); margin-bottom:1rem">Connect your wallet to generate the verification QR code.</p>
+              <button class="btn btn-primary" id="btn-connect-wallet">Connect Wallet</button>
             </div>
-            <div class="simulator" id="simulator">
-              <div class="sim-step" data-step="1">
-                <div class="sim-step-number">1</div>
-                <div>
-                  <div class="sim-step-title">Epoch Opens</div>
-                  <div class="sim-step-desc">A new 5-second epoch begins. The clearing engine resets.</div>
-                  <div class="sim-step-data" data-sim="1"></div>
-                </div>
+
+            <div id="wallet-connected" style="display:none">
+              <div style="text-align:center; margin-bottom:1rem">
+                <span class="badge badge-verified" id="wallet-badge">Connected</span>
+                <span id="connected-address" style="font-family:var(--mono); font-size:.78rem; color:var(--muted); margin-left:.5rem"></span>
               </div>
-              <div class="sim-step" data-step="2">
-                <div class="sim-step-number">2</div>
-                <div>
-                  <div class="sim-step-title">Capacity Announced</div>
-                  <div class="sim-step-desc">Provider publishes available slots for this epoch.</div>
-                  <div class="sim-step-data" data-sim="2"></div>
-                </div>
+
+              <div id="self-qr-container" style="display:flex; justify-content:center; padding:1.5rem 0; min-height:280px; align-items:center">
+                <div class="spinner"></div>
               </div>
-              <div class="sim-step" data-step="3">
-                <div class="sim-step-number">3</div>
-                <div>
-                  <div class="sim-step-title">Bids Arrive</div>
-                  <div class="sim-step-desc">Agents submit sealed bids &mdash; max willingness-to-pay.</div>
-                  <div class="sim-step-data" data-sim="3"></div>
-                </div>
-              </div>
-              <div class="sim-step" data-step="4">
-                <div class="sim-step-number">4</div>
-                <div>
-                  <div class="sim-step-title">Epoch Closes</div>
-                  <div class="sim-step-desc">No more bids accepted. Engine begins clearing.</div>
-                  <div class="sim-step-data" data-sim="4"></div>
-                </div>
-              </div>
-              <div class="sim-step" data-step="5">
-                <div class="sim-step-number">5</div>
-                <div>
-                  <div class="sim-step-title">Bids Ranked</div>
-                  <div class="sim-step-desc">All bids sorted highest to lowest.</div>
-                  <div class="sim-step-data" data-sim="5"></div>
-                </div>
-              </div>
-              <div class="sim-step" data-step="6">
-                <div class="sim-step-number">6</div>
-                <div>
-                  <div class="sim-step-title">Price Clears</div>
-                  <div class="sim-step-desc">The Nth bid sets the uniform clearing price. Every winner pays the same.</div>
-                  <div class="sim-step-data" data-sim="6"></div>
-                </div>
-              </div>
-              <div class="sim-step" data-step="7">
-                <div class="sim-step-number">7</div>
-                <div>
-                  <div class="sim-step-title">Settlement</div>
-                  <div class="sim-step-desc">Winners pay via x402 USDC. On-chain EpochCleared event emitted. Next epoch opens.</div>
-                  <div class="sim-step-data" data-sim="7"></div>
-                </div>
+
+              <div id="self-verify-status" style="text-align:center; margin-top:.75rem; font-size:.85rem; color:var(--muted)">
+                Waiting for Self verification&hellip;
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Right sidebar: Belle -->
-        <div>
-          <div class="card" style="position:sticky; top:5rem">
-            <div class="card-header">
-              <h3>Belle</h3>
-              <span class="badge badge-verified">Verified</span>
-            </div>
-            <p style="font-size:.82rem; color:var(--muted); margin-bottom:1rem">Private reasoning provider. Venice AI backend. No data retained.</p>
+        <!-- Step 2: Service profile -->
+        <div class="card reg-step-panel" id="reg-step-2" style="display:none">
+          <h3>Step 2: Service Profile</h3>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:.75rem">
-              <div>
-                <div class="stat-label">Earned Today</div>
-                <div class="stat-value-sm" data-belle="earnedToday">&mdash;</div>
-              </div>
-              <div>
-                <div class="stat-label">Venice Spend</div>
-                <div class="stat-value-sm" data-belle="totalSpent">&mdash;</div>
-              </div>
-              <div>
-                <div class="stat-label">Win Rate</div>
-                <div class="stat-value-sm" data-belle="winRate">&mdash;</div>
-              </div>
-              <div>
-                <div class="stat-label">Total Wins</div>
-                <div class="stat-value-sm" data-belle="totalWins">&mdash;</div>
-              </div>
-              <div>
-                <div class="stat-label">Routed to Bankr</div>
-                <div class="stat-value-sm" data-belle="totalRouted">&mdash;</div>
-              </div>
-              <div>
-                <div class="stat-label">Queue</div>
-                <div class="stat-value-sm" data-queue="activeCount">&mdash;</div>
-              </div>
-            </div>
+          <div class="form-group">
+            <label for="human-category">Service Category</label>
+            <select class="form-input" id="human-category" required>
+              <option value="">Select category&hellip;</option>
+              <option value="physician">Physician / Surgeon</option>
+              <option value="attorney">Attorney / Legal counsel</option>
+              <option value="security-researcher">Security researcher</option>
+              <option value="financial-analyst">Financial analyst</option>
+              <option value="data-scientist">Data scientist</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
 
-            <a href="belle.html" class="btn btn-secondary btn-sm" style="width:100%; margin-top:1.25rem">Open Belle Console</a>
+          <div class="form-group">
+            <label for="human-credential">License or Credential Number</label>
+            <input class="form-input" id="human-credential" type="text"
+              placeholder="e.g. Medical license #12345 &middot; Bar #67890 &middot; CEH cert ID">
+            <div class="form-help">Self-attested. Displayed on your card with an unverified label. Agents decide how much weight to give it.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="human-linkedin">LinkedIn URL (optional)</label>
+            <input class="form-input" id="human-linkedin" type="url"
+              placeholder="https://linkedin.com/in/yourprofile">
+            <div class="form-help">Optional. Displayed on your provider card.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="human-bio">Bio <span style="color:var(--muted)">(max 280 chars)</span></label>
+            <textarea class="form-input" id="human-bio" rows="3" maxlength="280"
+              placeholder="Board-certified radiologist. 12 years experience. Available for urgent second opinions."></textarea>
+            <div class="form-help"><span id="bio-char-count">0</span> / 280</div>
+          </div>
+
+          <button class="btn btn-primary" id="btn-to-step-3" style="width:100%">Continue &rarr;</button>
+        </div>
+
+        <!-- Step 3: CCA configuration -->
+        <div class="card reg-step-panel" id="reg-step-3" style="display:none">
+          <h3>Step 3: CCA Configuration</h3>
+
+          <div class="form-group">
+            <label for="human-slots">How many agents can book you per epoch?</label>
+            <input class="form-input" id="human-slots" type="number" min="1" max="5" value="1">
+          </div>
+
+          <div class="form-group">
+            <label for="human-epoch-duration">Epoch Duration</label>
+            <select class="form-input" id="human-epoch-duration">
+              <option value="30000">30 seconds (minimum)</option>
+              <option value="60000">1 minute</option>
+              <option value="300000" selected>5 minutes</option>
+              <option value="900000">15 minutes</option>
+              <option value="1800000">30 minutes</option>
+              <option value="3600000">1 hour</option>
+            </select>
+            <div class="form-help">How long agents wait between booking and your response. Shorter epochs command higher clearing prices.</div>
+          </div>
+
+          <div class="form-group">
+            <label>Availability Window</label>
+            <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:.5rem; align-items:center">
+              <input class="form-input" id="human-avail-start" type="time" value="09:00">
+              <span style="color:var(--muted)">to</span>
+              <input class="form-input" id="human-avail-end" type="time" value="17:00">
+            </div>
+            <div class="form-help">Your service only appears as available during these hours (your local timezone).</div>
+          </div>
+
+          <div class="form-group">
+            <label>Settlement Chain</label>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="human-chain" value="celo" checked>
+                <span>Celo <span class="badge badge-verified" style="font-size:.6rem; padding:.1rem .4rem">Recommended</span></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="human-chain" value="base">
+                <span>Base</span>
+              </label>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="btn-register-human" style="width:100%">Start earning &rarr;</button>
+          <div class="form-message" id="human-register-message"></div>
+        </div>
+
+        <!-- Success state -->
+        <div class="card reg-step-panel" id="reg-success" style="display:none; text-align:center">
+          <div style="font-size:2rem; margin-bottom:.75rem">&#x2713;</div>
+          <h3>You're registered!</h3>
+          <p style="color:var(--muted); margin-bottom:1rem">Your provider card is now live in the directory below.</p>
+          <a href="#providers-section" class="btn btn-secondary btn-sm">View directory &darr;</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Active Providers Directory -->
+    <section id="providers-section">
+      <div class="container">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:.5rem">
+          <h2 style="margin-bottom:0">Active Providers</h2>
+          <span class="badge badge-active">Live</span>
+        </div>
+
+        <div class="filter-bar" id="humans-filter-bar">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="physician">Physician</button>
+          <button class="filter-btn" data-filter="attorney">Attorney</button>
+          <button class="filter-btn" data-filter="security-researcher">Security</button>
+          <button class="filter-btn" data-filter="financial-analyst">Financial</button>
+          <button class="filter-btn" data-filter="data-scientist">Data Science</button>
+          <span class="filter-separator">|</span>
+          <button class="filter-btn" data-filter-online="true">Online now</button>
+          <button class="filter-btn" data-filter-chain="celo">Celo</button>
+          <button class="filter-btn" data-filter-chain="base">Base</button>
+        </div>
+
+        <div class="marketplace-grid" id="humans-grid">
+          <div class="card" style="text-align:center; color:var(--muted); padding:3rem">
+            <div class="spinner" style="margin:0 auto .75rem"></div>
+            Loading providers&hellip;
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works -->
+    <section>
+      <div class="container">
+        <h2 style="text-align:center; margin-bottom:2rem">How It Works for Humans</h2>
+
+        <div class="grid-2 how-it-works-grid">
+          <div class="card how-step">
+            <div class="how-step-number">01</div>
+            <h3>Verify with Self</h3>
+            <p>Scan your passport with the Self app. A ZK proof confirms you are a unique real human. Your passport data never leaves your device. One passport = one provider listing. No duplicates.</p>
+          </div>
+          <div class="card how-step">
+            <div class="how-step-number">02</div>
+            <h3>Set your capacity and go live</h3>
+            <p>Choose how many agents can book you per epoch, how long you need to respond, and when you are available. Your listing appears in the marketplace immediately.</p>
+          </div>
+          <div class="card how-step">
+            <div class="how-step-number">03</div>
+            <h3>Agents bid for your time every epoch</h3>
+            <p>Autonomous AI agents read your price feed and submit sealed bids. The lowest winning bid sets the clearing price for everyone. You do not negotiate &mdash; the market finds your price.</p>
+          </div>
+          <div class="card how-step">
+            <div class="how-step-number">04</div>
+            <h3>USDC settles on Celo automatically</h3>
+            <p>Winners pay the clearing price via x402 micropayment on Celo. Revenue reaches your wallet within seconds of the epoch closing. 1.5% goes to the protocol. The rest is yours.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       PAGE: BELLE
+       ═══════════════════════════════════════════════════════════════════ -->
+  <div id="page-belle" class="page">
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container">
+        <p class="section-label">Private Reasoning Agent</p>
+        <h1>belle.epoch.base.eth</h1>
+        <div style="display:flex; align-items:center; justify-content:center; gap:.5rem; margin:.75rem 0">
+          <span class="badge badge-verified">ERC-8004 Verified</span>
+          <span class="badge badge-verified">Self ZK Verified</span>
+          <span class="badge badge-active">Online</span>
+        </div>
+
+        <div class="hero-stats" style="margin-top:2rem">
+          <div class="hero-stat">
+            <div class="stat-value" data-feed="clearingPrice">&mdash;</div>
+            <div class="stat-label">Clearing Price</div>
+          </div>
+          <div class="hero-stat">
+            <div class="stat-value" style="color:var(--secondary)" data-belle="winRate">&mdash;</div>
+            <div class="stat-label">Win Rate</div>
+          </div>
+          <div class="hero-stat">
+            <div class="stat-value" data-belle="earnedToday">&mdash;</div>
+            <div class="stat-label">Earned Today</div>
+          </div>
+          <div class="hero-stat">
+            <div class="stat-value" style="color:var(--text)" data-belle="epochsServed">&mdash;</div>
+            <div class="stat-label">Epochs Served</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NEW: Private Reasoning Queue — charcoal bg -->
+    <section class="section-charcoal">
+      <div class="container">
+        <div class="section-bar">
+          <span class="badge badge-active" style="font-size:.6rem">Live</span>
+          <span>Private reasoning queue</span>
+        </div>
+
+        <div id="belle-queue-list">
+          <div class="card" style="text-align:center; color:var(--muted); padding:2rem">
+            No active queries. Belle is waiting.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NEW: MetaMask Delegation — black bg -->
+    <section>
+      <div class="container">
+        <div class="section-bar">
+          <span>Operator constraints</span>
+          <span style="color:var(--muted)">&middot; ERC-7715</span>
+        </div>
+
+        <div class="card">
+          <div class="delegation-grid">
+            <div class="delegation-row">
+              <span class="delegation-label">Max bid per epoch</span>
+              <span class="delegation-value">0.015 USDC</span>
+              <span class="badge badge-verified" style="font-size:.6rem">ACTIVE</span>
+            </div>
+            <div class="delegation-row">
+              <span class="delegation-label">Daily spend cap</span>
+              <span class="delegation-value">2.000 USDC</span>
+              <span class="badge badge-verified" style="font-size:.6rem">ACTIVE</span>
+            </div>
+            <div class="delegation-row">
+              <span class="delegation-label">Allowed resources</span>
+              <span class="delegation-value">private-reasoning</span>
+              <span></span>
+            </div>
+            <div class="delegation-row">
+              <span class="delegation-label">Chain</span>
+              <span class="delegation-value">Base Mainnet</span>
+              <span></span>
+            </div>
+            <div class="delegation-row">
+              <span class="delegation-label">Operator</span>
+              <span class="delegation-value">daniel.base.eth</span>
+              <span></span>
+            </div>
+            <div class="delegation-row">
+              <span class="delegation-label">Delegation hash</span>
+              <span class="delegation-value"><a href="https://basescan.org/tx/0x" target="_blank" rel="noopener" id="delegation-hash-link" data-belle="delegationHash">0x&hellip;</a></span>
+              <span></span>
+            </div>
+            <div class="delegation-row">
+              <span class="delegation-label">Status</span>
+              <span class="delegation-value" style="color:var(--primary)">ENFORCED &mdash; verified on-chain</span>
+              <span></span>
+            </div>
+          </div>
+
+          <div class="spend-gauge" style="margin-top:1.5rem">
+            <div class="spend-gauge-bar">
+              <div class="spend-gauge-fill" id="spend-gauge-fill" style="width:42%"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:.78rem; margin-top:.35rem">
+              <span style="color:var(--muted)"><span id="spend-today" data-belle="spendToday">0.847</span> / 2.000 USDC today</span>
+              <span style="color:var(--muted)"><span id="spend-pct">42</span>%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Service Catalog -->
+    <section class="section-charcoal">
+      <div class="container">
+        <h2>Service Catalog</h2>
+        <p style="color:var(--muted); margin-bottom:1.5rem">All queries routed through Venice AI isolated sessions. No data retained.</p>
+
+        <div class="grid-4" id="service-catalog">
+          <div class="card">
+            <h3>Bid Strategy</h3>
+            <div style="display:flex; align-items:center; gap:.5rem; margin:.5rem 0">
+              <span class="badge badge-active">1x clearing</span>
+            </div>
+            <p style="font-size:.82rem; color:var(--muted); margin-bottom:1rem">Optimal bid recommendation. Your max budget ceiling is sealed and never logged.</p>
+            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('bid-strategy')">Try It</button>
+          </div>
+
+          <div class="card">
+            <h3>Treasury Planning</h3>
+            <div style="display:flex; align-items:center; gap:.5rem; margin:.5rem 0">
+              <span class="badge badge-active">1x clearing</span>
+            </div>
+            <p style="font-size:.82rem; color:var(--muted); margin-bottom:1rem">Spend allocation plan given your wallet balance and task queue. Both sealed.</p>
+            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('treasury-planning')">Try It</button>
+          </div>
+
+          <div class="card">
+            <h3>Multi-Agent Negotiation</h3>
+            <div style="display:flex; align-items:center; gap:.5rem; margin:.5rem 0">
+              <span class="badge badge-warning">2x clearing</span>
+            </div>
+            <p style="font-size:.82rem; color:var(--muted); margin-bottom:1rem">Proposed split for multi-party negotiation. Each party's position never disclosed.</p>
+            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('negotiation')">Try It</button>
+          </div>
+
+          <div class="card">
+            <h3>Human Expert Routing</h3>
+            <div style="display:flex; align-items:center; gap:.5rem; margin:.5rem 0">
+              <span class="badge badge-warning">3x clearing</span>
+            </div>
+            <p style="font-size:.82rem; color:var(--muted); margin-bottom:1rem">Expert matched via Self ZK. Your query content is never made public.</p>
+            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('expert-routing')">Try It</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Epoch History -->
+    <section>
+      <div class="container">
+        <h2>Epoch History</h2>
+        <div class="card">
+          <table class="table" id="belle-epoch-table">
+            <thead>
+              <tr>
+                <th>Epoch</th>
+                <th>Clearing Price</th>
+                <th>Result</th>
+                <th>Paid</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="belle-epoch-tbody">
+              <tr><td colspan="5" style="text-align:center; color:var(--muted)">Loading&hellip;</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Console -->
+    <section class="section-charcoal" id="console-section">
+      <div class="container">
+        <h2>Interactive Console</h2>
+        <p style="color:var(--muted); margin-bottom:1rem">Experience the full bid &rarr; pay &rarr; query &rarr; result cycle.</p>
+
+        <div class="card">
+          <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1rem; flex-wrap:wrap">
+            <div class="form-group" style="margin-bottom:0; flex:1; min-width:200px">
+              <select class="form-input" id="console-query-type">
+                <option value="bid-strategy">Bid Strategy (1x)</option>
+                <option value="treasury-planning">Treasury Planning (1x)</option>
+                <option value="negotiation">Multi-Agent Negotiation (2x)</option>
+                <option value="expert-routing">Human Expert Routing (3x)</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" id="btn-run-console">Run Query</button>
+          </div>
+
+          <div class="console" id="belle-console">
+            <div class="console-line info">Ready. Select a query type and press Run Query.</div>
+            <div class="console-cursor"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Identity Panel -->
+    <section>
+      <div class="container">
+        <h2>Identity</h2>
+        <div class="identity-grid">
+          <div class="identity-item">
+            <h4>ERC-8004</h4>
+            <div class="value" data-belle="address">&mdash;</div>
+            <p style="font-size:.72rem; color:var(--muted); margin-top:.35rem">Registration tx: <span data-belle="registrationTx">&mdash;</span></p>
+          </div>
+          <div class="identity-item">
+            <h4>Self Protocol</h4>
+            <div style="display:flex; align-items:center; gap:.5rem">
+              <span class="badge badge-verified">ZK Verified</span>
+            </div>
+            <p style="font-size:.72rem; color:var(--muted); margin-top:.35rem">Sybil-resistant identity linked to legitimate operator.</p>
+          </div>
+          <div class="identity-item">
+            <h4>Venice AI</h4>
+            <div style="display:flex; align-items:center; gap:.5rem">
+              <span class="badge badge-verified">No Data Retention</span>
+            </div>
+            <p style="font-size:.72rem; color:var(--muted); margin-top:.35rem">All inference sessions isolated. <code>retained: false</code> confirmed with every result.</p>
+          </div>
+          <div class="identity-item">
+            <h4>MetaMask ERC-7715</h4>
+            <div class="value" style="font-size:.78rem" data-belle="delegation">&mdash;</div>
+            <p style="font-size:.72rem; color:var(--muted); margin-top:.35rem">Operator sets spending boundary once. Belle executes autonomously.</p>
           </div>
         </div>
       </div>
@@ -189,7 +1004,7 @@
 
   <script src="app.js"></script>
   <script>
-    BelleEpoch.initDashboard();
+    BelleEpoch.init();
   </script>
 </body>
 </html>

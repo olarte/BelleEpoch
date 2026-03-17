@@ -1,7 +1,7 @@
 /* ============================================================
    Belle Epoch — app.js
-   Vanilla JS: data fetching, live binding, charts, simulator,
-   console, ticker, provider registration.
+   Single-page app: data fetching, live binding, charts, simulator,
+   console, marketplace, registration, skill.md rendering.
    ============================================================ */
 
 const BelleEpoch = (() => {
@@ -11,7 +11,6 @@ const BelleEpoch = (() => {
   const API = window.location.origin;
   const FEED_POLL_MS     = 2000;
   const BIDS_POLL_MS     = 1000;
-  const TICKER_POLL_MS   = 5000;
   const COUNTDOWN_TICK   = 100;
   const DEMO_AGENT_ID    = 'demo-agent';
   const DEMO_SIGNATURE   = '0xdemo00000000000000000000000000000000000000000000000000000000dead';
@@ -20,8 +19,36 @@ const BelleEpoch = (() => {
   let feedData     = null;
   let belleData    = null;
   let queueData    = null;
+  let metricsData  = null;
   let countdownRef = null;
   let targetEpochMs = null;
+  let currentPage  = 'home';
+  let pageInited   = { home: false, agents: false, humans: false, belle: false };
+  let pollIntervals = [];
+
+  // Humans state
+  let connectedWallet = null;
+  let humansFilterCategory = 'all';
+  let humansFilterOnline = false;
+  let humansFilterChain = null;
+
+  const CATEGORY_ICONS = {
+    'physician': '\u{1FA7A}',
+    'attorney': '\u2696',
+    'security-researcher': '\u{1F6E1}',
+    'financial-analyst': '\u{1F4C8}',
+    'data-scientist': '\u{1F9EA}',
+    'other': '\u{1F464}',
+  };
+
+  const CATEGORY_LABELS = {
+    'physician': 'Physician',
+    'attorney': 'Attorney',
+    'security-researcher': 'Security Researcher',
+    'financial-analyst': 'Financial Analyst',
+    'data-scientist': 'Data Scientist',
+    'other': 'Other',
+  };
 
   // --------------- Helpers ---------------
 
@@ -38,14 +65,6 @@ const BelleEpoch = (() => {
     return (Number(ratio) * 100).toFixed(1) + '%';
   }
 
-  function formatDelta(current, previous) {
-    if (current == null || previous == null || previous === 0) return '';
-    const pct = ((current - previous) / previous) * 100;
-    const sign = pct >= 0 ? '+' : '';
-    const cls  = pct >= 0 ? 'up' : 'down';
-    return `<span class="ticker-delta ${cls}">${sign}${pct.toFixed(1)}%</span>`;
-  }
-
   function truncateAddr(addr) {
     if (!addr || addr.length < 12) return addr || '\u2014';
     return addr.slice(0, 6) + '\u2026' + addr.slice(-4);
@@ -60,8 +79,48 @@ const BelleEpoch = (() => {
     return Math.floor(diff / 3600000) + 'h ago';
   }
 
+  function countryCodeToFlag(code) {
+    if (!code || code.length !== 3) return '';
+    const a2 = code.slice(0, 2).toUpperCase();
+    return String.fromCodePoint(...[...a2].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+  }
+
   function $(sel, parent) { return (parent || document).querySelector(sel); }
   function $$(sel, parent) { return Array.from((parent || document).querySelectorAll(sel)); }
+
+  // --------------- SPA Navigation ---------------
+
+  function showPage(page) {
+    currentPage = page;
+
+    // Update tabs
+    $$('.nav-tab').forEach(t => t.classList.remove('active'));
+    const tab = $(`#tab-${page}`);
+    if (tab) tab.classList.add('active');
+
+    // Show/hide pages
+    $$('.page').forEach(p => p.classList.remove('active'));
+    const pageEl = $(`#page-${page}`);
+    if (pageEl) pageEl.classList.add('active');
+
+    // Update hash
+    window.location.hash = page === 'home' ? '' : page;
+
+    // Lazy init page
+    if (!pageInited[page]) {
+      pageInited[page] = true;
+      if (page === 'home') initHome();
+      else if (page === 'agents') initAgents();
+      else if (page === 'humans') initHumans();
+      else if (page === 'belle') initBelle();
+    }
+
+    // Scroll to top
+    window.scrollTo(0, 0);
+  }
+
+  // Expose globally for onclick handlers
+  window.showPage = showPage;
 
   // --------------- Data Fetching ---------------
 
@@ -82,12 +141,6 @@ const BelleEpoch = (() => {
       feedData = data;
       bindFeed(data);
     }
-    return data;
-  }
-
-  async function fetchBids() {
-    const data = await fetchJson('/feed/bids');
-    if (data) renderBidStream(data);
     return data;
   }
 
@@ -121,6 +174,25 @@ const BelleEpoch = (() => {
     return data;
   }
 
+  async function fetchMetrics() {
+    const data = await fetchJson('/feed/metrics');
+    if (data) {
+      metricsData = data;
+      bindMetrics(data);
+    }
+    return data;
+  }
+
+  async function fetchEvents() {
+    const data = await fetchJson('/feed/events?n=6');
+    if (data) renderEventsList(data);
+    return data;
+  }
+
+  async function fetchHumanProviders() {
+    return fetchJson('/humans/providers');
+  }
+
   // --------------- Data Binding ---------------
 
   function bindFeed(data) {
@@ -141,19 +213,6 @@ const BelleEpoch = (() => {
       }
     });
 
-    // slots bar
-    const bar = $('#slots-bar');
-    if (bar && data.capacity != null) {
-      const filled = data.slotsFilled || 0;
-      const cap    = data.capacity || 0;
-      bar.innerHTML = '';
-      for (let i = 0; i < cap; i++) {
-        const dot = document.createElement('div');
-        dot.className = 'slot' + (i < filled ? ' filled' : '');
-        bar.appendChild(dot);
-      }
-    }
-
     // countdown target
     if (data.nextEpochMs != null) {
       const newTarget = Date.now() + data.nextEpochMs;
@@ -164,19 +223,17 @@ const BelleEpoch = (() => {
   }
 
   function bindBelle(data) {
-    // Map aliases: epochsServed → totalWon, totalSpent → veniceSpend
     const aliases = { epochsServed: 'totalWon', totalSpent: 'veniceSpend' };
 
     $$('[data-belle]').forEach(el => {
       const key = el.getAttribute('data-belle');
       const resolvedKey = aliases[key] || key;
       let val = data[resolvedKey];
-      // Also check feed data for belle-specific fields
       if (val == null && feedData && feedData.belle) val = feedData.belle[resolvedKey];
       if (val == null) return;
 
       let display;
-      if (key === 'earnedToday' || key === 'totalSpent' || key === 'totalRouted' || key === 'veniceSpend')
+      if (key === 'earnedToday' || key === 'totalSpent' || key === 'totalRouted' || key === 'veniceSpend' || key === 'spendToday')
         display = formatUsdc(val);
       else if (key === 'winRate')
         display = formatPercent(val);
@@ -189,6 +246,17 @@ const BelleEpoch = (() => {
         el.textContent = display;
       }
     });
+
+    // Update spend gauge
+    if (data.earnedToday != null || data.veniceSpend != null) {
+      const spent = data.earnedToday || 0;
+      const cap = 2.0;
+      const pct = Math.min(100, (spent / cap) * 100);
+      const fill = $('#spend-gauge-fill');
+      const pctEl = $('#spend-pct');
+      if (fill) fill.style.width = pct.toFixed(0) + '%';
+      if (pctEl) pctEl.textContent = pct.toFixed(0);
+    }
   }
 
   function bindQueue(data) {
@@ -199,6 +267,82 @@ const BelleEpoch = (() => {
         el.textContent = val;
       }
     });
+
+    // Render queue items on Belle page
+    renderQueueList(data);
+  }
+
+  function bindMetrics(data) {
+    $$('[data-metrics]').forEach(el => {
+      const key = el.getAttribute('data-metrics');
+      let val = data[key];
+      if (val == null) return;
+
+      let display;
+      if (key === 'usdcSettledToday') display = formatUsdc(val);
+      else display = val;
+
+      if (el.textContent !== String(display)) {
+        el.textContent = display;
+        el.classList.add('updating');
+        setTimeout(() => el.classList.remove('updating'), 400);
+      }
+    });
+  }
+
+  // --------------- Events List (Home hero) ---------------
+
+  function renderEventsList(events) {
+    const container = $('#events-list');
+    if (!container) return;
+
+    if (!events || events.length === 0) {
+      container.innerHTML = '<div style="text-align:center; color:var(--muted); padding:1rem; font-size:.82rem">No events yet</div>';
+      return;
+    }
+
+    container.innerHTML = events.slice(0, 6).map(e => `
+      <div class="event-row">
+        <span class="event-epoch">#${e.epochId}</span>
+        <span class="event-provider">${e.providerEns || e.provider || '\u2014'}</span>
+        <span class="event-price">${formatUsdc(e.clearingPrice)}</span>
+        <span class="event-time">${timeAgo(e.timestamp)}</span>
+      </div>
+    `).join('');
+  }
+
+  // --------------- Queue List (Belle page) ---------------
+
+  function renderQueueList(data) {
+    const container = $('#belle-queue-list');
+    if (!container) return;
+
+    const items = data && data.items ? data.items : [];
+    if (items.length === 0) {
+      container.innerHTML = '<div class="card" style="text-align:center; color:var(--muted); padding:2rem">No active queries. Belle is waiting.</div>';
+      return;
+    }
+
+    container.innerHTML = items.map(item => {
+      const typeBadge = item.type === 'bid-strategy' ? 'badge-active'
+        : item.type === 'treasury-planning' ? 'badge-active'
+        : item.type === 'negotiation' ? 'badge-warning'
+        : 'badge-warning';
+      const statusColor = item.status === 'processing' ? 'var(--primary)'
+        : item.status === 'resolved' ? 'var(--secondary)'
+        : 'var(--muted)';
+
+      return `
+        <div class="card queue-item" style="margin-bottom:.5rem">
+          <div style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap">
+            <span class="badge ${typeBadge}">${item.type || 'unknown'}</span>
+            <span style="font-family:var(--mono); font-size:.78rem; color:var(--muted)">Epoch #${item.epochId || '\u2014'}</span>
+            <span style="font-size:.78rem; color:${statusColor}">${item.status}</span>
+            <span style="font-size:.72rem; color:var(--muted)">Venice: ${item.veniceSessionOpen ? 'open' : 'closed'}</span>
+            <span style="font-size:.72rem; color:var(--muted); margin-left:auto">[REDACTED &mdash; returned once to winner]</span>
+          </div>
+        </div>`;
+    }).join('');
   }
 
   // --------------- Countdown ---------------
@@ -217,122 +361,17 @@ const BelleEpoch = (() => {
     }, COUNTDOWN_TICK);
   }
 
-  // --------------- Bid Stream ---------------
+  // --------------- UTC Clock ---------------
 
-  function renderBidStream(data) {
-    const container = $('#bid-stream');
-    if (!container) return;
-
-    // data comes as { epochId, bids: [...], count } from /feed/bids
-    const bids = data && data.bids ? data.bids : (Array.isArray(data) ? data : []);
-    if (bids.length === 0) {
-      container.innerHTML = '<div class="bid-entry" style="justify-content:center; color:var(--muted)">No bids this epoch</div>';
-      return;
-    }
-
-    const latest = bids.slice(0, 6);
-    const currentIds = latest.map(b => b.agentId + ':' + b.timestamp).join(',');
-    if (container.dataset.lastIds === currentIds) return;
-    container.dataset.lastIds = currentIds;
-
-    const rangeColors = { high: 'var(--primary)', mid: 'var(--secondary)', low: 'var(--muted)' };
-    container.innerHTML = latest.map(b => `
-      <div class="bid-entry">
-        <span class="bid-agent">${b.agentId}</span>
-        <span class="bid-amount" style="color:${rangeColors[b.bidRange] || 'var(--text)'}">${b.bidRange || '\u2014'}</span>
-        <span class="bid-time">${timeAgo(b.timestamp)}</span>
-      </div>
-    `).join('');
+  function startUTCClock() {
+    const el = $('#utc-clock');
+    if (!el) return;
+    setInterval(() => {
+      el.textContent = new Date().toISOString().slice(11, 19) + ' UTC';
+    }, 1000);
   }
 
-  // --------------- Charts ---------------
-
-  function renderPriceChart(canvasId, history) {
-    const canvas = typeof canvasId === 'string' ? $('#' + canvasId) : canvasId;
-    if (!canvas || !history || !history.length) return;
-
-    const ctx = canvas.getContext('2d');
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.parentElement.getBoundingClientRect();
-    canvas.width  = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    canvas.style.width  = rect.width + 'px';
-    canvas.style.height = rect.height + 'px';
-    ctx.scale(dpr, dpr);
-
-    const w = rect.width;
-    const h = rect.height;
-    const pad = { top: 20, right: 20, bottom: 30, left: 60 };
-    const plotW = w - pad.left - pad.right;
-    const plotH = h - pad.top - pad.bottom;
-
-    const prices = history.map(e => Number(e.clearingPrice || 0));
-    const epochs = history.map(e => e.epochId);
-    const min = Math.min(...prices) * 0.9;
-    const max = Math.max(...prices) * 1.1 || 1;
-
-    ctx.clearRect(0, 0, w, h);
-
-    // grid lines
-    ctx.strokeStyle = 'rgba(26,26,46,.6)';
-    ctx.lineWidth = 0.5;
-    for (let i = 0; i <= 4; i++) {
-      const y = pad.top + (plotH / 4) * i;
-      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
-    }
-
-    // y-axis labels
-    ctx.fillStyle = '#8888a0';
-    ctx.font = '11px system-ui, sans-serif';
-    ctx.textAlign = 'right';
-    for (let i = 0; i <= 4; i++) {
-      const y = pad.top + (plotH / 4) * i;
-      const val = max - ((max - min) / 4) * i;
-      ctx.fillText(val.toFixed(4), pad.left - 8, y + 4);
-    }
-
-    // x-axis labels
-    ctx.textAlign = 'center';
-    const step = Math.max(1, Math.floor(prices.length / 6));
-    for (let i = 0; i < prices.length; i += step) {
-      const x = pad.left + (plotW / (prices.length - 1 || 1)) * i;
-      ctx.fillText('#' + (epochs[i] || i), x, h - 8);
-    }
-
-    if (prices.length < 2) return;
-
-    // line
-    ctx.beginPath();
-    ctx.strokeStyle = '#00d4aa';
-    ctx.lineWidth = 2;
-    ctx.lineJoin = 'round';
-    prices.forEach((p, i) => {
-      const x = pad.left + (plotW / (prices.length - 1)) * i;
-      const y = pad.top + plotH - ((p - min) / (max - min)) * plotH;
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    // gradient fill
-    const lastX = pad.left + plotW;
-    const lastY = pad.top + plotH - ((prices[prices.length - 1] - min) / (max - min)) * plotH;
-    ctx.lineTo(lastX, pad.top + plotH);
-    ctx.lineTo(pad.left, pad.top + plotH);
-    ctx.closePath();
-    const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + plotH);
-    grad.addColorStop(0, 'rgba(0,212,170,.15)');
-    grad.addColorStop(1, 'rgba(0,212,170,0)');
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // dots
-    ctx.fillStyle = '#00d4aa';
-    prices.forEach((p, i) => {
-      const x = pad.left + (plotW / (prices.length - 1)) * i;
-      const y = pad.top + plotH - ((p - min) / (max - min)) * plotH;
-      ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
-    });
-  }
+  // --------------- Sparkline ---------------
 
   function renderSparkline(svgEl, dataPoints) {
     if (!svgEl || !dataPoints || dataPoints.length < 2) return;
@@ -346,6 +385,94 @@ const BelleEpoch = (() => {
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     }).join(' ');
     svgEl.innerHTML = `<polyline points="${points}"/>`;
+  }
+
+  // --------------- Home Marketplace ---------------
+
+  async function renderHomeMarketplace() {
+    const grid = $('#home-marketplace-grid');
+    if (!grid) return;
+
+    const providers = await fetchProviders();
+    if (!providers || !Array.isArray(providers) || providers.length === 0) {
+      grid.innerHTML = '<div class="card" style="text-align:center; color:var(--muted); padding:3rem">No providers registered yet.</div>';
+      appendGhostCard(grid);
+      return;
+    }
+
+    grid.innerHTML = '';
+
+    for (const p of providers) {
+      const card = document.createElement('div');
+      card.className = 'card provider-card';
+      if (p.id === 'belle') card.classList.add('featured');
+
+      const initial = (p.name || p.ens || p.id || '?')[0].toUpperCase();
+      const verified = p.selfVerified ? '<span class="badge badge-verified">Self Verified</span>' : '';
+      const featured = p.id === 'belle' ? '<span class="badge badge-warning" style="font-size:.6rem">Featured</span>' : '';
+
+      // Check if human capacity
+      const isHuman = p.resource === 'human-capacity' || p.epochMs >= 60000;
+      const humanBadges = isHuman
+        ? '<span class="badge badge-verified" style="font-size:.6rem">Self Verified</span><span class="badge badge-online" style="font-size:.6rem">Online</span>'
+        : '';
+
+      card.innerHTML = `
+        <div class="provider-header">
+          <div class="provider-avatar">${initial}</div>
+          <div>
+            <h3 style="margin-bottom:.15rem">${p.name || p.ens || p.id}</h3>
+            <span style="font-size:.78rem; color:var(--muted)">${p.resource || '\u2014'}</span>
+            ${featured}${verified}
+          </div>
+        </div>
+        <div class="provider-stats">
+          <div>
+            <div class="provider-stat-label">Clearing Price</div>
+            <div class="provider-stat-value" style="color:var(--primary)">${formatUsdc(p.clearingPrice)}</div>
+          </div>
+          <div>
+            <div class="provider-stat-label">Capacity</div>
+            <div class="provider-stat-value">${p.capacity != null ? p.capacity : '\u2014'}</div>
+          </div>
+          <div>
+            <div class="provider-stat-label">Win Rate</div>
+            <div class="provider-stat-value">${formatPercent(p.winRate)}</div>
+          </div>
+          <div>
+            <div class="provider-stat-label">Slots Filled</div>
+            <div class="provider-stat-value">${p.slotsFilled != null ? p.slotsFilled : '\u2014'}</div>
+          </div>
+        </div>
+        <div class="sparkline"><svg viewBox="0 0 64 24" data-sparkline-id="${p.id}"></svg></div>
+        <button class="btn btn-primary btn-sm" style="width:100%; margin-top:.75rem" onclick="showPage('belle')">Bid Now &rarr;</button>
+      `;
+
+      grid.appendChild(card);
+
+      // load sparkline
+      fetchProviderHistory(p.id).then(hist => {
+        if (!hist || !Array.isArray(hist)) return;
+        const svg = $(`[data-sparkline-id="${p.id}"]`);
+        if (svg) renderSparkline(svg, hist.map(h => Number(h.clearingPrice || 0)));
+      });
+    }
+
+    appendGhostCard(grid);
+  }
+
+  function appendGhostCard(grid) {
+    const ghost = document.createElement('div');
+    ghost.className = 'card provider-card ghost-card';
+    ghost.innerHTML = `
+      <div style="text-align:center; padding:2rem 1rem">
+        <h3 style="color:var(--muted)">Your service here</h3>
+        <div class="terminal" style="font-size:.78rem; margin:.75rem 0">curl -s belleepoch.xyz/skill.md | launch</div>
+        <p style="font-size:.78rem; color:var(--muted)">Click to register</p>
+      </div>
+    `;
+    ghost.addEventListener('click', () => showPage('agents'));
+    grid.appendChild(ghost);
   }
 
   // --------------- Simulator ---------------
@@ -415,7 +542,6 @@ const BelleEpoch = (() => {
     if (!container || !btn) return;
     btn.disabled = true;
 
-    // clear previous
     container.querySelectorAll('.console-line').forEach(l => l.remove());
 
     const delay = ms => new Promise(r => setTimeout(r, ms));
@@ -434,7 +560,6 @@ const BelleEpoch = (() => {
 
     const bidAmount = feed ? (Number(feed.clearingPrice) * 1.2).toFixed(6) : '0.005000';
     consolePrint(container, `Submitting bid to POST /bid (type: ${queryType}, amount: ${bidAmount})\u2026`, 'info');
-    // Attempt real POST with correct payload
     const currentEpoch = feed ? feed.epochId : 0;
     try {
       const res = await fetch(API + '/bid', {
@@ -479,7 +604,6 @@ const BelleEpoch = (() => {
     await delay(400);
 
     consolePrint(container, `Querying Venice AI (type: ${queryType})\u2026`, 'info');
-    // Attempt real query
     try {
       const qRes = await fetch(API + '/query', {
         method: 'POST',
@@ -522,141 +646,6 @@ const BelleEpoch = (() => {
     if (section) section.scrollIntoView({ behavior: 'smooth' });
   }
 
-  // --------------- Ticker ---------------
-
-  async function renderTicker() {
-    const inner = $('#ticker-inner');
-    if (!inner) return;
-
-    const providers = await fetchProviders();
-    if (!providers || !Array.isArray(providers) || providers.length === 0) {
-      inner.innerHTML = '<div class="ticker-item"><span class="ticker-name">No providers online</span></div>';
-      return;
-    }
-
-    // duplicate for seamless scroll
-    const items = providers.map(p => `
-      <div class="ticker-item">
-        <span class="ticker-name">${p.name || p.id}</span>
-        <span class="ticker-resource">${p.resource || ''}</span>
-        <span class="ticker-price">${formatUsdc(p.clearingPrice)}</span>
-        ${formatDelta(p.clearingPrice, p.previousPrice)}
-      </div>
-    `).join('');
-
-    inner.innerHTML = items + items; // doubled for infinite scroll
-  }
-
-  // --------------- Marketplace ---------------
-
-  async function renderMarketplace() {
-    const grid = $('#marketplace-grid');
-    if (!grid) return;
-
-    const providers = await fetchProviders();
-    if (!providers || !Array.isArray(providers) || providers.length === 0) {
-      grid.innerHTML = '<div class="card" style="text-align:center; color:var(--muted); padding:3rem">No providers registered yet.</div>';
-      return;
-    }
-
-    grid.innerHTML = '';
-
-    for (const p of providers) {
-      const card = document.createElement('div');
-      card.className = 'card provider-card';
-
-      const initial = (p.name || p.id || '?')[0].toUpperCase();
-      const verified = p.selfVerified ? '<span class="badge badge-verified">Self Verified</span>' : '';
-
-      card.innerHTML = `
-        <div class="provider-header">
-          <div class="provider-avatar">${initial}</div>
-          <div>
-            <h3 style="margin-bottom:.15rem">${p.name || p.id}</h3>
-            <span style="font-size:.78rem; color:var(--muted)">${p.resource || '\u2014'}</span>
-            ${verified}
-          </div>
-        </div>
-        <div class="provider-stats">
-          <div>
-            <div class="provider-stat-label">Clearing Price</div>
-            <div class="provider-stat-value" style="color:var(--primary)">${formatUsdc(p.clearingPrice)}</div>
-          </div>
-          <div>
-            <div class="provider-stat-label">Capacity</div>
-            <div class="provider-stat-value">${p.capacity != null ? p.capacity : '\u2014'}</div>
-          </div>
-          <div>
-            <div class="provider-stat-label">Win Rate</div>
-            <div class="provider-stat-value">${formatPercent(p.winRate)}</div>
-          </div>
-          <div>
-            <div class="provider-stat-label">Slots Filled</div>
-            <div class="provider-stat-value">${p.slotsFilled != null ? p.slotsFilled : '\u2014'}</div>
-          </div>
-        </div>
-        <div class="sparkline"><svg viewBox="0 0 64 24" data-sparkline-id="${p.id}"></svg></div>
-        <button class="btn btn-primary btn-sm" style="width:100%; margin-top:.75rem" onclick="window.location.href='belle.html'">Bid Now</button>
-      `;
-
-      grid.appendChild(card);
-
-      // load sparkline
-      fetchProviderHistory(p.id).then(hist => {
-        if (!hist || !Array.isArray(hist)) return;
-        const svg = $(`[data-sparkline-id="${p.id}"]`);
-        if (svg) renderSparkline(svg, hist.map(h => Number(h.clearingPrice || 0)));
-      });
-    }
-  }
-
-  // --------------- Provider Registration ---------------
-
-  function initRegistrationForm() {
-    const form = $('#register-form');
-    if (!form) return;
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const msg = $('#register-message');
-      msg.className = 'form-message';
-      msg.style.display = 'none';
-
-      const payload = {
-        agentId:              $('#reg-agent-id').value.trim(),
-        resource:             $('#reg-resource').value.trim(),
-        capacity:             parseInt($('#reg-capacity').value, 10),
-        selfAttestationProof: $('#reg-attestation').value.trim() || 'self-zk-' + Date.now().toString(36),
-      };
-
-      try {
-        const res = await fetch(API + '/providers/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const json = await res.json().catch(() => ({}));
-
-        if (res.ok) {
-          msg.className = 'form-message success';
-          msg.textContent = 'Registered. Your provider will appear in the marketplace within 30 seconds.';
-          msg.style.display = 'block';
-          form.reset();
-          // refresh marketplace
-          setTimeout(() => { renderMarketplace(); renderTicker(); }, 5000);
-        } else {
-          msg.className = 'form-message error';
-          msg.textContent = json.error || 'Registration failed. Check inputs and try again.';
-          msg.style.display = 'block';
-        }
-      } catch (err) {
-        msg.className = 'form-message error';
-        msg.textContent = 'Network error: ' + err.message;
-        msg.style.display = 'block';
-      }
-    });
-  }
-
   // --------------- Belle Epoch History Table ---------------
 
   async function renderBelleEpochTable() {
@@ -682,99 +671,224 @@ const BelleEpoch = (() => {
     }).join('');
   }
 
-  // --------------- Page Initializers ---------------
+  // --------------- skill.md Rendering ---------------
 
-  function initDashboard() {
-    // initial fetches
-    fetchFeed();
-    fetchBids();
-    fetchAgentData('belle');
-    fetchQueue();
+  async function loadSkillMd() {
+    const container = $('#skillmd-content');
+    if (!container) return;
 
-    // chart
-    fetchHistory(12).then(hist => {
-      if (hist) renderPriceChart('price-chart-canvas', hist);
-    });
+    try {
+      const res = await fetch(API + '/skill.md');
+      const text = await res.text();
+      container.innerHTML = renderMarkdown(text);
+    } catch {
+      container.innerHTML = '<p style="color:var(--muted)">Failed to load skill.md</p>';
+    }
 
-    // polling
-    setInterval(fetchFeed, FEED_POLL_MS);
-    setInterval(fetchBids, BIDS_POLL_MS);
-    setInterval(() => { fetchAgentData('belle'); fetchQueue(); }, FEED_POLL_MS * 2);
-
-    // countdown
-    startCountdown();
-
-    // simulator
-    const simBtn = $('#btn-run-simulator');
-    if (simBtn) simBtn.addEventListener('click', runSimulator);
-
-    // re-render chart periodically
-    setInterval(() => {
-      fetchHistory(12).then(hist => {
-        if (hist) renderPriceChart('price-chart-canvas', hist);
+    // Nav link click handlers
+    $$('.skillmd-nav-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        $$('.skillmd-nav-link').forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+        const sec = link.dataset.skillsec;
+        const target = container.querySelector(`[data-section="${sec}"]`);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
-    }, FEED_POLL_MS * 5);
+    });
   }
 
-  function initBellePage() {
-    fetchFeed();
-    fetchAgentData('belle');
-    renderBelleEpochTable();
+  function renderMarkdown(md) {
+    // Simple markdown renderer for skill.md
+    const sectionMap = {
+      'Overview': 'overview',
+      'Quick Start': 'quick-start',
+      'Register as a Provider': 'register',
+      'Endpoints Reference': 'endpoints',
+      'Identity': 'identity',
+      'Settlement': 'settlement',
+      'Network': 'network',
+    };
 
-    setInterval(fetchFeed, FEED_POLL_MS);
-    setInterval(() => fetchAgentData('belle'), FEED_POLL_MS * 2);
+    let html = '';
+    let inCodeBlock = false;
+    let codeContent = '';
+    const lines = md.split('\n');
 
-    // console
-    const btn = $('#btn-run-console');
-    if (btn) {
-      btn.addEventListener('click', () => {
-        const type = $('#console-query-type').value;
-        runConsoleDemo(type);
+    for (const line of lines) {
+      if (line.startsWith('```')) {
+        if (inCodeBlock) {
+          html += `<pre class="code-block"><code>${escapeHtml(codeContent.trim())}</code></pre>`;
+          codeContent = '';
+          inCodeBlock = false;
+        } else {
+          inCodeBlock = true;
+        }
+        continue;
+      }
+
+      if (inCodeBlock) {
+        codeContent += line + '\n';
+        continue;
+      }
+
+      if (line.startsWith('# ')) {
+        html += `<h2 class="skillmd-h1">${escapeHtml(line.slice(2))}</h2>`;
+      } else if (line.startsWith('## ')) {
+        const title = line.slice(3);
+        const secId = sectionMap[title] || title.toLowerCase().replace(/\s+/g, '-');
+        html += `<h3 class="skillmd-h2" data-section="${secId}">${escapeHtml(title)}</h3>`;
+      } else if (line.startsWith('### ')) {
+        html += `<h4 class="skillmd-h3">${escapeHtml(line.slice(4))}</h4>`;
+      } else if (line.startsWith('| ')) {
+        // Table row
+        const cells = line.split('|').filter(c => c.trim()).map(c => c.trim());
+        if (cells.every(c => /^-+$/.test(c))) {
+          // separator row, skip
+        } else if (html.indexOf('<table') === -1 || html.lastIndexOf('</table>') > html.lastIndexOf('<table')) {
+          // Start new table
+          html += '<table class="table skillmd-table"><thead><tr>' + cells.map(c => `<th>${escapeHtml(c)}</th>`).join('') + '</tr></thead><tbody>';
+        } else {
+          html += '<tr>' + cells.map(c => `<td>${escapeHtml(c)}</td>`).join('') + '</tr>';
+        }
+      } else if (line.trim() === '' && html.includes('<tbody>') && !html.endsWith('</table>')) {
+        html += '</tbody></table>';
+      } else if (line.startsWith('- ')) {
+        html += `<div class="skillmd-list-item">&bull; ${escapeHtml(line.slice(2))}</div>`;
+      } else if (line.trim() === '') {
+        html += '<div style="height:.75rem"></div>';
+      } else {
+        // Inline code
+        const processed = escapeHtml(line).replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+        html += `<p class="skillmd-p">${processed}</p>`;
+      }
+    }
+
+    // Close any open table
+    if (html.includes('<tbody>') && !html.endsWith('</table>')) {
+      html += '</tbody></table>';
+    }
+
+    return html;
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // --------------- Agent Registration ---------------
+
+  function initAgentRegistration() {
+    // Live card preview updates
+    const ensInput = $('#reg-ens');
+    const resourceSelect = $('#reg-resource-type');
+    const slotsInput = $('#reg-slots');
+
+    function updatePreview() {
+      const name = ensInput ? ensInput.value.trim() : '';
+      const resource = resourceSelect ? resourceSelect.value : '';
+      const slots = slotsInput ? slotsInput.value : '3';
+
+      const previewName = $('#reg-preview-name');
+      const previewResource = $('#reg-preview-resource');
+      const previewAvatar = $('#reg-preview-avatar');
+      const previewSlots = $('#reg-preview-slots');
+
+      if (previewName) previewName.textContent = name || 'your-agent.base.eth';
+      if (previewResource) previewResource.textContent = resource || 'Select a resource type';
+      if (previewAvatar) previewAvatar.textContent = (name || '?')[0].toUpperCase();
+      if (previewSlots) previewSlots.textContent = slots;
+    }
+
+    if (ensInput) ensInput.addEventListener('input', updatePreview);
+    if (resourceSelect) resourceSelect.addEventListener('change', updatePreview);
+    if (slotsInput) slotsInput.addEventListener('input', updatePreview);
+
+    // Terminal CTA copy-to-clipboard
+    const termCta = $('#home-terminal-cta');
+    if (termCta) {
+      termCta.style.cursor = 'pointer';
+      termCta.addEventListener('click', () => {
+        navigator.clipboard.writeText('curl -s belleepoch.xyz/skill.md | launch').then(() => {
+          const cmd = termCta.querySelector('.terminal-command');
+          const original = cmd.textContent;
+          cmd.textContent = 'Copied!';
+          cmd.style.color = 'var(--primary)';
+          setTimeout(() => { cmd.textContent = original; cmd.style.color = ''; }, 1500);
+        });
+      });
+    }
+
+    // MetaMask delegation button
+    const mmBtn = $('#btn-mm-delegate');
+    if (mmBtn) {
+      mmBtn.addEventListener('click', async () => {
+        if (!window.ethereum) {
+          alert('MetaMask is required for delegation.');
+          return;
+        }
+        try {
+          await window.ethereum.request({ method: 'eth_requestAccounts' });
+          alert('MetaMask delegation configured (ERC-7715). In production, this would call wallet_grantPermissions.');
+        } catch (e) {
+          console.error('MetaMask error:', e);
+        }
+      });
+    }
+
+    // Launch CCA button
+    const launchBtn = $('#btn-launch-cca');
+    if (launchBtn) {
+      launchBtn.addEventListener('click', async () => {
+        const msg = $('#agent-register-message');
+        msg.className = 'form-message';
+        msg.style.display = 'none';
+
+        const agentId = $('#reg-ens').value.trim();
+        const resource = $('#reg-resource-type').value;
+        const capacity = parseInt($('#reg-slots').value, 10);
+
+        if (!agentId || !resource) {
+          msg.className = 'form-message error';
+          msg.textContent = 'Please fill in ENS and resource type.';
+          msg.style.display = 'block';
+          return;
+        }
+
+        try {
+          const res = await fetch(API + '/providers/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              agentId,
+              resource,
+              capacity: capacity || 3,
+              epochMs: parseInt($('#reg-epoch-dur').value, 10) || 5000,
+              selfAttestationProof: 'self-zk-' + Date.now().toString(36),
+            })
+          });
+          const json = await res.json().catch(() => ({}));
+
+          if (res.ok) {
+            msg.className = 'form-message success';
+            msg.textContent = 'Registered! Your provider will appear in the marketplace within 30 seconds.';
+            msg.style.display = 'block';
+            setTimeout(() => renderHomeMarketplace(), 5000);
+          } else {
+            msg.className = 'form-message error';
+            msg.textContent = json.error || 'Registration failed.';
+            msg.style.display = 'block';
+          }
+        } catch (err) {
+          msg.className = 'form-message error';
+          msg.textContent = 'Network error: ' + err.message;
+          msg.style.display = 'block';
+        }
       });
     }
   }
 
-  function initLaunchpad() {
-    fetchFeed();
-    renderTicker();
-    renderMarketplace();
-    initRegistrationForm();
-
-    setInterval(renderTicker, TICKER_POLL_MS);
-    setInterval(renderMarketplace, FEED_POLL_MS * 5);
-  }
-
   // --------------- Humans Page ---------------
-
-  let connectedWallet = null;
-  let humansFilterCategory = 'all';
-  let humansFilterOnline = false;
-  let humansFilterChain = null;
-
-  const CATEGORY_ICONS = {
-    'physician': '\u{1FA7A}',
-    'attorney': '\u2696',
-    'security-researcher': '\u{1F6E1}',
-    'financial-analyst': '\u{1F4C8}',
-    'data-scientist': '\u{1F9EA}',
-    'other': '\u{1F464}',
-  };
-
-  const CATEGORY_LABELS = {
-    'physician': 'Physician',
-    'attorney': 'Attorney',
-    'security-researcher': 'Security Researcher',
-    'financial-analyst': 'Financial Analyst',
-    'data-scientist': 'Data Scientist',
-    'other': 'Other',
-  };
-
-  function countryCodeToFlag(code) {
-    if (!code || code.length !== 3) return '';
-    // ISO 3166-1 alpha-3 to alpha-2 approximation (first two chars work for most)
-    const a2 = code.slice(0, 2).toUpperCase();
-    return String.fromCodePoint(...[...a2].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
-  }
 
   async function connectWallet() {
     if (!window.ethereum) {
@@ -791,10 +905,6 @@ const BelleEpoch = (() => {
     }
   }
 
-  async function fetchHumanProviders() {
-    return fetchJson('/humans/providers');
-  }
-
   function renderHumanProviders(providers) {
     const grid = $('#humans-grid');
     if (!grid) return;
@@ -808,7 +918,6 @@ const BelleEpoch = (() => {
       return;
     }
 
-    // Apply filters
     let filtered = providers;
     if (humansFilterCategory !== 'all') {
       filtered = filtered.filter(p => p.category === humansFilterCategory);
@@ -895,7 +1004,6 @@ const BelleEpoch = (() => {
       if (!btn) return;
 
       if (btn.dataset.filter) {
-        // category filter
         humansFilterCategory = btn.dataset.filter;
         humansFilterOnline = false;
         humansFilterChain = null;
@@ -917,13 +1025,11 @@ const BelleEpoch = (() => {
         }
       }
 
-      // Re-render with current data
       fetchHumanProviders().then(p => renderHumanProviders(p));
     });
   }
 
   function initHumansRegistration() {
-    // Wallet connect
     const btnConnect = $('#btn-connect-wallet');
     if (btnConnect) {
       btnConnect.addEventListener('click', async () => {
@@ -933,7 +1039,6 @@ const BelleEpoch = (() => {
           $('#wallet-connected').style.display = 'block';
           $('#connected-address').textContent = truncateAddr(addr);
 
-          // Show QR placeholder (Self SDK would render here)
           const qrContainer = $('#self-qr-container');
           qrContainer.innerHTML = `
             <div style="text-align:center">
@@ -945,7 +1050,6 @@ const BelleEpoch = (() => {
               <button class="btn btn-secondary btn-sm" id="btn-mock-verify" style="margin-top:1rem">Simulate Self Verification (Dev)</button>
             </div>`;
 
-          // Mock verify button for development
           const btnMock = $('#btn-mock-verify');
           if (btnMock) {
             btnMock.addEventListener('click', async () => {
@@ -953,7 +1057,6 @@ const BelleEpoch = (() => {
               statusEl.textContent = 'Verifying...';
               statusEl.style.color = 'var(--primary)';
 
-              // Simulate Self callback by posting mock data to /humans/verify
               try {
                 await fetch(API + '/humans/verify', {
                   method: 'POST',
@@ -967,7 +1070,6 @@ const BelleEpoch = (() => {
                 });
               } catch (e) { /* ignore */ }
 
-              // For dev: also directly mark as verified via register attempt
               statusEl.textContent = 'Verified! Proceeding to profile...';
               setTimeout(() => advanceRegStep(2), 800);
             });
@@ -976,7 +1078,6 @@ const BelleEpoch = (() => {
       });
     }
 
-    // Bio char counter
     const bioInput = $('#human-bio');
     if (bioInput) {
       bioInput.addEventListener('input', () => {
@@ -985,7 +1086,6 @@ const BelleEpoch = (() => {
       });
     }
 
-    // Step 2 -> Step 3
     const btnStep3 = $('#btn-to-step-3');
     if (btnStep3) {
       btnStep3.addEventListener('click', () => {
@@ -997,7 +1097,6 @@ const BelleEpoch = (() => {
       });
     }
 
-    // Final registration
     const btnRegister = $('#btn-register-human');
     if (btnRegister) {
       btnRegister.addEventListener('click', async () => {
@@ -1040,12 +1139,9 @@ const BelleEpoch = (() => {
           const json = await res.json().catch(() => ({}));
 
           if (res.ok && json.success) {
-            // Show success
             $('#reg-step-3').style.display = 'none';
             $('#reg-success').style.display = 'block';
-            // Update step indicators
             $$('.reg-step-dot').forEach(d => d.classList.add('done'));
-            // Refresh directory
             setTimeout(() => {
               fetchHumanProviders().then(p => renderHumanProviders(p));
             }, 2000);
@@ -1067,12 +1163,10 @@ const BelleEpoch = (() => {
   }
 
   function advanceRegStep(step) {
-    // Hide all panels
     for (let i = 1; i <= 3; i++) {
       const panel = $(`#reg-step-${i}`);
       if (panel) panel.style.display = i === step ? 'block' : 'none';
     }
-    // Update indicators
     $$('.reg-step-dot').forEach(d => {
       const s = parseInt(d.dataset.regStep);
       d.classList.toggle('active', s === step);
@@ -1080,34 +1174,103 @@ const BelleEpoch = (() => {
     });
   }
 
+  // --------------- Page Initializers ---------------
+
+  function initHome() {
+    fetchFeed();
+    fetchMetrics();
+    fetchEvents();
+    renderHomeMarketplace();
+    startCountdown();
+    startUTCClock();
+
+    // Simulator
+    const simBtn = $('#btn-run-simulator');
+    if (simBtn) simBtn.addEventListener('click', runSimulator);
+
+    // Copy terminal CTA
+    const termCta = $('#home-terminal-cta');
+    if (termCta) {
+      termCta.style.cursor = 'pointer';
+      termCta.addEventListener('click', () => {
+        navigator.clipboard.writeText('curl -s belleepoch.xyz/skill.md | launch').then(() => {
+          const cmd = termCta.querySelector('.terminal-command');
+          const original = cmd.textContent;
+          cmd.textContent = '  Copied!';
+          cmd.style.color = '#33e8c0';
+          setTimeout(() => { cmd.textContent = original; cmd.style.color = ''; }, 1500);
+        });
+      });
+    }
+
+    // Polling
+    setInterval(fetchFeed, FEED_POLL_MS);
+    setInterval(fetchMetrics, FEED_POLL_MS * 5);
+    setInterval(fetchEvents, FEED_POLL_MS * 3);
+    setInterval(renderHomeMarketplace, FEED_POLL_MS * 10);
+  }
+
+  function initAgents() {
+    loadSkillMd();
+    initAgentRegistration();
+  }
+
   function initHumans() {
-    // Load providers
     fetchHumanProviders().then(p => renderHumanProviders(p));
-
-    // Filters
     initHumansFilters();
-
-    // Registration flow
     initHumansRegistration();
 
-    // Poll providers
     setInterval(() => {
       fetchHumanProviders().then(p => renderHumanProviders(p));
     }, FEED_POLL_MS * 5);
   }
 
+  function initBelle() {
+    fetchFeed();
+    fetchAgentData('belle');
+    fetchQueue();
+    renderBelleEpochTable();
+
+    setInterval(fetchFeed, FEED_POLL_MS);
+    setInterval(() => fetchAgentData('belle'), FEED_POLL_MS * 2);
+    setInterval(fetchQueue, FEED_POLL_MS * 2);
+
+    // Console
+    const btn = $('#btn-run-console');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        const type = $('#console-query-type').value;
+        runConsoleDemo(type);
+      });
+    }
+  }
+
+  // --------------- Main Init ---------------
+
+  function init() {
+    // Handle hash routing
+    const hash = window.location.hash.slice(1);
+    const validPages = ['home', 'agents', 'humans', 'belle'];
+    const startPage = validPages.includes(hash) ? hash : 'home';
+
+    showPage(startPage);
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', () => {
+      const h = window.location.hash.slice(1);
+      if (validPages.includes(h) && h !== currentPage) {
+        showPage(h);
+      }
+    });
+  }
+
   // --------------- Public API ---------------
 
   return {
-    initDashboard,
-    initBellePage,
-    initLaunchpad,
-    initHumans,
+    init,
     scrollToConsole,
-    // expose utilities for console usage
     formatUsdc,
     formatPercent,
-    formatDelta
   };
 
 })();
