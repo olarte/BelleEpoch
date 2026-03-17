@@ -88,10 +88,10 @@ nav#nav {
   font-weight: 900;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--white);
+  color: #ffffff;
   text-decoration: none;
 }
-.nav-logo em { color: var(--redhi); font-style: normal; }
+.nav-logo em { color: #ffffff; font-style: italic; }
 
 .nav-tabs {
   display: flex;
