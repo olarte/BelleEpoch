@@ -744,12 +744,365 @@ const BelleEpoch = (() => {
     setInterval(renderMarketplace, FEED_POLL_MS * 5);
   }
 
+  // --------------- Humans Page ---------------
+
+  let connectedWallet = null;
+  let humansFilterCategory = 'all';
+  let humansFilterOnline = false;
+  let humansFilterChain = null;
+
+  const CATEGORY_ICONS = {
+    'physician': '\u{1FA7A}',
+    'attorney': '\u2696',
+    'security-researcher': '\u{1F6E1}',
+    'financial-analyst': '\u{1F4C8}',
+    'data-scientist': '\u{1F9EA}',
+    'other': '\u{1F464}',
+  };
+
+  const CATEGORY_LABELS = {
+    'physician': 'Physician',
+    'attorney': 'Attorney',
+    'security-researcher': 'Security Researcher',
+    'financial-analyst': 'Financial Analyst',
+    'data-scientist': 'Data Scientist',
+    'other': 'Other',
+  };
+
+  function countryCodeToFlag(code) {
+    if (!code || code.length !== 3) return '';
+    // ISO 3166-1 alpha-3 to alpha-2 approximation (first two chars work for most)
+    const a2 = code.slice(0, 2).toUpperCase();
+    return String.fromCodePoint(...[...a2].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+  }
+
+  async function connectWallet() {
+    if (!window.ethereum) {
+      alert('MetaMask or a compatible wallet is required.');
+      return null;
+    }
+    try {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      connectedWallet = accounts[0];
+      return connectedWallet;
+    } catch (err) {
+      console.error('Wallet connect failed:', err);
+      return null;
+    }
+  }
+
+  async function fetchHumanProviders() {
+    return fetchJson('/humans/providers');
+  }
+
+  function renderHumanProviders(providers) {
+    const grid = $('#humans-grid');
+    if (!grid) return;
+
+    if (!providers || providers.length === 0) {
+      grid.innerHTML = `
+        <div class="card" style="text-align:center; color:var(--muted); padding:3rem; grid-column:1/-1">
+          <p style="margin-bottom:1rem">No providers registered yet. Be the first.</p>
+          <a href="#register-section" class="btn btn-primary btn-sm">Register now &uarr;</a>
+        </div>`;
+      return;
+    }
+
+    // Apply filters
+    let filtered = providers;
+    if (humansFilterCategory !== 'all') {
+      filtered = filtered.filter(p => p.category === humansFilterCategory);
+    }
+    if (humansFilterOnline) {
+      filtered = filtered.filter(p => p.online);
+    }
+    if (humansFilterChain) {
+      filtered = filtered.filter(p => p.chain === humansFilterChain);
+    }
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="card" style="text-align:center; color:var(--muted); padding:3rem; grid-column:1/-1">No providers match this filter.</div>';
+      return;
+    }
+
+    grid.innerHTML = filtered.map(p => {
+      const icon = CATEGORY_ICONS[p.category] || CATEGORY_ICONS.other;
+      const label = CATEGORY_LABELS[p.category] || p.category;
+      const flag = countryCodeToFlag(p.nationality);
+      const onlineBadge = p.online
+        ? '<span class="badge badge-online">Online</span>'
+        : '<span class="badge badge-offline">Offline</span>';
+      const chainBadge = `<span class="badge badge-chain">${(p.chain || 'celo').charAt(0).toUpperCase() + (p.chain || 'celo').slice(1)}</span>`;
+      const credential = p.credentialClaim
+        ? `<div class="credential-line">\u26A0 Self-attested: ${p.credentialClaim}</div>`
+        : '';
+      const linkedin = p.linkedinUrl
+        ? `<a href="${p.linkedinUrl}" target="_blank" rel="noopener" style="font-size:.78rem">LinkedIn</a>`
+        : '';
+      const price = p.currentClearingPrice != null ? formatUsdc(p.currentClearingPrice) : '\u2014';
+      const epochLabel = p.epochMs >= 3600000 ? (p.epochMs / 3600000) + 'h epochs'
+        : p.epochMs >= 60000 ? (p.epochMs / 60000) + ' min epochs'
+        : (p.epochMs / 1000) + 's epochs';
+
+      return `
+        <div class="card human-card">
+          <div class="human-card-header">
+            <div class="category-icon">${icon}</div>
+            <div style="flex:1; min-width:0">
+              <div style="display:flex; align-items:center; gap:.5rem; flex-wrap:wrap">
+                <span style="font-weight:600; font-size:.9rem">${label}</span>
+                ${flag ? '<span class="flag-emoji">' + flag + '</span>' : ''}
+              </div>
+              <div class="human-badges">
+                <span class="badge badge-verified">Self Verified</span>
+                ${onlineBadge}
+                ${chainBadge}
+              </div>
+            </div>
+          </div>
+          <div class="human-bio">${p.bio || '\u2014'}</div>
+          ${credential}
+          ${linkedin}
+          <div class="human-stats">
+            <div>
+              <div class="human-stat-label">Clearing Price</div>
+              <div class="human-stat-value" style="color:var(--primary)">${price}</div>
+            </div>
+            <div>
+              <div class="human-stat-label">Epoch Duration</div>
+              <div class="human-stat-value">${epochLabel}</div>
+            </div>
+            <div>
+              <div class="human-stat-label">Slots</div>
+              <div class="human-stat-value">${p.capacitySlots || 1}</div>
+            </div>
+            <div>
+              <div class="human-stat-label">Epochs Served</div>
+              <div class="human-stat-value">${p.epochsServed || 0}</div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" style="width:100%; margin-top:.5rem">Bid now &rarr;</button>
+        </div>`;
+    }).join('');
+  }
+
+  function initHumansFilters() {
+    const bar = $('#humans-filter-bar');
+    if (!bar) return;
+
+    bar.addEventListener('click', (e) => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+
+      if (btn.dataset.filter) {
+        // category filter
+        humansFilterCategory = btn.dataset.filter;
+        humansFilterOnline = false;
+        humansFilterChain = null;
+        bar.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        bar.querySelectorAll('[data-filter-online], [data-filter-chain]').forEach(b => b.classList.remove('active'));
+      } else if (btn.dataset.filterOnline) {
+        humansFilterOnline = !humansFilterOnline;
+        btn.classList.toggle('active', humansFilterOnline);
+      } else if (btn.dataset.filterChain) {
+        const chain = btn.dataset.filterChain;
+        if (humansFilterChain === chain) {
+          humansFilterChain = null;
+          btn.classList.remove('active');
+        } else {
+          humansFilterChain = chain;
+          bar.querySelectorAll('[data-filter-chain]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        }
+      }
+
+      // Re-render with current data
+      fetchHumanProviders().then(p => renderHumanProviders(p));
+    });
+  }
+
+  function initHumansRegistration() {
+    // Wallet connect
+    const btnConnect = $('#btn-connect-wallet');
+    if (btnConnect) {
+      btnConnect.addEventListener('click', async () => {
+        const addr = await connectWallet();
+        if (addr) {
+          $('#wallet-not-connected').style.display = 'none';
+          $('#wallet-connected').style.display = 'block';
+          $('#connected-address').textContent = truncateAddr(addr);
+
+          // Show QR placeholder (Self SDK would render here)
+          const qrContainer = $('#self-qr-container');
+          qrContainer.innerHTML = `
+            <div style="text-align:center">
+              <div style="width:200px; height:200px; border:2px dashed var(--card-border); border-radius:12px; display:flex; align-items:center; justify-content:center; margin:0 auto; color:var(--muted); font-size:.82rem; padding:1rem">
+                Self QR Code<br>
+                <span style="font-size:.7rem">Scope: belle-epoch-humans</span><br>
+                <span style="font-size:.7rem">Wallet: ${truncateAddr(addr)}</span>
+              </div>
+              <button class="btn btn-secondary btn-sm" id="btn-mock-verify" style="margin-top:1rem">Simulate Self Verification (Dev)</button>
+            </div>`;
+
+          // Mock verify button for development
+          const btnMock = $('#btn-mock-verify');
+          if (btnMock) {
+            btnMock.addEventListener('click', async () => {
+              const statusEl = $('#self-verify-status');
+              statusEl.textContent = 'Verifying...';
+              statusEl.style.color = 'var(--primary)';
+
+              // Simulate Self callback by posting mock data to /humans/verify
+              try {
+                await fetch(API + '/humans/verify', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    attestationId: 'mock-' + Date.now(),
+                    proof: { mock: true },
+                    publicSignals: ['mock'],
+                    userContextData: connectedWallet,
+                  }),
+                });
+              } catch (e) { /* ignore */ }
+
+              // For dev: also directly mark as verified via register attempt
+              statusEl.textContent = 'Verified! Proceeding to profile...';
+              setTimeout(() => advanceRegStep(2), 800);
+            });
+          }
+        }
+      });
+    }
+
+    // Bio char counter
+    const bioInput = $('#human-bio');
+    if (bioInput) {
+      bioInput.addEventListener('input', () => {
+        const count = $('#bio-char-count');
+        if (count) count.textContent = bioInput.value.length;
+      });
+    }
+
+    // Step 2 -> Step 3
+    const btnStep3 = $('#btn-to-step-3');
+    if (btnStep3) {
+      btnStep3.addEventListener('click', () => {
+        const cat = $('#human-category').value;
+        const bio = $('#human-bio').value.trim();
+        if (!cat) { alert('Please select a service category.'); return; }
+        if (!bio) { alert('Please write a short bio.'); return; }
+        advanceRegStep(3);
+      });
+    }
+
+    // Final registration
+    const btnRegister = $('#btn-register-human');
+    if (btnRegister) {
+      btnRegister.addEventListener('click', async () => {
+        const msg = $('#human-register-message');
+        msg.style.display = 'none';
+
+        if (!connectedWallet) {
+          msg.className = 'form-message error';
+          msg.textContent = 'Wallet not connected.';
+          msg.style.display = 'block';
+          return;
+        }
+
+        const chain = document.querySelector('input[name="human-chain"]:checked');
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        const payload = {
+          walletAddress: connectedWallet,
+          category: $('#human-category').value,
+          credentialClaim: $('#human-credential').value.trim() || null,
+          linkedinUrl: $('#human-linkedin').value.trim() || null,
+          bio: $('#human-bio').value.trim(),
+          capacitySlots: parseInt($('#human-slots').value) || 1,
+          epochMs: parseInt($('#human-epoch-duration').value) || 300000,
+          chain: chain ? chain.value : 'celo',
+          timezone: tz,
+          availabilityStart: $('#human-avail-start').value,
+          availabilityEnd: $('#human-avail-end').value,
+        };
+
+        btnRegister.disabled = true;
+        btnRegister.textContent = 'Registering...';
+
+        try {
+          const res = await fetch(API + '/humans/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const json = await res.json().catch(() => ({}));
+
+          if (res.ok && json.success) {
+            // Show success
+            $('#reg-step-3').style.display = 'none';
+            $('#reg-success').style.display = 'block';
+            // Update step indicators
+            $$('.reg-step-dot').forEach(d => d.classList.add('done'));
+            // Refresh directory
+            setTimeout(() => {
+              fetchHumanProviders().then(p => renderHumanProviders(p));
+            }, 2000);
+          } else {
+            msg.className = 'form-message error';
+            msg.textContent = json.error || 'Registration failed.';
+            msg.style.display = 'block';
+          }
+        } catch (err) {
+          msg.className = 'form-message error';
+          msg.textContent = 'Network error: ' + err.message;
+          msg.style.display = 'block';
+        }
+
+        btnRegister.disabled = false;
+        btnRegister.textContent = 'Start earning \u2192';
+      });
+    }
+  }
+
+  function advanceRegStep(step) {
+    // Hide all panels
+    for (let i = 1; i <= 3; i++) {
+      const panel = $(`#reg-step-${i}`);
+      if (panel) panel.style.display = i === step ? 'block' : 'none';
+    }
+    // Update indicators
+    $$('.reg-step-dot').forEach(d => {
+      const s = parseInt(d.dataset.regStep);
+      d.classList.toggle('active', s === step);
+      d.classList.toggle('done', s < step);
+    });
+  }
+
+  function initHumans() {
+    // Load providers
+    fetchHumanProviders().then(p => renderHumanProviders(p));
+
+    // Filters
+    initHumansFilters();
+
+    // Registration flow
+    initHumansRegistration();
+
+    // Poll providers
+    setInterval(() => {
+      fetchHumanProviders().then(p => renderHumanProviders(p));
+    }, FEED_POLL_MS * 5);
+  }
+
   // --------------- Public API ---------------
 
   return {
     initDashboard,
     initBellePage,
     initLaunchpad,
+    initHumans,
     scrollToConsole,
     // expose utilities for console usage
     formatUsdc,

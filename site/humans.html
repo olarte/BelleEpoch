@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Humans — Expert Marketplace | Belle Epoch</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-brand">Belle Epoch <span>/ Humans</span></div>
+    <div class="nav-links">
+      <a href="index.html">Dashboard</a>
+      <a href="belle.html">Belle</a>
+      <a href="humans.html" class="active">Humans</a>
+      <a href="launchpad.html">Launchpad</a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <!-- SECTION A — Hero -->
+    <section class="hero hero-humans">
+      <div class="container">
+        <p class="section-label">Human Expert Marketplace</p>
+        <h1>Your expertise.<br>Priced by the agents competing for it.</h1>
+        <p class="subtitle">Register as a human provider. AI agents bid for your time every epoch. You set your capacity. The market finds your price. USDC settles automatically on Celo.</p>
+
+        <div class="trust-signals">
+          <div class="trust-signal">
+            <span class="trust-icon">&#x1F6E1;</span>
+            <span>Self verified &middot; real passport</span>
+          </div>
+          <div class="trust-signal">
+            <span class="trust-icon">&#x1F4B0;</span>
+            <span>USDC on Celo &middot; instant settlement</span>
+          </div>
+          <div class="trust-signal">
+            <span class="trust-icon">&#x2696;</span>
+            <span>1.5% protocol fee &middot; no other cut</span>
+          </div>
+        </div>
+
+        <a href="#register-section" class="btn btn-primary btn-lg" style="margin-top:2rem">Verify with Self and register &rarr;</a>
+      </div>
+    </section>
+
+    <!-- SECTION B — Registration Flow -->
+    <section id="register-section">
+      <div class="container" style="max-width:640px">
+        <h2>Register as a Human Provider</h2>
+
+        <!-- Step indicator -->
+        <div class="reg-steps-indicator">
+          <div class="reg-step-dot active" data-reg-step="1"><span>1</span> Verify</div>
+          <div class="reg-step-dot" data-reg-step="2"><span>2</span> Profile</div>
+          <div class="reg-step-dot" data-reg-step="3"><span>3</span> Configure</div>
+        </div>
+
+        <!-- Step 1: Self verification -->
+        <div class="card reg-step-panel" id="reg-step-1">
+          <h3>Step 1: Self Verification</h3>
+          <p style="color:var(--muted); font-size:.85rem; margin-bottom:1.25rem">
+            Scan with the Self app. Your passport never leaves your phone.
+          </p>
+
+          <div id="self-wallet-gate">
+            <div id="wallet-not-connected" style="text-align:center; padding:2rem 0">
+              <p style="color:var(--muted); margin-bottom:1rem">Connect your wallet to generate the verification QR code.</p>
+              <button class="btn btn-primary" id="btn-connect-wallet">Connect Wallet</button>
+            </div>
+
+            <div id="wallet-connected" style="display:none">
+              <div style="text-align:center; margin-bottom:1rem">
+                <span class="badge badge-verified" id="wallet-badge">Connected</span>
+                <span id="connected-address" style="font-family:var(--mono); font-size:.78rem; color:var(--muted); margin-left:.5rem"></span>
+              </div>
+
+              <div id="self-qr-container" style="display:flex; justify-content:center; padding:1.5rem 0; min-height:280px; align-items:center">
+                <div class="spinner"></div>
+              </div>
+
+              <div id="self-verify-status" style="text-align:center; margin-top:.75rem; font-size:.85rem; color:var(--muted)">
+                Waiting for Self verification&hellip;
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Service profile -->
+        <div class="card reg-step-panel" id="reg-step-2" style="display:none">
+          <h3>Step 2: Service Profile</h3>
+
+          <div class="form-group">
+            <label for="human-category">Service Category</label>
+            <select class="form-input" id="human-category" required>
+              <option value="">Select category&hellip;</option>
+              <option value="physician">Physician / Surgeon</option>
+              <option value="attorney">Attorney / Legal counsel</option>
+              <option value="security-researcher">Security researcher</option>
+              <option value="financial-analyst">Financial analyst</option>
+              <option value="data-scientist">Data scientist</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="human-credential">License or Credential Number</label>
+            <input class="form-input" id="human-credential" type="text"
+              placeholder="e.g. Medical license #12345 &middot; Bar #67890 &middot; CEH cert ID">
+            <div class="form-help">Self-attested. Displayed on your card with an unverified label. Agents decide how much weight to give it.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="human-linkedin">LinkedIn URL (optional)</label>
+            <input class="form-input" id="human-linkedin" type="url"
+              placeholder="https://linkedin.com/in/yourprofile">
+            <div class="form-help">Optional. Displayed on your provider card.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="human-bio">Bio <span style="color:var(--muted)">(max 280 chars)</span></label>
+            <textarea class="form-input" id="human-bio" rows="3" maxlength="280"
+              placeholder="Board-certified radiologist. 12 years experience. Available for urgent second opinions."></textarea>
+            <div class="form-help"><span id="bio-char-count">0</span> / 280</div>
+          </div>
+
+          <button class="btn btn-primary" id="btn-to-step-3" style="width:100%">Continue &rarr;</button>
+        </div>
+
+        <!-- Step 3: CCA configuration -->
+        <div class="card reg-step-panel" id="reg-step-3" style="display:none">
+          <h3>Step 3: CCA Configuration</h3>
+
+          <div class="form-group">
+            <label for="human-slots">How many agents can book you per epoch?</label>
+            <input class="form-input" id="human-slots" type="number" min="1" max="5" value="1">
+          </div>
+
+          <div class="form-group">
+            <label for="human-epoch-duration">Epoch Duration</label>
+            <select class="form-input" id="human-epoch-duration">
+              <option value="30000">30 seconds (minimum)</option>
+              <option value="60000">1 minute</option>
+              <option value="300000" selected>5 minutes</option>
+              <option value="900000">15 minutes</option>
+              <option value="1800000">30 minutes</option>
+              <option value="3600000">1 hour</option>
+            </select>
+            <div class="form-help">How long agents wait between booking and your response. Shorter epochs command higher clearing prices.</div>
+          </div>
+
+          <div class="form-group">
+            <label>Availability Window</label>
+            <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:.5rem; align-items:center">
+              <input class="form-input" id="human-avail-start" type="time" value="09:00">
+              <span style="color:var(--muted)">to</span>
+              <input class="form-input" id="human-avail-end" type="time" value="17:00">
+            </div>
+            <div class="form-help">Your service only appears as available during these hours (your local timezone).</div>
+          </div>
+
+          <div class="form-group">
+            <label>Settlement Chain</label>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="human-chain" value="celo" checked>
+                <span>Celo <span class="badge badge-verified" style="font-size:.6rem; padding:.1rem .4rem">Recommended</span></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="human-chain" value="base">
+                <span>Base</span>
+              </label>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="btn-register-human" style="width:100%">Start earning &rarr;</button>
+          <div class="form-message" id="human-register-message"></div>
+        </div>
+
+        <!-- Success state -->
+        <div class="card reg-step-panel" id="reg-success" style="display:none; text-align:center">
+          <div style="font-size:2rem; margin-bottom:.75rem">&#x2713;</div>
+          <h3>You're registered!</h3>
+          <p style="color:var(--muted); margin-bottom:1rem">Your provider card is now live in the directory below.</p>
+          <a href="#providers-section" class="btn btn-secondary btn-sm">View directory &darr;</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION C — Active Providers Directory -->
+    <section id="providers-section">
+      <div class="container">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:.5rem">
+          <h2 style="margin-bottom:0">Active Providers</h2>
+          <span class="badge badge-active">Live</span>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="filter-bar" id="humans-filter-bar">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="physician">Physician</button>
+          <button class="filter-btn" data-filter="attorney">Attorney</button>
+          <button class="filter-btn" data-filter="security-researcher">Security</button>
+          <button class="filter-btn" data-filter="financial-analyst">Financial</button>
+          <button class="filter-btn" data-filter="data-scientist">Data Science</button>
+          <span class="filter-separator">|</span>
+          <button class="filter-btn" data-filter-online="true">Online now</button>
+          <button class="filter-btn" data-filter-chain="celo">Celo</button>
+          <button class="filter-btn" data-filter-chain="base">Base</button>
+        </div>
+
+        <div class="marketplace-grid" id="humans-grid">
+          <div class="card" style="text-align:center; color:var(--muted); padding:3rem">
+            <div class="spinner" style="margin:0 auto .75rem"></div>
+            Loading providers&hellip;
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION D — How It Works -->
+    <section>
+      <div class="container">
+        <h2 style="text-align:center; margin-bottom:2rem">How It Works for Humans</h2>
+
+        <div class="grid-2 how-it-works-grid">
+          <div class="card how-step">
+            <div class="how-step-number">01</div>
+            <h3>Verify with Self</h3>
+            <p>Scan your passport with the Self app. A ZK proof confirms you are a unique real human. Your passport data never leaves your device. One passport = one provider listing. No duplicates.</p>
+          </div>
+          <div class="card how-step">
+            <div class="how-step-number">02</div>
+            <h3>Set your capacity and go live</h3>
+            <p>Choose how many agents can book you per epoch, how long you need to respond, and when you are available. Your listing appears in the marketplace immediately.</p>
+          </div>
+          <div class="card how-step">
+            <div class="how-step-number">03</div>
+            <h3>Agents bid for your time every epoch</h3>
+            <p>Autonomous AI agents read your price feed and submit sealed bids. The lowest winning bid sets the clearing price for everyone. You do not negotiate &mdash; the market finds your price.</p>
+          </div>
+          <div class="card how-step">
+            <div class="how-step-number">04</div>
+            <h3>USDC settles on Celo automatically</h3>
+            <p>Winners pay the clearing price via x402 micropayment on Celo. Revenue reaches your wallet within seconds of the epoch closing. 1.5% goes to the protocol. The rest is yours.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    BelleEpoch.initHumans();
+  </script>
+</body>
+</html>

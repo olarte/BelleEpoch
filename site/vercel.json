@@ -6,6 +6,8 @@
     { "source": "/query",             "destination": "https://api.belleepoch.xyz/query" },
     { "source": "/query/(.*)",        "destination": "https://api.belleepoch.xyz/query/$1" },
     { "source": "/providers/register","destination": "https://api.belleepoch.xyz/providers/register" },
+    { "source": "/humans/(.*)",      "destination": "https://api.belleepoch.xyz/humans/$1" },
+    { "source": "/humans",           "destination": "https://api.belleepoch.xyz/humans" },
     { "source": "/epoch/(.*)",        "destination": "https://api.belleepoch.xyz/epoch/$1" },
     { "source": "/delegation",        "destination": "https://api.belleepoch.xyz/delegation" },
     { "source": "/bankr/(.*)",        "destination": "https://api.belleepoch.xyz/bankr/$1" },

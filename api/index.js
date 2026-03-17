@@ -16,6 +16,8 @@ const bankr = require('../engine/bankr');
 const venice = require('../engine/venice');
 const uniswap = require('../engine/uniswap');
 
+const mountHumansRoutes = require('../engine/api/humans');
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -24,6 +26,9 @@ const PORT = parseInt(process.env.PORT || '3001', 10);
 
 // Serve site static files (before API routes — explicit API paths take priority)
 app.use(express.static(path.join(__dirname, '..', 'site')));
+
+// Mount humans routes (Self Protocol + Celo human provider marketplace)
+mountHumansRoutes(app, redis);
 
 // Track first-time bidders for Sybil check (in-memory cache, Redis-backed)
 const knownAgents = new Set();

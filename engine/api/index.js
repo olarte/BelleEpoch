@@ -16,6 +16,8 @@ const bankr = require('../bankr');
 const venice = require('../venice');
 const uniswap = require('../uniswap');
 
+const mountHumansRoutes = require('./humans');
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -27,6 +29,9 @@ const siteDir = path.join(__dirname, '..', '..', 'site');
 if (fs.existsSync(siteDir)) {
   app.use(express.static(siteDir));
 }
+
+// Mount humans routes (Self Protocol + Celo human provider marketplace)
+mountHumansRoutes(app, redis);
 
 // Track first-time bidders for Sybil check (in-memory cache, Redis-backed)
 const knownAgents = new Set();
