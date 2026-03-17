@@ -103,7 +103,7 @@ nav#nav {
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--g30);
+  color: var(--g20);
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
@@ -113,11 +113,13 @@ nav#nav {
   height: 100%;
   display: flex;
   align-items: center;
+  font-weight: 500;
 }
 .nav-tab:hover { color: var(--white); }
 .nav-tab.active {
   color: var(--white);
   border-bottom-color: var(--redhi);
+  font-weight: 600;
 }
 #tab-belle { font-style: italic; }
 
@@ -306,7 +308,7 @@ section {
   font-size: 14px;
   color: var(--g10);
   line-height: 1.85;
-  font-weight: 300;
+  font-weight: 400;
   max-width: 600px;
   margin-top: 16px;
 }
@@ -477,7 +479,7 @@ h3 {
   line-height: 1.85;
   max-width: 480px;
   margin-bottom: 1.5rem;
-  font-weight: 300;
+  font-weight: 400;
 }
 
 .status-bar {
@@ -547,7 +549,7 @@ h3 {
   max-width: 600px;
   margin: 16px auto 0;
   line-height: 1.85;
-  font-weight: 300;
+  font-weight: 400;
 }
 .hero-humans .section-label { color: var(--red); }
 
@@ -835,7 +837,7 @@ h3 {
   border: none;
   cursor: pointer;
   transition: all 0.15s;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
 }
 
@@ -1513,7 +1515,7 @@ select.form-input {
   background: transparent;
   color: var(--g30);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
   font-family: var(--mono);

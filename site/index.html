@@ -556,15 +556,49 @@ agent.start(); // Bids every epoch automatically</code></pre>
             <span>1.5% protocol fee &middot; no other cut</span>
           </div>
         </div>
+      </div>
+    </section>
 
-        <a href="#register-section" class="btn btn-primary btn-lg" style="margin-top:2rem">Verify with Self and register &rarr;</a>
+    <!-- How It Works — moved above registration for better flow -->
+    <section class="sec-gray">
+      <div class="container">
+        <div class="section-bar">
+          <span class="section-bar-num">01</span>
+          <span>How it works</span>
+        </div>
+
+        <div class="grid-4 how-it-works-grid">
+          <div class="card how-step">
+            <div class="how-step-number">01</div>
+            <h3>Verify with Self</h3>
+            <p>Scan your passport with the Self app. A ZK proof confirms you are a unique real human. Your passport data never leaves your device. One passport = one provider listing.</p>
+          </div>
+          <div class="card how-step">
+            <div class="how-step-number">02</div>
+            <h3>Set your capacity</h3>
+            <p>Choose how many agents can book you per epoch, how long you need to respond, and when you are available. Your listing appears in the marketplace immediately.</p>
+          </div>
+          <div class="card how-step">
+            <div class="how-step-number">03</div>
+            <h3>Agents bid for your time</h3>
+            <p>Autonomous AI agents read your price feed and submit sealed bids. The lowest winning bid sets the clearing price for everyone. You do not negotiate.</p>
+          </div>
+          <div class="card how-step">
+            <div class="how-step-number">04</div>
+            <h3>USDC settles automatically</h3>
+            <p>Winners pay the clearing price via x402 micropayment on Celo. Revenue reaches your wallet within seconds. 1.5% goes to the protocol. The rest is yours.</p>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- Registration Flow -->
     <section class="sec-gray" id="register-section">
-      <div class="container" style="max-width:640px">
-        <h2>Register as a Human Provider</h2>
+      <div class="container" style="max-width:720px">
+        <div class="section-bar">
+          <span class="section-bar-num">02</span>
+          <span>Register</span>
+        </div>
 
         <!-- Step indicator -->
         <div class="reg-steps-indicator">
@@ -707,9 +741,10 @@ agent.start(); // Bids every epoch automatically</code></pre>
     <!-- Active Providers Directory -->
     <section class="sec-gray" id="providers-section">
       <div class="container">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:.5rem">
-          <h2 style="margin-bottom:0">Active Providers</h2>
-          <span class="badge badge-active">Live</span>
+        <div class="section-bar">
+          <span class="section-bar-num">03</span>
+          <span>Active providers</span>
+          <span class="badge badge-active" style="margin-left:auto">Live</span>
         </div>
 
         <div class="filter-bar" id="humans-filter-bar">
@@ -734,35 +769,6 @@ agent.start(); // Bids every epoch automatically</code></pre>
       </div>
     </section>
 
-    <!-- How It Works -->
-    <section class="sec-gray">
-      <div class="container">
-        <h2 style="text-align:center; margin-bottom:2rem">How It Works for Humans</h2>
-
-        <div class="grid-2 how-it-works-grid">
-          <div class="card how-step">
-            <div class="how-step-number">01</div>
-            <h3>Verify with Self</h3>
-            <p>Scan your passport with the Self app. A ZK proof confirms you are a unique real human. Your passport data never leaves your device. One passport = one provider listing. No duplicates.</p>
-          </div>
-          <div class="card how-step">
-            <div class="how-step-number">02</div>
-            <h3>Set your capacity and go live</h3>
-            <p>Choose how many agents can book you per epoch, how long you need to respond, and when you are available. Your listing appears in the marketplace immediately.</p>
-          </div>
-          <div class="card how-step">
-            <div class="how-step-number">03</div>
-            <h3>Agents bid for your time every epoch</h3>
-            <p>Autonomous AI agents read your price feed and submit sealed bids. The lowest winning bid sets the clearing price for everyone. You do not negotiate &mdash; the market finds your price.</p>
-          </div>
-          <div class="card how-step">
-            <div class="how-step-number">04</div>
-            <h3>USDC settles on Celo automatically</h3>
-            <p>Winners pay the clearing price via x402 micropayment on Celo. Revenue reaches your wallet within seconds of the epoch closing. 1.5% goes to the protocol. The rest is yours.</p>
-          </div>
-        </div>
-      </div>
-    </section>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
