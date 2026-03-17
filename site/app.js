@@ -297,7 +297,7 @@ const BelleEpoch = (() => {
     if (!container) return;
 
     if (!events || events.length === 0) {
-      container.innerHTML = '<div style="text-align:center; color:var(--muted); padding:1rem; font-size:.82rem">No events yet</div>';
+      container.innerHTML = '<div style="text-align:center; color:var(--g30); padding:1rem; font-size:.82rem">No events yet</div>';
       return;
     }
 
@@ -319,7 +319,7 @@ const BelleEpoch = (() => {
 
     const items = data && data.items ? data.items : [];
     if (items.length === 0) {
-      container.innerHTML = '<div class="card" style="text-align:center; color:var(--muted); padding:2rem">No active queries. Belle is waiting.</div>';
+      container.innerHTML = '<div class="card" style="text-align:center; color:var(--g30); padding:2rem">No active queries. Belle is waiting.</div>';
       return;
     }
 
@@ -328,18 +328,18 @@ const BelleEpoch = (() => {
         : item.type === 'treasury-planning' ? 'badge-active'
         : item.type === 'negotiation' ? 'badge-warning'
         : 'badge-warning';
-      const statusColor = item.status === 'processing' ? 'var(--primary)'
-        : item.status === 'resolved' ? 'var(--secondary)'
-        : 'var(--muted)';
+      const statusColor = item.status === 'processing' ? 'var(--redhi)'
+        : item.status === 'resolved' ? 'var(--gold)'
+        : 'var(--g30)';
 
       return `
         <div class="card queue-item" style="margin-bottom:.5rem">
           <div style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap">
             <span class="badge ${typeBadge}">${item.type || 'unknown'}</span>
-            <span style="font-family:var(--mono); font-size:.78rem; color:var(--muted)">Epoch #${item.epochId || '\u2014'}</span>
+            <span style="font-family:var(--mono); font-size:.78rem; color:var(--g30)">Epoch #${item.epochId || '\u2014'}</span>
             <span style="font-size:.78rem; color:${statusColor}">${item.status}</span>
-            <span style="font-size:.72rem; color:var(--muted)">Venice: ${item.veniceSessionOpen ? 'open' : 'closed'}</span>
-            <span style="font-size:.72rem; color:var(--muted); margin-left:auto">[REDACTED &mdash; returned once to winner]</span>
+            <span style="font-size:.72rem; color:var(--g30)">Venice: ${item.veniceSessionOpen ? 'open' : 'closed'}</span>
+            <span style="font-size:.72rem; color:var(--g30); margin-left:auto">[REDACTED &mdash; returned once to winner]</span>
           </div>
         </div>`;
     }).join('');
@@ -395,7 +395,7 @@ const BelleEpoch = (() => {
 
     const providers = await fetchProviders();
     if (!providers || !Array.isArray(providers) || providers.length === 0) {
-      grid.innerHTML = '<div class="card" style="text-align:center; color:var(--muted); padding:3rem">No providers registered yet.</div>';
+      grid.innerHTML = '<div class="card" style="text-align:center; color:var(--g30); padding:3rem">No providers registered yet.</div>';
       appendGhostCard(grid);
       return;
     }
@@ -422,14 +422,14 @@ const BelleEpoch = (() => {
           <div class="provider-avatar">${initial}</div>
           <div>
             <h3 style="margin-bottom:.15rem">${p.name || p.ens || p.id}</h3>
-            <span style="font-size:.78rem; color:var(--muted)">${p.resource || '\u2014'}</span>
+            <span style="font-size:.78rem; color:var(--g30)">${p.resource || '\u2014'}</span>
             ${featured}${verified}
           </div>
         </div>
         <div class="provider-stats">
           <div>
             <div class="provider-stat-label">Clearing Price</div>
-            <div class="provider-stat-value" style="color:var(--primary)">${formatUsdc(p.clearingPrice)}</div>
+            <div class="provider-stat-value" style="color:var(--redhi)">${formatUsdc(p.clearingPrice)}</div>
           </div>
           <div>
             <div class="provider-stat-label">Capacity</div>
@@ -466,9 +466,9 @@ const BelleEpoch = (() => {
     ghost.className = 'card provider-card ghost-card';
     ghost.innerHTML = `
       <div style="text-align:center; padding:2rem 1rem">
-        <h3 style="color:var(--muted)">Your service here</h3>
+        <h3 style="color:var(--g30)">Your service here</h3>
         <div class="terminal" style="font-size:.78rem; margin:.75rem 0">curl -s belleepoch.xyz/skill.md | launch</div>
-        <p style="font-size:.78rem; color:var(--muted)">Click to register</p>
+        <p style="font-size:.78rem; color:var(--g30)">Click to register</p>
       </div>
     `;
     ghost.addEventListener('click', () => showPage('agents'));
@@ -654,7 +654,7 @@ const BelleEpoch = (() => {
 
     const data = await fetchAgentData('belle');
     if (!data || !data.epochs || !Array.isArray(data.epochs) || data.epochs.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--muted)">No epoch data available</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--g30)">No epoch data available</td></tr>';
       return;
     }
 
@@ -666,7 +666,7 @@ const BelleEpoch = (() => {
         <td>${formatUsdc(ep.clearingPrice)}</td>
         <td class="${won ? 'won' : 'lost'}">${won ? 'Won' : 'Lost'}</td>
         <td>${won ? formatUsdc(ep.paid) : '\u2014'}</td>
-        <td style="color:var(--muted)">${ep.timestamp ? new Date(ep.timestamp).toLocaleTimeString() : '\u2014'}</td>
+        <td style="color:var(--g30)">${ep.timestamp ? new Date(ep.timestamp).toLocaleTimeString() : '\u2014'}</td>
       </tr>`;
     }).join('');
   }
@@ -682,7 +682,7 @@ const BelleEpoch = (() => {
       const text = await res.text();
       container.innerHTML = renderMarkdown(text);
     } catch {
-      container.innerHTML = '<p style="color:var(--muted)">Failed to load skill.md</p>';
+      container.innerHTML = '<p style="color:var(--g30)">Failed to load skill.md</p>';
     }
 
     // Nav link click handlers
@@ -813,7 +813,7 @@ const BelleEpoch = (() => {
           const cmd = termCta.querySelector('.terminal-command');
           const original = cmd.textContent;
           cmd.textContent = 'Copied!';
-          cmd.style.color = 'var(--primary)';
+          cmd.style.color = 'var(--redhi)';
           setTimeout(() => { cmd.textContent = original; cmd.style.color = ''; }, 1500);
         });
       });
@@ -911,7 +911,7 @@ const BelleEpoch = (() => {
 
     if (!providers || providers.length === 0) {
       grid.innerHTML = `
-        <div class="card" style="text-align:center; color:var(--muted); padding:3rem; grid-column:1/-1">
+        <div class="card" style="text-align:center; color:var(--g30); padding:3rem; grid-column:1/-1">
           <p style="margin-bottom:1rem">No providers registered yet. Be the first.</p>
           <a href="#register-section" class="btn btn-primary btn-sm">Register now &uarr;</a>
         </div>`;
@@ -930,7 +930,7 @@ const BelleEpoch = (() => {
     }
 
     if (filtered.length === 0) {
-      grid.innerHTML = '<div class="card" style="text-align:center; color:var(--muted); padding:3rem; grid-column:1/-1">No providers match this filter.</div>';
+      grid.innerHTML = '<div class="card" style="text-align:center; color:var(--g30); padding:3rem; grid-column:1/-1">No providers match this filter.</div>';
       return;
     }
 
@@ -975,7 +975,7 @@ const BelleEpoch = (() => {
           <div class="human-stats">
             <div>
               <div class="human-stat-label">Clearing Price</div>
-              <div class="human-stat-value" style="color:var(--primary)">${price}</div>
+              <div class="human-stat-value" style="color:var(--redhi)">${price}</div>
             </div>
             <div>
               <div class="human-stat-label">Epoch Duration</div>
@@ -1042,7 +1042,7 @@ const BelleEpoch = (() => {
           const qrContainer = $('#self-qr-container');
           qrContainer.innerHTML = `
             <div style="text-align:center">
-              <div style="width:200px; height:200px; border:2px dashed var(--card-border); border-radius:12px; display:flex; align-items:center; justify-content:center; margin:0 auto; color:var(--muted); font-size:.82rem; padding:1rem">
+              <div style="width:200px; height:200px; border:2px dashed var(--g50); border-radius:0; display:flex; align-items:center; justify-content:center; margin:0 auto; color:var(--g30); font-size:.82rem; padding:1rem">
                 Self QR Code<br>
                 <span style="font-size:.7rem">Scope: belle-epoch-humans</span><br>
                 <span style="font-size:.7rem">Wallet: ${truncateAddr(addr)}</span>
@@ -1055,7 +1055,7 @@ const BelleEpoch = (() => {
             btnMock.addEventListener('click', async () => {
               const statusEl = $('#self-verify-status');
               statusEl.textContent = 'Verifying...';
-              statusEl.style.color = 'var(--primary)';
+              statusEl.style.color = 'var(--redhi)';
 
               try {
                 await fetch(API + '/humans/verify', {
@@ -1197,7 +1197,7 @@ const BelleEpoch = (() => {
           const cmd = termCta.querySelector('.terminal-command');
           const original = cmd.textContent;
           cmd.textContent = '  Copied!';
-          cmd.style.color = '#33e8c0';
+          cmd.style.color = '#e84030';
           setTimeout(() => { cmd.textContent = original; cmd.style.color = ''; }, 1500);
         });
       });
