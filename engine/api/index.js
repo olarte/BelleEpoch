@@ -833,8 +833,13 @@ async function setupOnChain() {
     const contract = new ethers.Contract(contractAddr, abi, wallet);
     const resourceId = ethers.id('private-reasoning');
 
+    // Record every 100th epoch on-chain to conserve gas
+    // (~42,000 gas per tx × 720/hr was draining ETH fast)
+    const ONCHAIN_INTERVAL = parseInt(process.env.ONCHAIN_INTERVAL || '100', 10);
+
     engine.setOnChainRecorder(async (result) => {
       if (result.slotsFilled === 0) return; // skip empty epochs
+      if (result.epochId % ONCHAIN_INTERVAL !== 0) return; // only record every Nth epoch
 
       // Convert clearing price to USDC units (6 decimals)
       const priceWei = ethers.parseUnits(result.clearingPrice.toFixed(6), 6);
@@ -853,12 +858,12 @@ async function setupOnChain() {
         result.totalBids,
         resourceId
       );
-      console.log(`[OnChain] epoch ${result.epochId} tx: ${tx.hash}`);
+      console.log(`[OnChain] epoch ${result.epochId} tx: ${tx.hash} (1-per-${ONCHAIN_INTERVAL})`);
       await tx.wait();
       console.log(`[OnChain] epoch ${result.epochId} confirmed`);
     });
 
-    console.log(`[OnChain] Base recorder active — contract: ${contractAddr}`);
+    console.log(`[OnChain] Base recorder active — contract: ${contractAddr} (every ${ONCHAIN_INTERVAL} epochs)`);
   } catch (err) {
     console.error('[OnChain] setup failed:', err.message);
   }
