@@ -23,6 +23,7 @@
   --g20:       #aaaaaa;
   --g10:       #d4d4d4;
   --white:     #f0ece6;
+  --gray-mid:  #ababab;   /* For Humans surface */
 
   /* Red palette */
   --red:       #c0392b;
@@ -181,6 +182,8 @@ section {
 .sec-black    { background: var(--black);  border-bottom: 1px solid var(--g50); }
 .sec-charcoal { background: var(--g70);    border-bottom: 1px solid var(--g50); }
 .sec-red      { background: var(--red);    border-bottom: 1px solid var(--red3); }
+.sec-gray     { background: var(--gray-mid); border-bottom: 1px solid #999; }
+.sec-white    { background: var(--white);    border-bottom: 1px solid #ddd; }
 
 /* ============================================================
    SECTION BARS
@@ -533,20 +536,20 @@ h3 {
    HERO — HUMANS (Red)
    ============================================================ */
 .hero-humans {
-  background: var(--red);
+  background: var(--gray-mid);
   padding: 80px 0 var(--pad-section);
 }
 
-.hero-humans h1 { color: #fff; }
+.hero-humans h1 { color: #111; }
 .hero-humans .subtitle {
-  color: var(--on-red);
+  color: #222;
   font-size: 14px;
   max-width: 600px;
   margin: 16px auto 0;
   line-height: 1.85;
   font-weight: 300;
 }
-.hero-humans .section-label { color: var(--on-red-dim); }
+.hero-humans .section-label { color: var(--red); }
 
 .trust-signals {
   display: flex;
@@ -574,13 +577,13 @@ h3 {
    HERO — BELLE (Red)
    ============================================================ */
 .hero-belle {
-  background: var(--red);
+  background: var(--white);
   text-align: center;
   padding: 80px 0 var(--pad-section);
 }
-.hero-belle h1 { color: #fff; }
-.hero-belle .section-label { color: var(--on-red-dim); }
-.hero-belle .badge { border-color: rgba(0,0,0,0.25); background: rgba(0,0,0,0.15); }
+.hero-belle h1 { color: #111; }
+.hero-belle .section-label { color: var(--red); }
+.hero-belle .badge { border-color: #ccc; background: rgba(0,0,0,0.04); }
 
 /* ============================================================
    STATS PANEL (Home hero right)
@@ -1960,6 +1963,145 @@ select.form-input {
 
 .sec-red .hero-stats .stat-value { color: #fff; }
 .sec-red .hero-stats .stat-label { color: var(--on-red-dim); }
+
+/* ============================================================
+   GRAY SURFACE (For Humans) — dark text on #ababab
+   ============================================================ */
+.sec-gray .sbar          { background: #9a9a9a; border-bottom-color: #888; }
+.sec-gray .sbar-label    { color: #333; }
+.sec-gray .sbar-label .num { color: var(--red); }
+.sec-gray .section-bar   { background: #9a9a9a; border-bottom-color: #888; color: #333; }
+
+.sec-gray h1, .sec-gray h2, .sec-gray h3,
+.sec-gray .hero-headline,
+.sec-gray .hero-title,
+.sec-gray .sec-title      { color: #111; }
+.sec-gray .section-label,
+.sec-gray .eyebrow        { color: var(--red); }
+.sec-gray .subtitle,
+.sec-gray .body-text,
+.sec-gray p               { color: #222; }
+.sec-gray .hero-subhead   { color: #333; }
+
+.sec-gray .card           { background: rgba(255,255,255,0.35); border-color: #999; }
+.sec-gray .card:hover     { border-color: #777; }
+.sec-gray .badge          { background: rgba(0,0,0,0.08); border-color: #999; color: #333; }
+.sec-gray .badge-verified { background: rgba(192,57,43,0.1); color: var(--red); border-color: rgba(192,57,43,0.3); }
+.sec-gray .badge-active   { background: rgba(39,174,96,0.1); color: #1a8a4a; border-color: rgba(39,174,96,0.3); }
+
+.sec-gray .trust-signal   { background: rgba(255,255,255,0.3); border-color: #999; color: #222; }
+.sec-gray .btn-primary    { background: var(--red); color: #fff; }
+.sec-gray .btn-primary:hover { background: var(--red2); }
+.sec-gray .btn-secondary  { border-color: #777; color: #333; }
+.sec-gray .btn-secondary:hover { border-color: #555; color: #111; }
+
+.sec-gray .form-group label { color: #444; }
+.sec-gray .form-input     { background: rgba(255,255,255,0.5); border-color: #999; color: #111; }
+.sec-gray .form-input:focus { border-color: var(--red); }
+.sec-gray .form-input::placeholder { color: #777; }
+.sec-gray .form-help      { color: #555; }
+.sec-gray .radio-option   { color: #222; }
+
+.sec-gray .how-step-number { color: #777; }
+.sec-gray .how-step h3    { color: #111; }
+.sec-gray .how-step p     { color: #333; }
+
+.sec-gray .filter-btn     { border-color: #999; color: #555; }
+.sec-gray .filter-btn:hover,
+.sec-gray .filter-btn.active { color: #111; border-color: var(--red); background: rgba(192,57,43,0.08); }
+.sec-gray .filter-separator { color: #999; }
+
+.sec-gray .reg-step-dot   { color: #555; }
+.sec-gray .reg-step-dot span { background: #999; color: #fff; }
+.sec-gray .reg-step-dot.active { color: var(--red); }
+.sec-gray .reg-step-dot.active span { background: var(--red); color: #fff; }
+
+.sec-gray .marketplace-grid { background: #999; }
+.sec-gray .marketplace-grid > * { background: rgba(255,255,255,0.25); }
+
+.sec-gray .human-card .human-bio { color: #333; }
+.sec-gray .human-card .human-stat-label { color: #555; }
+.sec-gray .human-card .human-stat-value { color: #111; }
+.sec-gray .human-card .credential-line { color: #555; }
+
+.sec-gray .spinner { border-color: #999; border-top-color: var(--red); }
+
+/* Force muted text on gray to be readable */
+.sec-gray [style*="color:var(--g30)"] { color: #444 !important; }
+
+/* ============================================================
+   WHITE SURFACE (Belle) — dark text on off-white
+   ============================================================ */
+.sec-white .sbar          { background: #e4e0da; border-bottom-color: #ccc; }
+.sec-white .sbar-label    { color: #555; }
+.sec-white .sbar-label .num { color: var(--red); }
+.sec-white .section-bar   { background: #e4e0da; border-bottom-color: #ccc; color: #555; }
+.sec-white .section-bar-num { color: var(--red); }
+
+.sec-white h1, .sec-white h2, .sec-white h3,
+.sec-white .hero-headline,
+.sec-white .hero-title,
+.sec-white .sec-title      { color: #111; }
+.sec-white .section-label,
+.sec-white .eyebrow        { color: var(--red); }
+.sec-white p               { color: #333; }
+
+.sec-white .card           { background: #e8e4de; border-color: #ccc; }
+.sec-white .card:hover     { border-color: #aaa; }
+.sec-white .badge          { background: rgba(0,0,0,0.05); border-color: #ccc; color: #555; }
+.sec-white .badge-verified { background: rgba(192,57,43,0.08); color: var(--red); border-color: rgba(192,57,43,0.25); }
+.sec-white .badge-active   { background: rgba(39,174,96,0.08); color: #1a8a4a; border-color: rgba(39,174,96,0.25); }
+.sec-white .badge-warning  { background: rgba(232,64,48,0.08); color: var(--redhi); border-color: rgba(232,64,48,0.2); }
+
+.sec-white .btn-primary    { background: var(--red); color: #fff; }
+.sec-white .btn-primary:hover { background: var(--red2); }
+.sec-white .btn-secondary  { border-color: #bbb; color: #555; }
+.sec-white .btn-secondary:hover { border-color: #888; color: #111; }
+
+.sec-white .stat-value     { color: var(--red); }
+.sec-white .stat-label     { color: #777; }
+.sec-white .hero-stats .stat-value { color: var(--red); }
+.sec-white .hero-stats .stat-label { color: #777; }
+
+.sec-white .delegation-grid { }
+.sec-white .delegation-row { border-bottom-color: #ddd; }
+.sec-white .delegation-label { color: #777; }
+.sec-white .delegation-value { color: #222; }
+.sec-white .delegation-value a { color: var(--red); }
+
+.sec-white .spend-gauge-bar { background: #ddd; }
+.sec-white .spend-gauge-fill { background: var(--redhi); }
+
+.sec-white .console        { background: #111; border-color: #333; color: var(--g10); }
+.sec-white .terminal       { background: #111; border-color: #333; color: var(--redhi); }
+
+.sec-white .form-group label { color: #666; }
+.sec-white .form-input     { background: #fff; border-color: #ccc; color: #111; }
+.sec-white .form-input:focus { border-color: var(--red); }
+.sec-white .form-input::placeholder { color: #aaa; }
+
+.sec-white .table th       { color: #777; border-bottom-color: #ccc; }
+.sec-white .table td       { color: #333; border-bottom-color: #e8e4de; }
+.sec-white .table .won     { color: var(--green); }
+.sec-white .table .lost    { color: #aaa; }
+
+.sec-white .identity-grid  { background: #ccc; border-color: #ccc; }
+.sec-white .identity-item  { background: #e8e4de; }
+.sec-white .identity-item h4 { color: #777; }
+.sec-white .identity-item .value { color: #222; }
+
+.sec-white .grid-4 { background: #ccc; }
+.sec-white .grid-4 > * { background: #e8e4de; }
+.sec-white .grid-2 { background: #ccc; }
+.sec-white .grid-2 > * { background: #e8e4de; }
+
+.sec-white .metric-grid    { border-color: #ccc; }
+.sec-white .metric         { border-color: #ccc; }
+
+.sec-white .spinner { border-color: #ccc; border-top-color: var(--red); }
+
+/* Force muted text on white to be readable */
+.sec-white [style*="color:var(--g30)"] { color: #555 !important; }
 
 /* ============================================================
    RESPONSIVE
