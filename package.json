@@ -16,7 +16,9 @@
     "compile": "npx hardhat compile",
     "deploy:base": "npx hardhat run scripts/deploy.js --network base",
     "deploy:celo": "npx hardhat run scripts/deploy.js --network celo",
-    "register:belle": "npx hardhat run scripts/register-belle.js --network base"
+    "register:belle": "npx hardhat run scripts/register-belle.js --network base",
+    "agent": "node scripts/run-agent.js",
+    "delegation": "node scripts/create-delegation.js"
   },
   "license": "MIT",
   "dependencies": {

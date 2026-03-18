@@ -51,6 +51,10 @@ async function settleEpoch(epochId) {
   const settlements = [];
 
   for (const winner of result.winners) {
+    // Skip sim settlement for external agents (non-sim bidders settle themselves)
+    const isSimAgent = AGENTS.some(a => a.id === winner.agentId);
+    if (!isSimAgent) continue;
+
     // Simulate: agent constructs payment proof after receiving 402
     const simProof = `sim-payment-${winner.agentId}-${epochId}`;
 

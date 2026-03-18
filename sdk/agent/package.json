@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Agent SDK for Belle Epoch Continuous Clearing Auctions — bid, settle, and access CCA-gated services",
   "main": "index.js",
-  "keywords": ["belle-epoch", "clearing-auction", "x402", "agent", "bidding"],
+  "files": ["index.js", "README.md"],
+  "keywords": ["belle-epoch", "clearing-auction", "x402", "agent", "bidding", "autonomous-agent"],
   "license": "MIT",
   "repository": {
     "type": "git",

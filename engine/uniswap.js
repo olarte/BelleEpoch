@@ -32,7 +32,7 @@ const BASE_RPC_URL = process.env.BASE_RPC_URL || '';
 
 // Accumulated fees awaiting routing (in USDC, 6 decimals)
 let accumulatedFeeUsdc = 0;
-const FEE_ROUTING_THRESHOLD = 0.001; // Route when >= 0.001 USDC accumulated
+const FEE_ROUTING_THRESHOLD = parseFloat(process.env.FEE_ROUTING_THRESHOLD || '0.05'); // Route when threshold reached
 
 // ─── Resolve token symbol to address ─────────────────────────────────────────
 function resolveToken(symbolOrAddress, chainId) {

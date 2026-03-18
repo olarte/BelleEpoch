@@ -140,30 +140,42 @@ class BelleAgent {
     // Step 2: Calculate bid
     const bidAmount = parseFloat(this.calculateBid(feed).toFixed(4));
 
-    // Step 3: Sign the bid
-    const bidBody = {
-      epochId: feed.epochId,
-      agentId: this.agentId,
-      maxBid: bidAmount,
-      resource,
-    };
-    const signature = await this.signBid(bidBody);
+    // Step 3+4: Sign and submit bid, with retry on epoch mismatch
+    let bidData;
+    let usedEpochId = feed.epochId;
 
-    // Step 4: Submit bid
-    const bidRes = await fetch(`${endpoint}/bid`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...bidBody, signature }),
-    });
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const bidBody = {
+        epochId: usedEpochId,
+        agentId: this.agentId,
+        maxBid: bidAmount,
+        resource,
+      };
+      const signature = await this.signBid(bidBody);
 
-    const bidData = await bidRes.json();
+      const bidRes = await fetch(`${endpoint}/bid`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...bidBody, signature }),
+      });
 
-    if (bidRes.status === 400 || bidRes.status === 401 || bidRes.status === 403) {
-      throw new Error(`Bid rejected: ${bidData.error}`);
-    }
+      bidData = await bidRes.json();
 
-    if (!bidRes.ok && bidRes.status !== 402) {
-      throw new Error(`Bid failed: ${bidData.error || bidRes.status}`);
+      // If epoch mismatch, retry immediately with the correct epoch
+      if (bidRes.status === 400 && bidData.currentEpochId && bidData.currentEpochId !== usedEpochId) {
+        usedEpochId = bidData.currentEpochId;
+        continue;
+      }
+
+      if (bidRes.status === 400 || bidRes.status === 401 || bidRes.status === 403) {
+        throw new Error(`Bid rejected: ${bidData.error}`);
+      }
+
+      if (!bidRes.ok && bidRes.status !== 402) {
+        throw new Error(`Bid failed: ${bidData.error || bidRes.status}`);
+      }
+
+      break; // success
     }
 
     // Step 5: Wait for epoch to close
@@ -171,14 +183,14 @@ class BelleAgent {
     await new Promise(resolve => setTimeout(resolve, waitMs + 500));
 
     // Step 6: Check if we won — poll payment endpoint
-    const paymentRes = await fetch(`${endpoint}/epoch/${feed.epochId}/payment/${this.agentId}`);
+    const paymentRes = await fetch(`${endpoint}/epoch/${usedEpochId}/payment/${this.agentId}`);
     const paymentData = await paymentRes.json();
 
     if (paymentRes.status === 404) {
       // We lost this epoch
       return {
         won: false,
-        epochId: feed.epochId,
+        epochId: usedEpochId,
         bidAmount,
         clearingPrice: null,
         accessToken: null,
@@ -189,14 +201,14 @@ class BelleAgent {
       // We won — settle via x402
       const settlementResult = await this._settlePayment(
         endpoint,
-        feed.epochId,
+        usedEpochId,
         paymentData.clearingPrice,
         resource
       );
 
       return {
         won: true,
-        epochId: feed.epochId,
+        epochId: usedEpochId,
         bidAmount,
         clearingPrice: paymentData.clearingPrice,
         ...settlementResult,
@@ -206,7 +218,7 @@ class BelleAgent {
     if (paymentData.status === 'already_paid') {
       return {
         won: true,
-        epochId: feed.epochId,
+        epochId: usedEpochId,
         bidAmount,
         clearingPrice: paymentData.clearingPrice || null,
         txHash: paymentData.txHash,
@@ -216,7 +228,7 @@ class BelleAgent {
 
     return {
       won: false,
-      epochId: feed.epochId,
+      epochId: usedEpochId,
       bidAmount,
       clearingPrice: null,
       accessToken: null,

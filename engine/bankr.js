@@ -14,6 +14,7 @@ const BANKR_WALLET = process.env.BANKR_WALLET || '';
 
 let initialized = false;
 let walletAddress = null;
+let accumulatedBankrUsdc = 0;
 
 async function init() {
   if (!BANKR_API_KEY) {
@@ -37,9 +38,18 @@ async function init() {
     }
   }
 
+  // Restore accumulated routing amount from Redis
+  try {
+    const stored = await redis.get('bankr:routing:accumulated');
+    if (stored) accumulatedBankrUsdc = parseFloat(stored);
+  } catch { /* ignore */ }
+
   initialized = true;
   console.log(`[Bankr] Active — gateway: ${BANKR_LLM_URL}`);
   console.log(`[Bankr] Wallet: ${walletAddress || '(not resolved)'}`);
+  if (accumulatedBankrUsdc > 0) {
+    console.log(`[Bankr] Accumulated pending routing: ${accumulatedBankrUsdc.toFixed(6)} USDC`);
+  }
   return true;
 }
 
@@ -154,9 +164,10 @@ async function getUsage(days = 7) {
 }
 
 // ─── Revenue routing ────────────────────────────────────────────────────────
-// Routes USDC from protocol earnings to Bankr wallet.
-// In production this would be a real x402 micropayment or on-chain transfer.
-// For the MVP, we track it in Redis and log the simulated routing.
+// Routes USDC from protocol earnings to Bankr wallet via real on-chain transfer.
+// Accumulates until threshold, then sends a single USDC transfer on Base.
+
+const BANKR_ROUTING_THRESHOLD = parseFloat(process.env.BANKR_ROUTING_THRESHOLD || '0.0001'); // min USDC to route
 
 async function routeRevenue(epochId, amountUsdc) {
   const target = walletAddress || BANKR_WALLET;
@@ -165,28 +176,70 @@ async function routeRevenue(epochId, amountUsdc) {
     return { routed: false, error: 'No wallet address' };
   }
 
-  // Generate a deterministic simulated tx hash for tracking
-  const crypto = require('crypto');
-  const txHash = '0x' + crypto.createHash('sha256')
-    .update(`bankr-route:${epochId}:${amountUsdc}:${target}:${Date.now()}`)
-    .digest('hex');
+  // Accumulate small amounts
+  accumulatedBankrUsdc += amountUsdc;
+  await redis.set('bankr:routing:accumulated', accumulatedBankrUsdc.toString());
+
+  if (accumulatedBankrUsdc < BANKR_ROUTING_THRESHOLD) {
+    return { routed: false, accumulated: accumulatedBankrUsdc };
+  }
+
+  const routeAmount = accumulatedBankrUsdc;
+  let txHash = null;
+
+  // Attempt real on-chain USDC transfer
+  const privateKey = process.env.ENGINE_PRIVATE_KEY;
+  const rpcUrl = process.env.BASE_RPC_URL;
+
+  if (privateKey && rpcUrl) {
+    try {
+      const { ethers } = require('ethers');
+      const provider = new ethers.JsonRpcProvider(rpcUrl);
+      const wallet = new ethers.Wallet(privateKey, provider);
+      const USDC_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'; // USDC on Base
+      const usdcAbi = ['function transfer(address to, uint256 amount) returns (bool)'];
+      const usdc = new ethers.Contract(USDC_ADDRESS, usdcAbi, wallet);
+
+      const amountRaw = Math.round(routeAmount * 1e6).toString(); // USDC 6 decimals
+      const tx = await usdc.transfer(target, amountRaw);
+      console.log(`[Bankr] Revenue routing tx submitted: ${tx.hash}`);
+      const receipt = await tx.wait();
+      console.log(`[Bankr] Revenue routing confirmed in block ${receipt.blockNumber}`);
+      txHash = tx.hash;
+
+      // Reset accumulator on success
+      accumulatedBankrUsdc = 0;
+      await redis.set('bankr:routing:accumulated', '0');
+    } catch (err) {
+      console.error(`[Bankr] On-chain routing failed: ${err.message} — keeping accumulated`);
+      return { routed: false, error: err.message, accumulated: accumulatedBankrUsdc };
+    }
+  } else {
+    // No wallet config — fallback to tracking only (no fake tx hashes)
+    console.log(`[Bankr] Missing ENGINE_PRIVATE_KEY or BASE_RPC_URL — tracking only`);
+    txHash = null;
+    accumulatedBankrUsdc = 0;
+    await redis.set('bankr:routing:accumulated', '0');
+  }
 
   // Track cumulative routing in Redis
-  await redis.incrbyfloat('bankr:routed:total', amountUsdc);
+  await redis.incrbyfloat('bankr:routed:total', routeAmount);
   await redis.lpush('bankr:routing:log', JSON.stringify({
     epochId,
-    amount: amountUsdc,
+    amount: routeAmount,
     target,
     txHash,
+    onChain: !!txHash,
     timestamp: new Date().toISOString(),
   }));
   await redis.ltrim('bankr:routing:log', 0, 999);
 
   console.log(
-    `[Bankr] Routed ${amountUsdc.toFixed(6)} USDC → ${target.slice(0, 10)}... | tx: ${txHash.slice(0, 18)}...`
+    `[Bankr] Routed ${routeAmount.toFixed(6)} USDC → ${target.slice(0, 10)}...` +
+    (txHash ? ` | tx: ${txHash.slice(0, 18)}...` : ' | tracked (no on-chain)')
   );
 
-  return { routed: true, txHash, amount: amountUsdc, target };
+  return { routed: true, txHash, amount: routeAmount, target, onChain: !!txHash };
 }
 
 // ─── Routing log retrieval ──────────────────────────────────────────────────

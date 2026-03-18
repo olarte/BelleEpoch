@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Express middleware that gates any API behind a Belle Epoch Continuous Clearing Auction",
   "main": "index.js",
-  "keywords": ["belle-epoch", "clearing-auction", "x402", "agent", "middleware"],
+  "files": ["index.js", "README.md"],
+  "keywords": ["belle-epoch", "clearing-auction", "x402", "agent", "middleware", "express"],
   "license": "MIT",
   "repository": {
     "type": "git",
