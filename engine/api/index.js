@@ -16,6 +16,7 @@ const bankr = require('../bankr');
 const venice = require('../venice');
 const uniswap = require('../uniswap');
 
+const { startProviderLoop, stopProviderLoop, isLoopActive } = require('../providerLoop');
 const mountHumansRoutes = require('./humans');
 
 const app = express();
@@ -194,6 +195,41 @@ app.post('/bid', async (req, res) => {
 // ─── GET /feed ───────────────────────────────────────────────────────────────
 app.get('/feed', async (req, res) => {
   res.set('Cache-Control', 'no-store');
+
+  // Idle guard — meaningful response when no providers are active
+  const allIds = [
+    ...await redis.zrevrange('providers', 0, -1).catch(() => []),
+    ...await redis.zrevrange('humans:providers', 0, -1).catch(() => []),
+  ];
+
+  const providers = (await Promise.all(
+    allIds.map(id =>
+      redis.get(`provider:${id}`)
+        .then(r => r ? JSON.parse(r) : null)
+        .catch(() => null)
+    )
+  )).filter(Boolean);
+
+  const online = providers.filter(p => p.online);
+
+  // Also check if Belle's loop is running (she may not be in the sorted set)
+  const belleId = process.env.BELLE_WALLET || 'belle.epoch.base.eth';
+  const belleActive = isLoopActive(belleId);
+
+  if (online.length === 0 && !belleActive) {
+    return res.status(200).json({
+      status: 'idle',
+      message: 'No active providers.',
+      skill: 'https://belleepoch.xyz/skill.md',
+      providersRegistered: providers.length,
+      providersOnline: 0,
+      clearingPrice: null,
+      epochId: null,
+      nextEpochMs: null,
+      protocolFeeRate: parseFloat(process.env.PROTOCOL_FEE_RATE || '0.015'),
+    });
+  }
+
   res.json(await engine.getFeed());
 });
 
@@ -493,7 +529,33 @@ app.post('/providers/register', async (req, res) => {
 
     await redis.rpush('self:providers', JSON.stringify(provider));
 
+    // Also store in provider sorted set for loop restoration
+    await redis.set(`provider:${agentId}`, JSON.stringify({
+      id: agentId,
+      type: 'agent',
+      resource,
+      capacitySlots: provider.capacity,
+      epochMs: provider.epochMs,
+      chain: 'base',
+      online: true,
+      registeredAt: provider.registeredAt,
+    }));
+    await redis.zadd('providers', Date.now(), agentId);
+
     console.log(`[Self] Provider registered: ${agentId} (${resource}) — credentials: [${provider.credentials.join(', ')}]`);
+
+    // Start per-provider epoch loop
+    startProviderLoop({
+      id: agentId,
+      type: 'agent',
+      resource,
+      capacitySlots: provider.capacity,
+      epochMs: provider.epochMs,
+      chain: 'base',
+      online: true,
+    }).catch(err =>
+      console.error(`[register] loop start failed for ${agentId}:`, err.message)
+    );
 
     res.status(201).json({
       status: 'registered',
@@ -507,6 +569,37 @@ app.post('/providers/register', async (req, res) => {
     });
   } catch (err) {
     console.error('[POST /providers/register] error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ─── POST /providers/deregister ─────────────────────────────────────────────
+app.post('/providers/deregister', async (req, res) => {
+  try {
+    const { walletAddress, signature } = req.body;
+
+    if (!walletAddress || !signature) {
+      return res.status(400).json({ error: 'Missing walletAddress or signature' });
+    }
+
+    const { ethers } = require('ethers');
+    const recovered = ethers.verifyMessage('belle-epoch-deregister', signature);
+    if (recovered.toLowerCase() !== walletAddress.toLowerCase()) {
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+
+    stopProviderLoop(walletAddress);
+
+    const raw = await redis.get(`provider:${walletAddress}`);
+    if (raw) {
+      const p = JSON.parse(raw);
+      p.online = false;
+      await redis.set(`provider:${walletAddress}`, JSON.stringify(p));
+    }
+
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    console.error('[POST /providers/deregister] error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -1017,15 +1110,94 @@ async function start() {
   await engine.initEpochId();
   await setupOnChain();
 
-  // Start the clearing engine
   console.log('Belle Epoch — Clearing Engine + API');
   console.log(`Capacity: ${engine.CAPACITY} slots | Epoch: ${engine.EPOCH_DURATION}ms`);
   console.log('---');
-  setInterval(() => engine.runEpoch(), engine.EPOCH_DURATION);
 
   app.listen(PORT, () => {
     console.log(`[API] listening on port ${PORT}`);
   });
+
+  // ── Restore active loops on startup (Railway redeploy) ──────────────
+  await restoreActiveLoops();
+
+  // ── Ensure Belle's loop always runs ─────────────────────────────────
+  await ensureBelleLoop();
+}
+
+// ─── Restore active provider loops from Redis ───────────────────────────────
+async function restoreActiveLoops() {
+  console.log('[startup] restoring provider loops...');
+
+  // Agent providers
+  const agentIds = await redis.zrevrange('providers', 0, -1).catch(() => []);
+  for (const id of agentIds) {
+    const raw = await redis.get(`provider:${id}`);
+    if (!raw) continue;
+    const p = JSON.parse(raw);
+    if (p.online && !isLoopActive(id)) {
+      startProviderLoop(p).catch(err =>
+        console.error(`[startup] loop restore failed ${id}:`, err.message)
+      );
+      console.log(`[startup] restored loop for ${id}`);
+    }
+  }
+
+  // Human providers
+  const humanIds = await redis.zrevrange('humans:providers', 0, -1).catch(() => []);
+  for (const id of humanIds) {
+    const raw = await redis.get(`humans:provider:${id}`);
+    if (!raw) continue;
+    const p = JSON.parse(raw);
+    const heartbeatAlive = await redis.exists(`humans:online:${id}`);
+    if (heartbeatAlive && !isLoopActive(id)) {
+      startProviderLoop(p).catch(err =>
+        console.error(`[startup] human loop restore failed ${id}:`, err.message)
+      );
+      console.log(`[startup] restored human loop for ${id}`);
+    } else if (!heartbeatAlive && p.online) {
+      p.online = false;
+      await redis.set(`humans:provider:${id}`, JSON.stringify(p));
+    }
+  }
+
+  console.log('[startup] loop restoration complete');
+}
+
+// ─── Ensure Belle's loop is always running ──────────────────────────────────
+async function ensureBelleLoop() {
+  const belleId = process.env.BELLE_WALLET || 'belle.epoch.base.eth';
+  const raw = await redis.get(`provider:${belleId}`);
+
+  if (!raw) {
+    // First boot — register Belle
+    const belle = {
+      id: belleId,
+      type: 'agent',
+      resource: 'private-reasoning',
+      capacitySlots: 3,
+      epochMs: engine.EPOCH_DURATION,
+      chain: 'base',
+      online: true,
+      registeredAt: new Date().toISOString(),
+    };
+    await redis.set(`provider:${belleId}`, JSON.stringify(belle));
+    await redis.zadd('providers', Date.now(), belleId);
+    console.log('[startup] Belle registered');
+    startProviderLoop(belle).catch(err =>
+      console.error('[startup] Belle loop failed:', err.message)
+    );
+  } else {
+    const belle = JSON.parse(raw);
+    belle.online = true;
+    await redis.set(`provider:${belleId}`, JSON.stringify(belle));
+    if (!isLoopActive(belleId)) {
+      startProviderLoop(belle).catch(err =>
+        console.error('[startup] Belle loop failed:', err.message)
+      );
+      console.log('[startup] Belle loop started');
+    }
+  }
 }
 
 start();

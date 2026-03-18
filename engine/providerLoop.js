@@ -1,0 +1,152 @@
+// engine/providerLoop.js — Per-provider epoch loops
+//
+// Replaces the global setInterval. Each provider gets its own loop that
+// can be started / stopped independently. Belle delegates to the existing
+// engine.runEpoch(); other providers run a lighter per-provider clearing.
+// On-chain calls fire ONLY when there are real winners — idle epochs cost
+// zero gas.
+
+const engine = require('./clearing');
+const { redis } = require('./bids');
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const activeLoops = new Map();
+
+const BELLE_ID = process.env.BELLE_WALLET || 'belle.epoch.base.eth';
+
+// ─── Start a per-provider epoch loop ────────────────────────────────────────
+
+async function startProviderLoop(provider) {
+  if (activeLoops.get(provider.id) === true) {
+    console.log(`[loop] ${provider.id} already running`);
+    return;
+  }
+
+  console.log(`[loop] starting for ${provider.id}`);
+  activeLoops.set(provider.id, true);
+
+  const isBelle = provider.id === BELLE_ID;
+
+  if (isBelle) {
+    // ── Belle: delegates to existing engine.runEpoch() ──────────────────
+    // This preserves sim bids, settlement, revenue routing, on-chain
+    // recording, margin logging — everything the current engine does.
+    while (activeLoops.get(provider.id) === true) {
+      const start = Date.now();
+      try {
+        await engine.runEpoch();
+      } catch (err) {
+        console.error(`[loop] ${provider.id} epoch error:`, err.message);
+      }
+      const elapsed = Date.now() - start;
+      await sleep(Math.max(0, (provider.epochMs || engine.EPOCH_DURATION) - elapsed));
+    }
+  } else {
+    // ── Other providers: per-provider clearing ──────────────────────────
+    const lastId = await redis.get(`provider:${provider.id}:lastEpochId`);
+    let epochId = lastId ? parseInt(lastId) + 1 : 1;
+
+    while (activeLoops.get(provider.id) === true) {
+      const start = Date.now();
+
+      try {
+        // Provider-scoped bids (separate from Belle's global bid pool)
+        const bidKey = `provider:${provider.id}:epoch:${epochId}:bids`;
+        const raw = await redis.lrange(bidKey, 0, -1);
+        const bids = raw.map(s => JSON.parse(s));
+
+        if (bids.length === 0) {
+          // No bids — close silently. Zero gas. Zero chain call.
+          console.log(`[loop] ${provider.id} epoch ${epochId} — no bids, idle`);
+        } else {
+          const sorted = [...bids].sort((a, b) => b.maxBid - a.maxBid);
+          const capacity = provider.capacitySlots || 1;
+          const winners = sorted.slice(0, capacity);
+          const losers = sorted.slice(capacity);
+          const clearingPrice = winners[winners.length - 1].maxBid;
+
+          console.log(
+            `[loop] ${provider.id} epoch ${epochId} — ` +
+            `${bids.length} bids, price ${clearingPrice.toFixed(4)}, ` +
+            `${winners.length} winners`
+          );
+
+          // On-chain call ONLY when there are real winners
+          if (winners.length > 0 && engine.onChainRecorder) {
+            const result = {
+              epochId,
+              clearingPrice,
+              slotsFilled: winners.length,
+              totalBids: bids.length,
+              winners: winners.map(w => ({
+                agentId: w.agentId,
+                pays: clearingPrice,
+                signer: w.signer || null,
+                identityAddress: w.identityAddress || null,
+              })),
+              losers: losers.map(l => ({ agentId: l.agentId, pays: 0 })),
+            };
+
+            engine.onChainRecorder(result).catch(err =>
+              console.error(`[loop] ${provider.id} on-chain error:`, err.message)
+            );
+
+            // Update aggregate stats
+            await redis.incrbyfloat(
+              `provider:${provider.id}:totalVolume`,
+              clearingPrice * winners.length
+            );
+            await redis.incrby(
+              `provider:${provider.id}:totalWinners`,
+              winners.length
+            );
+          }
+
+          // Publish to feed events
+          await redis.lpush('feed:events', JSON.stringify({
+            epochId,
+            provider: provider.id,
+            clearingPrice,
+            slotsFilled: winners.length,
+            totalBids: bids.length,
+            chain: provider.chain || 'base',
+            timestamp: new Date().toISOString(),
+          }));
+          await redis.ltrim('feed:events', 0, 99);
+
+          // Clean up bid key
+          await redis.del(bidKey);
+        }
+
+        await redis.incr(`provider:${provider.id}:epochsRun`);
+        await redis.set(`provider:${provider.id}:lastEpochId`, epochId);
+      } catch (err) {
+        console.error(`[loop] ${provider.id} epoch ${epochId} error:`, err.message);
+        // Keep loop alive through errors
+      }
+
+      epochId++;
+      const elapsed = Date.now() - start;
+      await sleep(Math.max(0, (provider.epochMs || 30000) - elapsed));
+    }
+  }
+
+  activeLoops.delete(provider.id);
+  console.log(`[loop] ${provider.id} stopped`);
+}
+
+// ─── Stop a provider loop ───────────────────────────────────────────────────
+
+function stopProviderLoop(providerId) {
+  activeLoops.set(providerId, false);
+  console.log(`[loop] ${providerId} marked for stop`);
+}
+
+// ─── Check if a loop is active ──────────────────────────────────────────────
+
+function isLoopActive(providerId) {
+  return activeLoops.get(providerId) === true;
+}
+
+module.exports = { startProviderLoop, stopProviderLoop, isLoopActive };

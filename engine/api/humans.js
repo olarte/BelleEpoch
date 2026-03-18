@@ -1,6 +1,7 @@
 // engine/api/humans.js — Human provider routes (Self Protocol + Celo)
 
 const { ethers } = require('ethers');
+const { startProviderLoop, stopProviderLoop, isLoopActive } = require('../providerLoop');
 
 module.exports = function mountHumansRoutes(app, redis) {
 
@@ -226,27 +227,36 @@ module.exports = function mountHumansRoutes(app, redis) {
     }
   });
 
-  // ─── Background job: mark providers offline if heartbeat expired ──────────
+  // ─── Background job: link heartbeat to provider loops ─────────────────────
   setInterval(async () => {
     try {
       const ids = await redis.zrevrange('humans:providers', 0, -1);
       for (const id of ids) {
-        const isOnline = await redis.exists(`humans:online:${id}`);
-        if (!isOnline) {
-          const raw = await redis.get(`humans:provider:${id}`);
-          if (raw) {
-            const p = JSON.parse(raw);
-            if (p.online) {
-              p.online = false;
-              await redis.set(`humans:provider:${id}`, JSON.stringify(p));
-            }
-          }
+        const raw = await redis.get(`humans:provider:${id}`);
+        if (!raw) continue;
+        const provider = JSON.parse(raw);
+        const heartbeatAlive = await redis.exists(`humans:online:${id}`);
+
+        if (!heartbeatAlive && provider.online) {
+          provider.online = false;
+          await redis.set(`humans:provider:${id}`, JSON.stringify(provider));
+          stopProviderLoop(id);
+          console.log(`[heartbeat] ${id} offline — loop stopped`);
+        }
+
+        if (heartbeatAlive && !isLoopActive(id)) {
+          provider.online = true;
+          await redis.set(`humans:provider:${id}`, JSON.stringify(provider));
+          startProviderLoop(provider).catch(err =>
+            console.error(`[heartbeat] restart failed for ${id}:`, err.message)
+          );
+          console.log(`[heartbeat] ${id} online — loop restarted`);
         }
       }
     } catch (err) {
       console.error('[Humans] heartbeat check error:', err.message);
     }
-  }, 60000);
+  }, 30000);
 
   console.log('[Humans] routes mounted: /humans/verify, /humans/register, /humans/providers, /humans/heartbeat');
 };

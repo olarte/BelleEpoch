@@ -1,0 +1,7 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "node engine/index.js"
+restartPolicyType = "always"
+restartPolicyMaxRetries = 10
