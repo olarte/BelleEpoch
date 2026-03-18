@@ -1167,6 +1167,18 @@ async function restoreActiveLoops() {
 // ─── Ensure Belle's loop is always running ──────────────────────────────────
 async function ensureBelleLoop() {
   const belleId = process.env.BELLE_WALLET || 'belle.epoch.base.eth';
+
+  if (process.env.BELLE_AUTOSTART === 'false') {
+    console.log('[startup] Belle autostart disabled (BELLE_AUTOSTART=false) — zero gas, zero spend');
+    const raw = await redis.get(`provider:${belleId}`);
+    if (raw) {
+      const belle = JSON.parse(raw);
+      belle.online = false;
+      await redis.set(`provider:${belleId}`, JSON.stringify(belle));
+    }
+    return;
+  }
+
   const raw = await redis.get(`provider:${belleId}`);
 
   if (!raw) {
