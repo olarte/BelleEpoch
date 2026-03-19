@@ -1666,6 +1666,14 @@ select.form-input {
   border: 1px solid var(--g50);
 }
 
+.identity-grid-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+@media (max-width: 900px) {
+  .identity-grid-3 { grid-template-columns: 1fr; }
+}
+
 .identity-item {
   padding: 20px;
   background: var(--g80);
@@ -1685,6 +1693,38 @@ select.form-input {
   font-size: 12px;
   word-break: break-all;
   color: var(--g10);
+}
+
+.identity-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--g60, #333);
+}
+
+.identity-row:last-child {
+  border-bottom: none;
+}
+
+.identity-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--g30);
+  white-space: nowrap;
+  margin-right: 12px;
+}
+
+.identity-row .value {
+  text-align: right;
+}
+
+.identity-row .value a {
+  text-decoration: none;
+}
+
+.identity-row .value a:hover {
+  text-decoration: underline;
 }
 
 /* ============================================================
@@ -2091,6 +2131,9 @@ select.form-input {
 .sec-white .identity-item  { background: #e8e4de; }
 .sec-white .identity-item h4 { color: #777; }
 .sec-white .identity-item .value { color: #222; }
+.sec-white .identity-row { border-bottom-color: #ccc; }
+.sec-white .identity-label { color: #777; }
+.sec-white .identity-row .value a { color: #222; }
 
 .sec-white .grid-4 { background: #ccc; }
 .sec-white .grid-4 > * { background: #e8e4de; }

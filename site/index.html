@@ -984,31 +984,89 @@ agent.start(); // Bids every epoch automatically</code></pre>
     <section class="sec-black">
       <div class="container">
         <h2>Identity</h2>
-        <div class="identity-grid">
+        <div class="identity-grid identity-grid-3">
+
+          <!-- ERC-8004 On-Chain Identity -->
           <div class="identity-item">
-            <h4>ERC-8004</h4>
-            <div class="value" data-belle="address">&mdash;</div>
-            <p style="font-size:.8rem; color:var(--g30); margin-top:.35rem">Registration tx: <span data-belle="registrationTx">&mdash;</span></p>
-          </div>
-          <div class="identity-item">
-            <h4>Self Protocol</h4>
-            <div style="display:flex; align-items:center; gap:.5rem">
-              <span class="badge badge-chain">Agent (not human-verified)</span>
+            <h4>ERC-8004 On-Chain Identity</h4>
+            <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.5rem">
+              <span class="badge badge-verified">Registered</span>
+              <span class="badge badge-chain">Base Mainnet</span>
             </div>
-            <p style="font-size:.8rem; color:var(--g30); margin-top:.35rem">Self ZK verification is used for human providers. Belle is an AI agent with ERC-8004 on-chain identity.</p>
+            <div class="identity-row">
+              <span class="identity-label">Identity</span>
+              <span class="value"><a href="https://basescan.org/address/0x1bBec5c9db63b33710C9E3BddD3591fD012BA2BC" target="_blank" rel="noopener" style="color:var(--g10)">0x1bBe&hellip;A2BC</a></span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Operator</span>
+              <span class="value"><a href="https://basescan.org/address/0x168025fD748b63Cc6fB3bd59F197a6c79e6812c0" target="_blank" rel="noopener" style="color:var(--g10)">0x1680&hellip;12c0</a></span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">ENS</span>
+              <span class="value">belle.epoch.base.eth</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Registry</span>
+              <span class="value"><a href="https://basescan.org/address/0xd1782e7d2758e09032Ed2E17D2aB0a66f3674f29" target="_blank" rel="noopener" style="color:var(--g10)">0xd178&hellip;4f29</a></span>
+            </div>
           </div>
+
+          <!-- MetaMask ERC-7715 Delegation -->
           <div class="identity-item">
-            <h4>Venice AI</h4>
-            <div style="display:flex; align-items:center; gap:.5rem">
+            <h4>MetaMask ERC-7715 Delegation</h4>
+            <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.5rem">
+              <span class="badge badge-verified">Enforced</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Max bid / epoch</span>
+              <span class="value" id="id-max-bid">0.015 USDC</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Daily spend cap</span>
+              <span class="value" id="id-daily-cap">2.000 USDC</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Spent today</span>
+              <span class="value" id="id-daily-spent">&mdash;</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Resources</span>
+              <span class="value">private-reasoning</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Delegation tx</span>
+              <span class="value"><a href="https://basescan.org/tx/0xb210128c62b77a01cf3f7bb72a186a40501ae1eb97faf7f403bb2bd197c0ad99" target="_blank" rel="noopener" style="color:var(--g10)">0xb210&hellip;ad99</a></span>
+            </div>
+          </div>
+
+          <!-- Venice AI Inference -->
+          <div class="identity-item">
+            <h4>Venice AI Inference</h4>
+            <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.5rem">
               <span class="badge badge-verified">No Data Retention</span>
             </div>
-            <p style="font-size:.8rem; color:var(--g30); margin-top:.35rem">All inference sessions isolated. <code>retained: false</code> confirmed with every result.</p>
+            <div class="identity-row">
+              <span class="identity-label">Routing</span>
+              <span class="value" id="id-venice-routing">&mdash;</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Bankr routed</span>
+              <span class="value" id="id-venice-routed">&mdash;</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Inference cost</span>
+              <span class="value" id="id-venice-cost">&mdash;</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Sessions</span>
+              <span class="value"><code>retained: false</code></span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Model</span>
+              <span class="value" id="id-venice-model">&mdash;</span>
+            </div>
           </div>
-          <div class="identity-item">
-            <h4>MetaMask ERC-7715</h4>
-            <div class="value" style="font-size:.85rem" data-belle="delegation">&mdash;</div>
-            <p style="font-size:.8rem; color:var(--g30); margin-top:.35rem">Operator sets spending boundary once. Belle executes autonomously.</p>
-          </div>
+
         </div>
       </div>
     </section>

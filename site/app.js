@@ -193,6 +193,44 @@ const BelleEpoch = (() => {
     return fetchJson('/humans/providers');
   }
 
+  async function fetchIdentityData() {
+    const [delegation, bankr] = await Promise.all([
+      fetchJson('/delegation'),
+      fetchJson('/bankr/status'),
+    ]);
+    if (delegation) {
+      const el = (id) => document.getElementById(id);
+      if (el('id-max-bid') && delegation.caveats) {
+        el('id-max-bid').textContent = (delegation.caveats.maxBidPerEpoch / 1e6).toFixed(3) + ' USDC';
+      }
+      if (el('id-daily-cap') && delegation.dailyCapUsdc != null) {
+        el('id-daily-cap').textContent = delegation.dailyCapUsdc.toFixed(3) + ' USDC';
+      }
+      if (el('id-daily-spent') && delegation.dailySpendUsdc != null) {
+        const pct = delegation.dailyCapUsdc > 0
+          ? ((delegation.dailySpendUsdc / delegation.dailyCapUsdc) * 100).toFixed(0)
+          : 0;
+        el('id-daily-spent').textContent = delegation.dailySpendUsdc.toFixed(4) + ' USDC (' + pct + '%)';
+      }
+    }
+    if (bankr) {
+      const el = (id) => document.getElementById(id);
+      if (el('id-venice-routing')) {
+        el('id-venice-routing').textContent = bankr.initialized ? 'Bankr LLM Gateway' : 'Direct Venice API';
+      }
+      if (el('id-venice-routed') && bankr.totalRouted != null) {
+        el('id-venice-routed').textContent = parseFloat(bankr.totalRouted).toFixed(4) + ' USDC';
+      }
+      if (el('id-venice-cost')) {
+        const cost = bankr.inferenceCost || (bankr.usage && (bankr.usage.totalCost || bankr.usage.cost)) || 0;
+        el('id-venice-cost').textContent = parseFloat(cost).toFixed(6) + ' USDC';
+      }
+      if (el('id-venice-model')) {
+        el('id-venice-model').textContent = bankr.model || 'via Bankr gateway';
+      }
+    }
+  }
+
   // --------------- Data Binding ---------------
 
   function bindFeed(data) {
@@ -1322,11 +1360,13 @@ const BelleEpoch = (() => {
     fetchFeed();
     fetchAgentData('belle');
     fetchQueue();
+    fetchIdentityData();
     renderBelleEpochTable();
 
     setInterval(fetchFeed, FEED_POLL_MS);
     setInterval(() => fetchAgentData('belle'), FEED_POLL_MS * 2);
     setInterval(fetchQueue, FEED_POLL_MS * 2);
+    setInterval(fetchIdentityData, FEED_POLL_MS * 10);
 
     // Console
     const btn = $('#btn-run-console');

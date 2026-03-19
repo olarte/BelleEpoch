@@ -835,12 +835,15 @@ app.get('/bankr/status', async (req, res) => {
   const balance = await bankr.getBalance();
   const totalRouted = await bankr.getTotalRouted();
   const usage = await bankr.getUsage();
+  const inferenceCostRaw = await redis.get('bankr:inference:cost');
   res.json({
     wallet: bankr.getWallet(),
     initialized: bankr.isInitialized(),
     balance,
     totalRouted,
     usage,
+    model: process.env.BANKR_MODEL || process.env.VENICE_MODEL || 'llama-3.3-70b',
+    inferenceCost: parseFloat(inferenceCostRaw || '0'),
   });
 });
 
