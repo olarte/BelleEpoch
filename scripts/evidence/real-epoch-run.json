@@ -1,0 +1,15 @@
+{
+  "runDate": "2026-03-19T13:15:50.607Z",
+  "agentWallet": "0xbdBEE40a847BC8F8AadE8Ab2685E028Dc32865a9",
+  "epochId": 262,
+  "clearingPrice": 0.01,
+  "paymentTxHash": "0xade344b1784275c902446be3d32ec762395e1d0478434541f560407e207c17a1",
+  "epochClearedTxHash": "(check BaseScan for EpochCleared event)",
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlcG9jaElkIjoyNjIsImFnZW50SWQiOiJhZ2VudC1iZEJFRTQwYSIsInNsb3QiOjIsInJlc291cmNlIjoicHJpdmF0ZS1yZWFzb25pbmciLCJpYXQiOjE3NzM5MjYxNjEsImV4cCI6MTc3MzkyNjE2NSwiaXNzIjoiYmVsbGUtZXBvY2giLCJzdWIiOiJhZ2VudC1iZEJFRTQwYSJ9.OmfTUrvFzV211DBvtzC7Cee8tpNYNMCh1mIX0Cpfae4",
+  "veniceQueryId": "q-262-1bfc58da14aa0e11",
+  "veniceRetained": false,
+  "usdcBalanceBefore": "1.5",
+  "usdcBalanceAfter": "1.49",
+  "bankrWalletBefore": "(check /bankr/status)",
+  "bankrWalletAfter": "(check /bankr/status)"
+}

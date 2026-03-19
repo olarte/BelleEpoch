@@ -286,5 +286,48 @@
     "veniceQuery": null,
     "agentId": "agent-168025fD",
     "wallet": "0x168025fD748b63Cc6fB3bd59F197a6c79e6812c0"
+  },
+  {
+    "timestamp": "2026-03-19T13:13:40.557Z",
+    "phase": "error",
+    "action": "Bid rejected: Signer 0xbdBEE40a847BC8F8AadE8Ab2685E028Dc32865a9 has no ERC-8004 identity registered",
+    "agentId": "agent-bdBEE40a"
+  },
+  {
+    "timestamp": "2026-03-19T13:13:48.630Z",
+    "phase": "error",
+    "action": "Bid rejected: Signer 0xbdBEE40a847BC8F8AadE8Ab2685E028Dc32865a9 has no ERC-8004 identity registered",
+    "agentId": "agent-bdBEE40a"
+  },
+  {
+    "timestamp": "2026-03-19T13:13:55.631Z",
+    "phase": "error",
+    "action": "Bid rejected: Signer 0xbdBEE40a847BC8F8AadE8Ab2685E028Dc32865a9 has no ERC-8004 identity registered",
+    "agentId": "agent-bdBEE40a"
+  },
+  {
+    "timestamp": "2026-03-19T13:14:02.632Z",
+    "phase": "error",
+    "action": "Bid rejected: Signer 0xbdBEE40a847BC8F8AadE8Ab2685E028Dc32865a9 has no ERC-8004 identity registered",
+    "agentId": "agent-bdBEE40a"
+  },
+  {
+    "timestamp": "2026-03-19T13:15:50.607Z",
+    "phase": "execute",
+    "epochId": 262,
+    "action": "Full cycle: bid → win → settle → query",
+    "bidAmount": 0.01,
+    "clearingPrice": 0.01,
+    "txHash": "0xade344b1784275c902446be3d32ec762395e1d0478434541f560407e207c17a1",
+    "won": true,
+    "accessToken": "(present)",
+    "veniceQuery": {
+      "queryId": "q-262-1bfc58da14aa0e11",
+      "status": "error",
+      "retained": false,
+      "veniceProof": null
+    },
+    "agentId": "agent-bdBEE40a",
+    "wallet": "0xbdBEE40a847BC8F8AadE8Ab2685E028Dc32865a9"
   }
 ]

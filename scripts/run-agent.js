@@ -14,17 +14,31 @@ const path = require('path');
 const fs = require('fs');
 const { BelleAgent } = require('../sdk/agent');
 
+const { ethers } = require('ethers');
+
 const AGENT_PRIVATE_KEY = process.env.AGENT_PRIVATE_KEY;
 const ENDPOINT = process.env.AGENT_ENDPOINT || process.env.ENDPOINT || 'https://api.belleepoch.xyz';
 const MAX_BID = parseFloat(process.env.AGENT_MAX_BID || '0.01');
 const STRATEGY = process.env.AGENT_STRATEGY || 'adaptive';
 const RESOURCE = 'private-reasoning';
 const AGENT_LOG_PATH = path.resolve(__dirname, '..', 'agent_log.json');
+const EVIDENCE_DIR = path.resolve(__dirname, 'evidence');
+const USDC_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+const BASE_RPC_URL = process.env.BASE_RPC_URL || 'https://mainnet.base.org';
 
 if (!AGENT_PRIVATE_KEY) {
   console.error('ERROR: AGENT_PRIVATE_KEY env var is required');
   console.error('Usage: AGENT_PRIVATE_KEY=0x... node scripts/run-agent.js');
   process.exit(1);
+}
+
+async function getUsdcBalance(address) {
+  const provider = new ethers.JsonRpcProvider(BASE_RPC_URL);
+  const usdc = new ethers.Contract(USDC_ADDRESS, [
+    'function balanceOf(address) view returns (uint256)',
+  ], provider);
+  const raw = await usdc.balanceOf(address);
+  return ethers.formatUnits(raw, 6);
 }
 
 const agent = new BelleAgent({
@@ -107,7 +121,18 @@ async function queryVenice(accessToken) {
 
 async function runOneCycle() {
   const cycleStart = new Date().toISOString();
-  console.log(`\n[Agent] === Cycle start: ${cycleStart} ===`);
+  console.log(`\n=== REAL EPOCH RUN START ===`);
+  console.log(`[Agent] Cycle start: ${cycleStart}`);
+  console.log(`[Agent] Agent wallet: ${agent.wallet.address}`);
+
+  let balanceBefore;
+  try {
+    balanceBefore = await getUsdcBalance(agent.wallet.address);
+    console.log(`[Agent] USDC balance before: ${balanceBefore}`);
+  } catch (e) {
+    console.log(`[Agent] Could not read balance: ${e.message}`);
+    balanceBefore = 'unknown';
+  }
 
   try {
     // Step 1: Bid
@@ -125,10 +150,13 @@ async function runOneCycle() {
         bidAmount: result.bidAmount,
         won: false,
       });
+      console.log(`=== REAL EPOCH RUN END (lost) ===`);
       return;
     }
 
-    console.log(`[Agent] Clearing price: ${result.clearingPrice} USDC | TX: ${result.txHash || 'n/a'}`);
+    console.log(`[Agent] Clearing price: ${result.clearingPrice} USDC`);
+    console.log(`[Agent] Payment proof (tx hash): ${result.txHash || 'n/a'}`);
+    console.log(`[Agent] Access token: ${result.accessToken ? result.accessToken.slice(0, 32) + '...' : 'none'}`);
 
     // Step 2: Query Venice if we have an access token
     let queryResult = null;
@@ -143,7 +171,16 @@ async function runOneCycle() {
       }
     }
 
-    // Step 3: Log
+    // Step 3: Read balance after
+    let balanceAfter;
+    try {
+      balanceAfter = await getUsdcBalance(agent.wallet.address);
+      console.log(`[Agent] USDC balance after: ${balanceAfter}`);
+    } catch (e) {
+      balanceAfter = 'unknown';
+    }
+
+    // Step 4: Log
     appendLog({
       timestamp: cycleStart,
       phase: 'execute',
@@ -164,7 +201,33 @@ async function runOneCycle() {
       wallet: agent.wallet.address,
     });
 
+    // Step 5: Save evidence if we got a real tx hash
+    if (result.txHash && result.txHash.startsWith('0x') && result.txHash.length === 66) {
+      if (!fs.existsSync(EVIDENCE_DIR)) {
+        fs.mkdirSync(EVIDENCE_DIR, { recursive: true });
+      }
+      const evidence = {
+        runDate: cycleStart,
+        agentWallet: agent.wallet.address,
+        epochId: result.epochId,
+        clearingPrice: result.clearingPrice,
+        paymentTxHash: result.txHash,
+        epochClearedTxHash: '(check BaseScan for EpochCleared event)',
+        accessToken: result.accessToken || null,
+        veniceQueryId: queryResult ? queryResult.queryId : null,
+        veniceRetained: queryResult ? queryResult.retained : null,
+        usdcBalanceBefore: balanceBefore,
+        usdcBalanceAfter: balanceAfter,
+        bankrWalletBefore: '(check /bankr/status)',
+        bankrWalletAfter: '(check /bankr/status)',
+      };
+      const evidencePath = path.resolve(EVIDENCE_DIR, 'real-epoch-run.json');
+      fs.writeFileSync(evidencePath, JSON.stringify(evidence, null, 2) + '\n');
+      console.log(`[Agent] Evidence saved to ${evidencePath}`);
+    }
+
     console.log(`[Agent] Cycle complete — logged to agent_log.json`);
+    console.log(`=== REAL EPOCH RUN END ===`);
   } catch (err) {
     console.error(`[Agent] Cycle error: ${err.message}`);
     appendLog({
@@ -173,6 +236,7 @@ async function runOneCycle() {
       action: err.message,
       agentId: agent.agentId,
     });
+    console.log(`=== REAL EPOCH RUN END (error) ===`);
   }
 }
 

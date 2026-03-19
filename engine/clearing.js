@@ -1,8 +1,20 @@
 // engine/clearing.js — Clearing engine core + epoch timer
 
 const { getBids, clearEpoch, recordAgentEpoch, storeEpochResult, storeEpochHistory, redis } = require('./bids');
-const { generateBids, settleEpoch } = require('./sims');
 const { PROTOCOL_FEE_RATE } = require('./x402');
+
+// Simulated agents — only loaded in development
+let generateBids, settleEpoch;
+if (process.env.NODE_ENV !== 'production') {
+  const sims = require('./sims');
+  generateBids = sims.generateBids;
+  settleEpoch = sims.settleEpoch;
+  console.log('[sims] simulated agents running (dev mode)');
+} else {
+  generateBids = async () => {};
+  settleEpoch = async () => [];
+  console.log('[sims] simulated agents disabled in production');
+}
 const bankr = require('./bankr');
 let uniswap = null;
 try { uniswap = require('./uniswap'); } catch (e) { /* optional */ }

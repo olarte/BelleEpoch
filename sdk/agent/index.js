@@ -199,11 +199,13 @@ class BelleAgent {
 
     if (paymentRes.status === 402 || paymentData.status === 'payment_required') {
       // We won — settle via x402
+      const payTo = paymentData.paymentRequest?.accepts?.[0]?.payTo;
       const settlementResult = await this._settlePayment(
         endpoint,
         usedEpochId,
         paymentData.clearingPrice,
-        resource
+        resource,
+        payTo
       );
 
       return {
@@ -236,43 +238,70 @@ class BelleAgent {
   }
 
   /**
-   * Settle a winning bid via the x402 payment flow.
-   * Constructs a payment proof and POSTs to /bid with X-Payment-Proof.
+   * Settle a winning bid via real USDC transfer on Base mainnet.
+   * Signs and broadcasts a USDC transfer, then submits the tx hash as proof.
    */
-  async _settlePayment(endpoint, epochId, clearingPrice, resource) {
-    // Construct simulated payment proof (for the sim flow)
-    // In production, this would create a real USDC transaction
-    const paymentProof = `agent-payment-${this.agentId}-${epochId}-${Date.now()}`;
+  async _settlePayment(endpoint, epochId, clearingPrice, resource, payTo) {
+    const USDC_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+    const BASE_RPC_URL = process.env.BASE_RPC_URL || 'https://mainnet.base.org';
+    const protocolWallet = payTo;
 
-    const settleRes = await fetch(`${endpoint}/bid`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Payment-Proof': paymentProof,
-      },
-      body: JSON.stringify({
-        epochId,
-        agentId: this.agentId,
-        resource,
-      }),
-    });
-
-    const settleData = await settleRes.json();
-
-    if (settleData.accessToken) {
-      return {
-        accessToken: settleData.accessToken,
-        txHash: settleData.txHash || null,
-      };
+    if (!protocolWallet) {
+      return { accessToken: null, txHash: null, settlementError: 'No payTo address in payment request' };
     }
 
-    // Payment verification may require a real on-chain proof
-    // Return what we have
-    return {
-      accessToken: null,
-      txHash: settleData.txHash || null,
-      settlementError: settleData.error || null,
-    };
+    try {
+      // Connect wallet to Base mainnet
+      const provider = new ethers.JsonRpcProvider(BASE_RPC_URL);
+      const connectedWallet = this.wallet.connect(provider);
+
+      // USDC contract (6 decimals)
+      const usdc = new ethers.Contract(USDC_ADDRESS, [
+        'function transfer(address to, uint256 amount) returns (bool)',
+        'function balanceOf(address) view returns (uint256)',
+      ], connectedWallet);
+
+      const amount = BigInt(Math.round(clearingPrice * 1e6));
+
+      // Check balance
+      const balance = await usdc.balanceOf(this.wallet.address);
+      if (balance < amount) {
+        return { accessToken: null, txHash: null, settlementError: `Insufficient USDC: have ${balance}, need ${amount}` };
+      }
+
+      console.log(`[x402] Transferring ${clearingPrice} USDC (${amount} units) to ${protocolWallet}...`);
+
+      // Execute real USDC transfer
+      const tx = await usdc.transfer(protocolWallet, amount);
+      console.log(`[x402] USDC transfer tx: ${tx.hash}`);
+
+      const receipt = await tx.wait();
+      console.log(`[x402] USDC transfer confirmed in block ${receipt.blockNumber}`);
+
+      // Submit tx hash as payment proof to get access token
+      const settleRes = await fetch(`${endpoint}/bid`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Payment-Proof': tx.hash,
+        },
+        body: JSON.stringify({
+          epochId,
+          agentId: this.agentId,
+          resource,
+        }),
+      });
+
+      const settleData = await settleRes.json();
+
+      return {
+        accessToken: settleData.accessToken || null,
+        txHash: tx.hash,
+      };
+    } catch (err) {
+      console.error(`[x402] Real payment failed: ${err.message}`);
+      return { accessToken: null, txHash: null, settlementError: err.message };
+    }
   }
 
   /**
