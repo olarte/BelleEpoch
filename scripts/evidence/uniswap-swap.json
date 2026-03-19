@@ -1,0 +1,13 @@
+{
+  "txHash": "0xace4bac9612f060e96b3de9824f4fe66a4c12b26f5aa28fe692c75fae4995de2",
+  "date": "2026-03-19T14:16:15.163Z",
+  "amountUsdc": 0.03,
+  "amountOutWeth": "0.000014093660756471",
+  "feeTier": 500,
+  "blockNumber": 43570215,
+  "gasUsed": "139797",
+  "chain": "Base Mainnet (8453)",
+  "router": "0x2626664c2603336E57B271c5C0b26F421741e481",
+  "wallet": "0x168025fD748b63Cc6fB3bd59F197a6c79e6812c0",
+  "basescanUrl": "https://basescan.org/tx/0xace4bac9612f060e96b3de9824f4fe66a4c12b26f5aa28fe692c75fae4995de2"
+}

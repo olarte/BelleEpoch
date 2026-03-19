@@ -25,6 +25,11 @@ const CHAIN_IDS = {
   celo: 42220,
 };
 
+// Permit2 contract (canonical address on all chains)
+const PERMIT2 = '0x000000000022D473030F116dDEE9F6B43aC78BA3';
+// Uniswap SwapRouter02 on Base
+const SWAP_ROUTER_02 = '0x2626664c2603336E57B271c5C0b26F421741e481';
+
 // Protocol wallet that receives fee revenue
 const PROTOCOL_WALLET = process.env.PROTOCOL_WALLET || '';
 const ENGINE_PRIVATE_KEY = process.env.ENGINE_PRIVATE_KEY || '';
@@ -32,7 +37,7 @@ const BASE_RPC_URL = process.env.BASE_RPC_URL || '';
 
 // Accumulated fees awaiting routing (in USDC, 6 decimals)
 let accumulatedFeeUsdc = 0;
-const FEE_ROUTING_THRESHOLD = parseFloat(process.env.FEE_ROUTING_THRESHOLD || '0.05'); // Route when threshold reached
+const FEE_ROUTING_THRESHOLD = parseFloat(process.env.FEE_ROUTING_THRESHOLD || '0.01'); // Route when threshold reached
 
 // ─── Resolve token symbol to address ─────────────────────────────────────────
 function resolveToken(symbolOrAddress, chainId) {
@@ -142,129 +147,86 @@ async function accumulateFee(epochId, feeUsdc) {
 }
 
 // Execute a real swap of accumulated USDC fees through Uniswap on Base.
-// Swaps USDC → WETH via Uniswap v4 pool, logs real TxID.
+// Swaps USDC → WETH via Uniswap V3 SwapRouter02 using Permit2 approvals.
 async function routeFeeThroughUniswap(epochId, amountUsdc) {
-  if (!UNISWAP_API_KEY || !ENGINE_PRIVATE_KEY || !BASE_RPC_URL) {
+  if (!ENGINE_PRIVATE_KEY || !BASE_RPC_URL) {
     console.log('[Uniswap] Missing config — skipping fee routing');
     return { routed: false, error: 'missing config' };
   }
 
-  const amountRaw = Math.round(amountUsdc * 1e6).toString(); // USDC 6 decimals
+  const amountRaw = BigInt(Math.round(amountUsdc * 1e6)); // USDC 6 decimals
 
   try {
-    // Step 1: Get quote + swap calldata from Uniswap Trading API
-    const quoteBody = {
-      type: 'EXACT_INPUT',
-      amount: amountRaw,
-      tokenInChainId: 8453,
-      tokenOutChainId: 8453,
-      tokenIn: BASE_TOKENS.USDC,
-      tokenOut: BASE_TOKENS.WETH,
-      swapper: PROTOCOL_WALLET,
-      slippageTolerance: 1.0,
-      routingPreference: 'BEST_PRICE',
-      protocols: ['V4', 'V3'],
-    };
-
-    const quoteRes = await fetch(`${UNISWAP_API_URL}/quote`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': UNISWAP_API_KEY,
-      },
-      body: JSON.stringify(quoteBody),
-    });
-
-    if (!quoteRes.ok) {
-      const text = await quoteRes.text();
-      console.error(`[Uniswap] Quote failed ${quoteRes.status}: ${text}`);
-      return { routed: false, error: `quote failed: ${quoteRes.status}` };
-    }
-
-    const quoteData = await quoteRes.json();
-
-    // Step 2: Get swap transaction data
-    const swapRes = await fetch(`${UNISWAP_API_URL}/swap`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': UNISWAP_API_KEY,
-      },
-      body: JSON.stringify({
-        quote: quoteData.quote,
-        permitData: quoteData.permitData || undefined,
-        signature: quoteData.permitData ? undefined : undefined,
-        simulateTransaction: false,
-      }),
-    });
-
-    let txData = null;
-    if (swapRes.ok) {
-      const swapData = await swapRes.json();
-      txData = swapData.swap || swapData;
-    }
-
-    // Step 3: If we got transaction data, submit on-chain
-    if (txData && txData.to && txData.data) {
-      const provider = new ethers.JsonRpcProvider(BASE_RPC_URL);
-      const wallet = new ethers.Wallet(ENGINE_PRIVATE_KEY, provider);
-
-      const tx = await wallet.sendTransaction({
-        to: txData.to,
-        data: txData.data,
-        value: txData.value || '0',
-        gasLimit: txData.gasLimit || 300000,
-      });
-
-      console.log(`[Uniswap] Fee routing tx submitted: ${tx.hash}`);
-      const receipt = await tx.wait();
-      console.log(`[Uniswap] Fee routing confirmed in block ${receipt.blockNumber}`);
-
-      // Log to Redis
-      const routingLog = {
-        epochId,
-        amountUsdc,
-        txHash: tx.hash,
-        blockNumber: receipt.blockNumber,
-        routing: quoteData.routing || 'CLASSIC',
-        timestamp: new Date().toISOString(),
-      };
-      await redis.lpush('uniswap:fee:routing:log', JSON.stringify(routingLog));
-      await redis.incrbyfloat('uniswap:fee:routing:total', amountUsdc);
-
-      // Reset accumulator
-      accumulatedFeeUsdc = 0;
-      await redis.set('uniswap:fees:accumulated', '0');
-
-      return { routed: true, txHash: tx.hash, amountUsdc, blockNumber: receipt.blockNumber };
-    }
-
-    // Fallback: if Uniswap swap endpoint didn't return tx data,
-    // execute a direct USDC transfer to protocol wallet as fee receipt
-    // (demonstrates real on-chain tx with the fee amount)
     const provider = new ethers.JsonRpcProvider(BASE_RPC_URL);
     const wallet = new ethers.Wallet(ENGINE_PRIVATE_KEY, provider);
 
-    // USDC transfer as protocol fee routing
-    const usdcAbi = ['function transfer(address to, uint256 amount) returns (bool)'];
+    // Step 1: Ensure USDC is approved to Permit2
+    const usdcAbi = [
+      'function allowance(address owner, address spender) view returns (uint256)',
+      'function approve(address spender, uint256 amount) returns (bool)',
+    ];
     const usdc = new ethers.Contract(BASE_TOKENS.USDC, usdcAbi, wallet);
+    const permit2Allowance = await usdc.allowance(wallet.address, PERMIT2);
+    if (permit2Allowance < amountRaw) {
+      const approveTx = await usdc.approve(PERMIT2, ethers.MaxUint256);
+      await approveTx.wait();
+      console.log(`[Uniswap] USDC approved to Permit2: ${approveTx.hash}`);
+    }
 
-    const tx = await usdc.transfer(PROTOCOL_WALLET, amountRaw);
-    console.log(`[Uniswap] Fee routing (direct) tx: ${tx.hash}`);
+    // Step 2: Ensure Permit2 grants allowance to SwapRouter02
+    const permit2Abi = [
+      'function allowance(address owner, address token, address spender) view returns (uint160 amount, uint48 expiration, uint48 nonce)',
+      'function approve(address token, address spender, uint160 amount, uint48 expiration)',
+    ];
+    const permit2 = new ethers.Contract(PERMIT2, permit2Abi, wallet);
+    const [currentAmt, expiration] = await permit2.allowance(wallet.address, BASE_TOKENS.USDC, SWAP_ROUTER_02);
+    const now = Math.floor(Date.now() / 1000);
+    if (currentAmt < amountRaw || expiration <= now) {
+      const maxUint160 = (1n << 160n) - 1n;
+      const p2Tx = await permit2.approve(BASE_TOKENS.USDC, SWAP_ROUTER_02, maxUint160, now + 86400 * 30);
+      await p2Tx.wait();
+      console.log(`[Uniswap] Permit2 allowance granted to SwapRouter02: ${p2Tx.hash}`);
+    }
+
+    // Step 3: Execute swap USDC → WETH via SwapRouter02
+    const routerAbi = [
+      'function exactInputSingle((address tokenIn, address tokenOut, uint24 fee, address recipient, uint256 amountIn, uint256 amountOutMinimum, uint160 sqrtPriceLimitX96)) external payable returns (uint256 amountOut)',
+    ];
+    const router = new ethers.Contract(SWAP_ROUTER_02, routerAbi, wallet);
+
+    const params = {
+      tokenIn: BASE_TOKENS.USDC,
+      tokenOut: BASE_TOKENS.WETH,
+      fee: 500, // 0.05% fee tier (most liquid USDC/WETH pool on Base)
+      recipient: wallet.address,
+      amountIn: amountRaw,
+      amountOutMinimum: 0n,
+      sqrtPriceLimitX96: 0n,
+    };
+
+    const gasEstimate = await router.exactInputSingle.estimateGas(params);
+    const tx = await router.exactInputSingle(params, {
+      gasLimit: gasEstimate * 130n / 100n,
+    });
+
+    console.log(`[Uniswap] Fee routing tx submitted: ${tx.hash}`);
     const receipt = await tx.wait();
     console.log(`[Uniswap] Fee routing confirmed in block ${receipt.blockNumber}`);
 
+    // Log to Redis
     const routingLog = {
       epochId,
       amountUsdc,
       txHash: tx.hash,
       blockNumber: receipt.blockNumber,
-      routing: 'DIRECT_FEE',
+      routing: 'UNISWAP_V3',
+      feeTier: 500,
       timestamp: new Date().toISOString(),
     };
     await redis.lpush('uniswap:fee:routing:log', JSON.stringify(routingLog));
     await redis.incrbyfloat('uniswap:fee:routing:total', amountUsdc);
 
+    // Reset accumulator
     accumulatedFeeUsdc = 0;
     await redis.set('uniswap:fees:accumulated', '0');
 

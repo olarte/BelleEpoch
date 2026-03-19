@@ -97,6 +97,19 @@ module.exports = function mountHumansRoutes(app, redis) {
     }
   });
 
+  // ─── GET /humans/verified/:address ──────────────────────────────────────────
+  // Check if a wallet has been Self-verified (used by frontend polling)
+  app.get('/humans/verified/:address', async (req, res) => {
+    try {
+      const raw = await redis.get(`humans:verified:${req.params.address}`);
+      if (!raw) return res.json({ verified: false });
+      const data = JSON.parse(raw);
+      return res.json({ verified: true, nationality: data.nationality, verifiedAt: data.verifiedAt });
+    } catch (err) {
+      return res.json({ verified: false });
+    }
+  });
+
   // ─── POST /humans/register ──────────────────────────────────────────────────
   // Provider submits profile after Self verification
   app.post('/humans/register', async (req, res) => {

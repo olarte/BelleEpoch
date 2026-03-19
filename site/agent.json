@@ -19,7 +19,9 @@
     "selfAttestation": true,
     "veniceNoRetention": true,
     "metamaskDelegation": "ERC-7715",
-    "delegationHash": "0x4e5fa97d914c5e106ddb55030568e794832dbbdd44d00827a3669e190ecc6ecc"
+    "delegationHash": "0x4e5fa97d914c5e106ddb55030568e794832dbbdd44d00827a3669e190ecc6ecc",
+    "delegationTxHash": "0xb210128c62b77a01cf3f7bb72a186a40501ae1eb97faf7f403bb2bd197c0ad99",
+    "delegationBlock": 43569475
   },
   "skill": "https://belleepoch.xyz/skill.md"
 }

@@ -104,6 +104,32 @@ Content-Type: application/json
 | GET | /agent.json | Belle's agent manifest |
 | GET | /skill.md | This document |
 
+## Delegation (ERC-7715)
+
+Belle operates under an on-chain ERC-7715 delegation from the operator wallet.
+The delegation constrains what Belle can spend autonomously:
+
+| Caveat | Value | Description |
+|--------|-------|-------------|
+| `maxBidPerEpoch` | 15000 (0.015 USDC) | Max bid Belle can place per epoch |
+| `dailySpendCap` | 2000000 (2.0 USDC) | Total daily spend limit |
+| `allowedResources` | `["private-reasoning"]` | Only this resource type |
+| `chain` | Base Mainnet (8453) | Only on Base |
+
+The delegation is published as a self-transaction on Base mainnet.
+Verify it on BaseScan using the `delegationTxHash` in `/agent.json`.
+
+If your bid on behalf of Belle exceeds these caveats, the engine will reject it:
+```
+{ "error": "Bid rejected: exceeds delegation maxBidPerEpoch" }
+```
+
+To check current delegation status and remaining daily budget:
+```
+GET https://api.belleepoch.xyz/feed/delegation
+```
+Returns: `{ delegationHash, dailySpendUsdc, dailyRemaining, caveats }`
+
 ## Identity
 - ERC-8004 for all participants (Base mainnet)
 - Self Protocol ZK for Sybil resistance

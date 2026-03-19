@@ -1039,41 +1039,64 @@ const BelleEpoch = (() => {
           $('#wallet-connected').style.display = 'block';
           $('#connected-address').textContent = truncateAddr(addr);
 
+          // Build Self Protocol deeplink QR code
           const qrContainer = $('#self-qr-container');
+          const sessionId = crypto.randomUUID();
+          const selfApp = {
+            appName: 'Belle Epoch',
+            logoBase64: '',
+            endpointType: 'https',
+            endpoint: 'https://api.belleepoch.xyz/humans/verify',
+            deeplinkCallback: '',
+            header: '',
+            scope: 'belle-epoch-humans',
+            sessionId: sessionId,
+            userId: addr.startsWith('0x') ? addr.slice(2) : addr,
+            userIdType: 'hex',
+            devMode: false,
+            disclosures: {
+              nationality: true,
+              minimumAge: 18,
+              ofac: true,
+            },
+            version: 2,
+            chainID: 42220,
+            userDefinedData: addr,
+          };
+          const selfLink = 'https://redirect.self.xyz?selfApp=' + encodeURIComponent(JSON.stringify(selfApp));
+
           qrContainer.innerHTML = `
             <div style="text-align:center">
-              <div style="width:200px; height:200px; border:2px dashed var(--g50); border-radius:0; display:flex; align-items:center; justify-content:center; margin:0 auto; color:var(--g30); font-size:.9rem; padding:1rem">
-                Self QR Code<br>
-                <span style="font-size:.7rem">Scope: belle-epoch-humans</span><br>
-                <span style="font-size:.7rem">Wallet: ${truncateAddr(addr)}</span>
-              </div>
-              <button class="btn btn-secondary btn-sm" id="btn-mock-verify" style="margin-top:1rem">Simulate Self Verification (Dev)</button>
+              <canvas id="self-qr-canvas" style="margin:0 auto"></canvas>
+              <p style="font-size:.7rem; color:var(--g30); margin-top:.5rem">
+                Scan with the Self app &middot; Scope: belle-epoch-humans
+              </p>
             </div>`;
 
-          const btnMock = $('#btn-mock-verify');
-          if (btnMock) {
-            btnMock.addEventListener('click', async () => {
-              const statusEl = $('#self-verify-status');
-              statusEl.textContent = 'Verifying...';
-              statusEl.style.color = 'var(--redhi)';
-
-              try {
-                await fetch(API + '/humans/verify', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    attestationId: 'mock-' + Date.now(),
-                    proof: { mock: true },
-                    publicSignals: ['mock'],
-                    userContextData: connectedWallet,
-                  }),
-                });
-              } catch (e) { /* ignore */ }
-
-              statusEl.textContent = 'Verified! Proceeding to profile...';
-              setTimeout(() => advanceRegStep(2), 800);
+          if (typeof QRCode !== 'undefined' && QRCode.toCanvas) {
+            QRCode.toCanvas($('#self-qr-canvas'), selfLink, {
+              width: 220,
+              margin: 2,
+              color: { dark: '#e0e0e0', light: '#0a0a0a' },
+            }, function(err) {
+              if (err) console.error('[Self QR] render error:', err);
             });
           }
+
+          // Poll for verification completion
+          const statusEl = $('#self-verify-status');
+          const pollVerified = setInterval(async () => {
+            try {
+              const res = await fetch(API + '/humans/verified/' + addr);
+              const data = await res.json();
+              if (data.verified) {
+                clearInterval(pollVerified);
+                statusEl.textContent = 'Verified! Proceeding to profile...';
+                statusEl.style.color = '#00ff88';
+                setTimeout(() => advanceRegStep(2), 800);
+              }
+            } catch (e) { /* ignore polling errors */ }
+          }, 3000);
         }
       });
     }
