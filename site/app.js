@@ -1029,76 +1029,114 @@ const BelleEpoch = (() => {
     });
   }
 
+  let selfPollInterval = null;
+
+  function showSelfQR(addr) {
+    $('#wallet-not-connected').style.display = 'none';
+    $('#wallet-connected').style.display = 'block';
+    $('#connected-address').textContent = truncateAddr(addr);
+
+    const qrContainer = $('#self-qr-container');
+    const sessionId = crypto.randomUUID();
+    const selfApp = {
+      appName: 'Belle Epoch',
+      logoBase64: '',
+      endpointType: 'https',
+      endpoint: 'https://api.belleepoch.xyz/humans/verify',
+      deeplinkCallback: '',
+      header: '',
+      scope: 'belle-epoch-humans',
+      sessionId: sessionId,
+      userId: addr.startsWith('0x') ? addr.slice(2) : addr,
+      userIdType: 'hex',
+      devMode: false,
+      disclosures: {
+        nationality: true,
+        minimumAge: 18,
+        ofac: true,
+      },
+      version: 2,
+      chainID: 42220,
+      userDefinedData: addr,
+    };
+    const selfLink = 'https://redirect.self.xyz?selfApp=' + encodeURIComponent(JSON.stringify(selfApp));
+
+    qrContainer.innerHTML = `
+      <div style="text-align:center">
+        <canvas id="self-qr-canvas" style="margin:0 auto"></canvas>
+        <p style="font-size:.7rem; color:var(--g30); margin-top:.5rem">
+          Scan with the Self app &middot; Scope: belle-epoch-humans
+        </p>
+      </div>`;
+
+    if (typeof QRCode !== 'undefined' && QRCode.toCanvas) {
+      QRCode.toCanvas($('#self-qr-canvas'), selfLink, {
+        width: 220,
+        margin: 2,
+        color: { dark: '#e0e0e0', light: '#0a0a0a' },
+      }, function(err) {
+        if (err) console.error('[Self QR] render error:', err);
+      });
+    } else {
+      console.error('[Self QR] QRCode library not loaded');
+      qrContainer.innerHTML = `
+        <div style="text-align:center; color:var(--redhi); padding:2rem">
+          QR code library failed to load. Try refreshing the page.
+        </div>`;
+    }
+
+    // Poll for verification completion
+    if (selfPollInterval) clearInterval(selfPollInterval);
+    const statusEl = $('#self-verify-status');
+    statusEl.textContent = 'Waiting for Self verification\u2026';
+    statusEl.style.color = 'var(--g30)';
+    selfPollInterval = setInterval(async () => {
+      try {
+        const res = await fetch(API + '/humans/verified/' + addr);
+        const data = await res.json();
+        if (data.verified) {
+          clearInterval(selfPollInterval);
+          selfPollInterval = null;
+          statusEl.textContent = 'Verified! Proceeding to profile...';
+          statusEl.style.color = '#00ff88';
+          setTimeout(() => advanceRegStep(2), 800);
+        }
+      } catch (e) { /* ignore polling errors */ }
+    }, 3000);
+  }
+
+  function disconnectWallet() {
+    connectedWallet = null;
+    if (selfPollInterval) { clearInterval(selfPollInterval); selfPollInterval = null; }
+    $('#wallet-not-connected').style.display = '';
+    $('#wallet-connected').style.display = 'none';
+    $('#self-qr-container').innerHTML = '<div class="spinner"></div>';
+    $('#self-verify-status').textContent = 'Waiting for Self verification\u2026';
+    $('#self-verify-status').style.color = 'var(--g30)';
+  }
+
   function initHumansRegistration() {
     const btnConnect = $('#btn-connect-wallet');
     if (btnConnect) {
       btnConnect.addEventListener('click', async () => {
         const addr = await connectWallet();
-        if (addr) {
-          $('#wallet-not-connected').style.display = 'none';
-          $('#wallet-connected').style.display = 'block';
-          $('#connected-address').textContent = truncateAddr(addr);
-
-          // Build Self Protocol deeplink QR code
-          const qrContainer = $('#self-qr-container');
-          const sessionId = crypto.randomUUID();
-          const selfApp = {
-            appName: 'Belle Epoch',
-            logoBase64: '',
-            endpointType: 'https',
-            endpoint: 'https://api.belleepoch.xyz/humans/verify',
-            deeplinkCallback: '',
-            header: '',
-            scope: 'belle-epoch-humans',
-            sessionId: sessionId,
-            userId: addr.startsWith('0x') ? addr.slice(2) : addr,
-            userIdType: 'hex',
-            devMode: false,
-            disclosures: {
-              nationality: true,
-              minimumAge: 18,
-              ofac: true,
-            },
-            version: 2,
-            chainID: 42220,
-            userDefinedData: addr,
-          };
-          const selfLink = 'https://redirect.self.xyz?selfApp=' + encodeURIComponent(JSON.stringify(selfApp));
-
-          qrContainer.innerHTML = `
-            <div style="text-align:center">
-              <canvas id="self-qr-canvas" style="margin:0 auto"></canvas>
-              <p style="font-size:.7rem; color:var(--g30); margin-top:.5rem">
-                Scan with the Self app &middot; Scope: belle-epoch-humans
-              </p>
-            </div>`;
-
-          if (typeof QRCode !== 'undefined' && QRCode.toCanvas) {
-            QRCode.toCanvas($('#self-qr-canvas'), selfLink, {
-              width: 220,
-              margin: 2,
-              color: { dark: '#e0e0e0', light: '#0a0a0a' },
-            }, function(err) {
-              if (err) console.error('[Self QR] render error:', err);
-            });
-          }
-
-          // Poll for verification completion
-          const statusEl = $('#self-verify-status');
-          const pollVerified = setInterval(async () => {
-            try {
-              const res = await fetch(API + '/humans/verified/' + addr);
-              const data = await res.json();
-              if (data.verified) {
-                clearInterval(pollVerified);
-                statusEl.textContent = 'Verified! Proceeding to profile...';
-                statusEl.style.color = '#00ff88';
-                setTimeout(() => advanceRegStep(2), 800);
-              }
-            } catch (e) { /* ignore polling errors */ }
-          }, 3000);
-        }
+        if (addr) showSelfQR(addr);
       });
+    }
+
+    const btnDisconnect = $('#btn-disconnect-wallet');
+    if (btnDisconnect) {
+      btnDisconnect.addEventListener('click', disconnectWallet);
+    }
+
+    // Auto-detect already-connected wallet on page load
+    if (window.ethereum) {
+      window.ethereum.request({ method: 'eth_accounts' }).then(accounts => {
+        if (accounts && accounts.length > 0) {
+          connectedWallet = accounts[0];
+          showSelfQR(accounts[0]);
+        }
+      }).catch(() => {});
     }
 
     const bioInput = $('#human-bio');
