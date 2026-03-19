@@ -180,11 +180,17 @@ class BelleAgent {
 
     // Step 5: Wait for epoch to close
     const waitMs = bidData.epochClosesMs || 5000;
-    await new Promise(resolve => setTimeout(resolve, waitMs + 500));
+    await new Promise(resolve => setTimeout(resolve, waitMs + 1000));
 
-    // Step 6: Check if we won — poll payment endpoint
-    const paymentRes = await fetch(`${endpoint}/epoch/${usedEpochId}/payment/${this.agentId}`);
-    const paymentData = await paymentRes.json();
+    // Step 6: Check if we won — poll payment endpoint with retry
+    let paymentRes, paymentData;
+    for (let poll = 0; poll < 3; poll++) {
+      paymentRes = await fetch(`${endpoint}/epoch/${usedEpochId}/payment/${this.agentId}`);
+      paymentData = await paymentRes.json();
+      if (paymentRes.status !== 404) break;
+      // Epoch result might not be stored yet — wait and retry
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
 
     if (paymentRes.status === 404) {
       // We lost this epoch

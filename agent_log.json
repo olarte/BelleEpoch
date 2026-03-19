@@ -329,5 +329,184 @@
     },
     "agentId": "agent-bdBEE40a",
     "wallet": "0xbdBEE40a847BC8F8AadE8Ab2685E028Dc32865a9"
+  },
+  {
+    "timestamp": "2026-03-19T13:25:26.571Z",
+    "phase": "error",
+    "action": "Bid rejected: Missing required fields: epochId, agentId, resource",
+    "agentId": "agent-bdBEE40a"
+  },
+  {
+    "timestamp": "2026-03-19T13:25:34.222Z",
+    "phase": "error",
+    "action": "Bid rejected: Missing required fields: epochId, agentId, resource",
+    "agentId": "agent-bdBEE40a"
+  },
+  {
+    "timestamp": "2026-03-19T13:25:48.225Z",
+    "phase": "error",
+    "action": "Bid rejected: Missing required fields: epochId, agentId, resource",
+    "agentId": "agent-bdBEE40a"
+  },
+  {
+    "timestamp": "2026-03-19T13:25:41.223Z",
+    "phase": "error",
+    "action": "fetch failed",
+    "agentId": "agent-bdBEE40a"
+  },
+  {
+    "timestamp": "2026-03-19T13:25:55.225Z",
+    "phase": "error",
+    "action": "Bid rejected: Missing required fields: epochId, agentId, resource",
+    "agentId": "agent-bdBEE40a"
+  },
+  {
+    "timestamp": "2026-03-19T13:26:02.224Z",
+    "phase": "error",
+    "action": "Bid rejected: Missing required fields: epochId, agentId, resource",
+    "agentId": "agent-bdBEE40a"
+  },
+  {
+    "timestamp": "2026-03-19T13:37:52.423Z",
+    "phase": "bid",
+    "epochId": 79177,
+    "action": "Lost auction",
+    "bidAmount": 0.005,
+    "won": false
+  },
+  {
+    "timestamp": "2026-03-19T13:38:02.502Z",
+    "phase": "bid",
+    "epochId": 79179,
+    "action": "Lost auction",
+    "bidAmount": 0.005,
+    "won": false
+  },
+  {
+    "timestamp": "2026-03-19T13:38:09.503Z",
+    "phase": "bid",
+    "epochId": 79181,
+    "action": "Lost auction",
+    "bidAmount": 0.005,
+    "won": false
+  },
+  {
+    "timestamp": "2026-03-19T13:38:16.504Z",
+    "phase": "bid",
+    "epochId": 79182,
+    "action": "Lost auction",
+    "bidAmount": 0.0022,
+    "won": false
+  },
+  {
+    "timestamp": "2026-03-19T13:38:23.504Z",
+    "phase": "bid",
+    "epochId": 79183,
+    "action": "Lost auction",
+    "bidAmount": 0.0013,
+    "won": false
+  },
+  {
+    "timestamp": "2026-03-19T13:38:37.506Z",
+    "phase": "bid",
+    "epochId": 79186,
+    "action": "Lost auction",
+    "bidAmount": 0.0024,
+    "won": false
+  },
+  {
+    "timestamp": "2026-03-19T13:39:50.994Z",
+    "phase": "execute",
+    "epochId": 79201,
+    "action": "Full cycle: bid → win → settle → query",
+    "bidAmount": 0.005,
+    "clearingPrice": 0.005,
+    "txHash": "0xfc12ac1488345fa97423c04f11e3438b40d2d54c7ed88903c9b206e87adf9ea4",
+    "won": true,
+    "accessToken": "(present)",
+    "veniceQuery": {
+      "queryId": "q-79201-c1152e2ff0c295f7",
+      "status": "error",
+      "retained": false,
+      "veniceProof": null
+    },
+    "agentId": "agent-bdBEE40a",
+    "wallet": "0xbdBEE40a847BC8F8AadE8Ab2685E028Dc32865a9"
+  },
+  {
+    "timestamp": "2026-03-19T13:40:11.912Z",
+    "phase": "execute",
+    "epochId": 79205,
+    "action": "Full cycle: bid → win → settle → query",
+    "bidAmount": 0.005,
+    "clearingPrice": 0.005,
+    "txHash": "0x2042accc34adc9c09adfde59b74e614d4dcf46d9e9b3114665e8747797790672",
+    "won": true,
+    "accessToken": "(present)",
+    "veniceQuery": {
+      "queryId": "q-79205-95976241e7e7a4f3",
+      "status": "error",
+      "retained": false,
+      "veniceProof": null
+    },
+    "agentId": "agent-bdBEE40a",
+    "wallet": "0xbdBEE40a847BC8F8AadE8Ab2685E028Dc32865a9"
+  },
+  {
+    "timestamp": "2026-03-19T13:40:18.913Z",
+    "phase": "execute",
+    "epochId": 79206,
+    "action": "Full cycle: bid → win → settle → query",
+    "bidAmount": 0.0022,
+    "clearingPrice": 0.0022,
+    "txHash": "0xb14df7786f708fddcb3fa685966923e7526a8d70b91ded366ee5c6b4550d759a",
+    "won": true,
+    "accessToken": "(present)",
+    "veniceQuery": {
+      "queryId": "q-79206-6b9ee1e7e40db91b",
+      "status": "error",
+      "retained": false,
+      "veniceProof": null
+    },
+    "agentId": "agent-bdBEE40a",
+    "wallet": "0xbdBEE40a847BC8F8AadE8Ab2685E028Dc32865a9"
+  },
+  {
+    "timestamp": "2026-03-19T13:40:25.914Z",
+    "phase": "execute",
+    "epochId": 79208,
+    "action": "Full cycle: bid → win → settle → query",
+    "bidAmount": 0.005,
+    "clearingPrice": 0.005,
+    "txHash": "0x5d16f5bc7ef1316c20cdf0ade7e3e41a2149481e6450cc6940f891623aa15f2b",
+    "won": true,
+    "accessToken": "(present)",
+    "veniceQuery": {
+      "queryId": "q-79208-bee8d5ac4c2ec45c",
+      "status": "error",
+      "retained": false,
+      "veniceProof": null
+    },
+    "agentId": "agent-bdBEE40a",
+    "wallet": "0xbdBEE40a847BC8F8AadE8Ab2685E028Dc32865a9"
+  },
+  {
+    "timestamp": "2026-03-19T13:40:32.915Z",
+    "phase": "execute",
+    "epochId": 79209,
+    "action": "Full cycle: bid → win → settle → query",
+    "bidAmount": 0.0025,
+    "clearingPrice": 0.0025,
+    "txHash": "0xe814a894d59c05b195c47b731c3a0352db223de601a849a856865ca0d334ef64",
+    "won": true,
+    "accessToken": "(present)",
+    "veniceQuery": {
+      "queryId": "q-79209-beb946176b1cf34d",
+      "status": "error",
+      "retained": false,
+      "veniceProof": null
+    },
+    "agentId": "agent-bdBEE40a",
+    "wallet": "0xbdBEE40a847BC8F8AadE8Ab2685E028Dc32865a9"
   }
 ]

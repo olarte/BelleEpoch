@@ -1,15 +1,39 @@
 {
-  "runDate": "2026-03-19T13:15:50.607Z",
+  "runDate": "2026-03-19T13:40:32.915Z",
   "agentWallet": "0xbdBEE40a847BC8F8AadE8Ab2685E028Dc32865a9",
-  "epochId": 262,
-  "clearingPrice": 0.01,
-  "paymentTxHash": "0xade344b1784275c902446be3d32ec762395e1d0478434541f560407e207c17a1",
-  "epochClearedTxHash": "(check BaseScan for EpochCleared event)",
-  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlcG9jaElkIjoyNjIsImFnZW50SWQiOiJhZ2VudC1iZEJFRTQwYSIsInNsb3QiOjIsInJlc291cmNlIjoicHJpdmF0ZS1yZWFzb25pbmciLCJpYXQiOjE3NzM5MjYxNjEsImV4cCI6MTc3MzkyNjE2NSwiaXNzIjoiYmVsbGUtZXBvY2giLCJzdWIiOiJhZ2VudC1iZEJFRTQwYSJ9.OmfTUrvFzV211DBvtzC7Cee8tpNYNMCh1mIX0Cpfae4",
-  "veniceQueryId": "q-262-1bfc58da14aa0e11",
+  "agentErc8004Identity": "0xdE1E3945F30d9961cbD81B6390471C68CF7bc915",
+  "epochId": 79209,
+  "clearingPrice": 0.0025,
+  "paymentTxHash": "0xe814a894d59c05b195c47b731c3a0352db223de601a849a856865ca0d334ef64",
+  "epochClearedTxHash": "(recorded on-chain — check BaseScan contract events)",
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlcG9jaElkIjo3OTIwOSwiYWdlbnRJZCI6ImFnZW50LWJkQkVFNDBhIiwic2xvdCI6MCwicmVzb3VyY2UiOiJwcml2YXRlLXJlYXNvbmluZyIsImlhdCI6MTc3MzkyNzY0MiwiZXhwIjoxNzczOTI3NjQ3LCJpc3MiOiJiZWxsZS1lcG9jaCIsInN1YiI6ImFnZW50LWJkQkVFNDBhIn0.QCPiQDw0h7ZgzkC2Dt3xie2_zHOki7lNLX7RbvyUCOw",
+  "veniceQueryId": "q-79209-beb946176b1cf34d",
   "veniceRetained": false,
   "usdcBalanceBefore": "1.5",
-  "usdcBalanceAfter": "1.49",
-  "bankrWalletBefore": "(check /bankr/status)",
-  "bankrWalletAfter": "(check /bankr/status)"
+  "usdcBalanceAfter": "1.4653",
+  "bankrWallet": "0x243b0b3c87dca360ec62222c6237f3b4c58f103f",
+  "bankrBalanceUsdc": 1.00448,
+  "bankrTotalRouted": 8.3088,
+  "additionalPaidEpochs": [
+    {
+      "epochId": 79201,
+      "clearingPrice": 0.005,
+      "paymentTxHash": "0xfc12ac1488345fa97423c04f11e3438b40d2d54c7ed88903c9b206e87adf9ea4"
+    },
+    {
+      "epochId": 79205,
+      "clearingPrice": 0.005,
+      "paymentTxHash": "0x2042accc34adc9c09adfde59b74e614d4dcf46d9e9b3114665e8747797790672"
+    },
+    {
+      "epochId": 79206,
+      "clearingPrice": 0.0022,
+      "paymentTxHash": "0xb14df7786f708fddcb3fa685966923e7526a8d70b91ded366ee5c6b4550d759a"
+    },
+    {
+      "epochId": 79208,
+      "clearingPrice": 0.005,
+      "paymentTxHash": "0x5d16f5bc7ef1316c20cdf0ade7e3e41a2149481e6450cc6940f891623aa15f2b"
+    }
+  ]
 }
