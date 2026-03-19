@@ -157,6 +157,24 @@ module.exports = function mountHumansRoutes(app, redis) {
     return res.json({ reset: true });
   });
 
+  // ─── POST /humans/force-verify — admin: mark wallet as Self-verified ───────
+  app.post('/humans/force-verify', async (req, res) => {
+    const { walletAddress, secret, nationality } = req.body;
+    if (secret !== process.env.ENGINE_PRIVATE_KEY?.slice(-8)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const addr = (walletAddress || '').toLowerCase();
+    const verifiedData = JSON.stringify({
+      nationality: nationality || 'verified',
+      verifiedAt: new Date().toISOString(),
+      nullifier: 'admin-verified-' + Date.now(),
+    });
+    await redis.set(`humans:verified:${addr}`, verifiedData);
+    await redis.set(`humans:verified:${walletAddress}`, verifiedData);
+    console.log(`[Humans] Force-verified wallet: ${addr}`);
+    return res.json({ verified: true, wallet: addr });
+  });
+
   // ─── POST /humans/register ──────────────────────────────────────────────────
   // Provider submits profile after Self verification
   app.post('/humans/register', async (req, res) => {
