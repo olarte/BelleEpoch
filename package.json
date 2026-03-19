@@ -18,6 +18,7 @@
     "deploy:celo": "npx hardhat run scripts/deploy.js --network celo",
     "register:belle": "npx hardhat run scripts/register-belle.js --network base",
     "agent": "node scripts/run-agent.js",
+    "demo:x402": "node scripts/demo-x402.js",
     "delegation": "node scripts/create-delegation.js"
   },
   "license": "MIT",

@@ -16,7 +16,7 @@ const bankr = require('../bankr');
 const venice = require('../venice');
 const uniswap = require('../uniswap');
 
-const { startProviderLoop, stopProviderLoop, isLoopActive } = require('../providerLoop');
+const { startProviderLoop, stopProviderLoop, isLoopActive, getProviderEpochId } = require('../providerLoop');
 const mountHumansRoutes = require('./humans');
 
 const app = express();
@@ -41,9 +41,11 @@ const knownAgents = new Set();
 // Two modes:
 //   1. Normal bid (no X-Payment-Proof) — submit sealed bid to current epoch
 //   2. Payment settlement (X-Payment-Proof present) — verify payment for a won epoch, issue access token
+// Optional: providerId field routes bids to a specific provider's clearing pool.
+//   If omitted or 'belle', bids go to Belle's global pool (default behavior).
 app.post('/bid', async (req, res) => {
   try {
-    const { epochId, maxBid, agentId, resource, signature } = req.body;
+    const { epochId, maxBid, agentId, resource, signature, providerId } = req.body;
     const paymentProof = req.headers['x-payment-proof'];
 
     // Validate required fields
@@ -51,10 +53,20 @@ app.post('/bid', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields: epochId, agentId, resource' });
     }
 
+    // Determine if this bid targets a specific provider (human or non-Belle)
+    const isBelleTarget = !providerId || providerId === 'belle';
+
     // ─── Payment settlement mode ──────────────────────────────────────────
     if (paymentProof) {
-      // Look up the epoch result to find this agent's winning entry
-      const epochResult = await getEpochResult(epochId);
+      // Look up the epoch result — check provider-specific result first, then global
+      let epochResult;
+      if (!isBelleTarget) {
+        const providerResult = await redis.get(`provider:${providerId}:epoch:${epochId}:result`);
+        epochResult = providerResult ? JSON.parse(providerResult) : null;
+      }
+      if (!epochResult) {
+        epochResult = await getEpochResult(epochId);
+      }
       if (!epochResult) {
         return res.status(404).json({ error: `Epoch ${epochId} result not found` });
       }
@@ -65,7 +77,8 @@ app.post('/bid', async (req, res) => {
       }
 
       // Check if already paid
-      const existing = await getPaymentState(epochId, agentId);
+      const paymentPrefix = isBelleTarget ? '' : `${providerId}:`;
+      const existing = await getPaymentState(epochId, `${paymentPrefix}${agentId}`);
       if (existing && existing.paid) {
         return res.status(409).json({ error: 'Already paid', txHash: existing.txHash });
       }
@@ -86,7 +99,7 @@ app.post('/bid', async (req, res) => {
       const settlement = await settlePayment(paymentProof, epochId, epochResult.clearingPrice);
 
       // Mark as paid in Redis
-      await markPaid(epochId, agentId, verification.txHash || settlement.txHash);
+      await markPaid(epochId, `${paymentPrefix}${agentId}`, verification.txHash || settlement.txHash);
 
       // Find the agent's slot index among winners
       const slot = epochResult.winners.findIndex(w => w.agentId === agentId);
@@ -99,6 +112,7 @@ app.post('/bid', async (req, res) => {
         status: 'paid',
         epochId,
         agentId,
+        providerId: isBelleTarget ? 'belle' : providerId,
         clearingPrice: epochResult.clearingPrice,
         txHash: verification.txHash || settlement.txHash,
         accessToken,
@@ -118,6 +132,52 @@ app.post('/bid', async (req, res) => {
       return res.status(400).json({ error: 'maxBid must be a positive number' });
     }
 
+    // ─── Provider-targeted bids ───────────────────────────────────────────
+    if (!isBelleTarget) {
+      // Verify provider exists and is online
+      const providerRaw = await redis.get(`humans:provider:${providerId}`) || await redis.get(`provider:${providerId}`);
+      if (!providerRaw) {
+        return res.status(404).json({ error: `Provider ${providerId} not found` });
+      }
+      const provider = JSON.parse(providerRaw);
+      if (!provider.online && !isLoopActive(providerId)) {
+        return res.status(400).json({ error: `Provider ${providerId} is offline` });
+      }
+
+      // Get provider's current epoch (they run independent loops)
+      const providerEpochId = await getProviderEpochId(providerId);
+
+      // ERC-8004 signature verification (still required)
+      const sigResult = await erc8004.verifyBidSignature(
+        { epochId: providerEpochId, agentId, maxBid, resource },
+        signature
+      );
+      if (!sigResult.valid) {
+        return res.status(401).json({ error: sigResult.error || 'Invalid ERC-8004 signature' });
+      }
+
+      // Push bid to provider-scoped pool
+      const bidKey = `provider:${providerId}:epoch:${providerEpochId}:bids`;
+      await redis.lpush(bidKey, JSON.stringify({
+        agentId,
+        maxBid,
+        epochId: providerEpochId,
+        timestamp: Date.now(),
+        signature,
+        signer: sigResult.signer || null,
+        identityAddress: sigResult.identityAddress || null,
+      }));
+      await redis.expire(bidKey, 120);
+
+      return res.json({
+        status: 'pending',
+        epochId: providerEpochId,
+        providerId,
+        epochClosesMs: provider.epochMs || 30000,
+      });
+    }
+
+    // ─── Belle's global bid pool (default) ────────────────────────────────
     // Validate epochId matches current epoch
     const currentEpoch = engine.getCurrentEpochId();
     if (epochId !== currentEpoch) {
@@ -276,6 +336,31 @@ app.get('/feed/providers', async (req, res) => {
   }
 
   res.json(providers);
+});
+
+// ─── GET /feed/providers/:id/epoch ───────────────────────────────────────────
+// Returns a provider's current epoch ID so external agents can bid on the right epoch.
+app.get('/feed/providers/:id/epoch', async (req, res) => {
+  try {
+    const providerId = req.params.id;
+    const providerRaw = await redis.get(`humans:provider:${providerId}`) || await redis.get(`provider:${providerId}`);
+    if (!providerRaw) {
+      return res.status(404).json({ error: `Provider ${providerId} not found` });
+    }
+    const provider = JSON.parse(providerRaw);
+    const epochId = await getProviderEpochId(providerId);
+    res.json({
+      providerId,
+      epochId,
+      epochMs: provider.epochMs || 30000,
+      online: provider.online || isLoopActive(providerId),
+      capacity: provider.capacitySlots || 1,
+      currentClearingPrice: provider.currentClearingPrice || null,
+    });
+  } catch (err) {
+    console.error('[GET /feed/providers/:id/epoch] error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // ─── GET /feed/swap ──────────────────────────────────────────────────────────
@@ -687,12 +772,22 @@ app.get('/delegation', async (req, res) => {
 
 // ─── GET /epoch/:epochId/payment/:agentId ────────────────────────────────────
 // Returns x402 payment request for winning agents. 404 for losers or unknown.
+// Optional query param: ?providerId=<id> to check a specific provider's epoch
 app.get('/epoch/:epochId/payment/:agentId', async (req, res) => {
   try {
     const epochId = parseInt(req.params.epochId, 10);
     const agentId = req.params.agentId;
+    const providerId = req.query.providerId;
 
-    const result = await getEpochResult(epochId);
+    // Check provider-specific result first if providerId given
+    let result = null;
+    if (providerId && providerId !== 'belle') {
+      const providerResult = await redis.get(`provider:${providerId}:epoch:${epochId}:result`);
+      result = providerResult ? JSON.parse(providerResult) : null;
+    }
+    if (!result) {
+      result = await getEpochResult(epochId);
+    }
     if (!result) {
       return res.status(404).json({ error: `Epoch ${epochId} not found` });
     }
