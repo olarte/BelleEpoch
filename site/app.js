@@ -1087,24 +1087,27 @@ const BelleEpoch = (() => {
     };
     const selfLink = 'https://redirect.self.xyz?selfApp=' + encodeURIComponent(JSON.stringify(selfApp));
 
-    qrContainer.innerHTML = `
-      <div style="text-align:center">
-        <canvas id="self-qr-canvas" style="margin:0 auto"></canvas>
-        <p style="font-size:.7rem; color:var(--g30); margin-top:.5rem">
-          Scan with the Self app &middot; Scope: belle-epoch-humans
-        </p>
-      </div>`;
-
-    if (typeof QRCode !== 'undefined' && QRCode.toCanvas) {
-      QRCode.toCanvas($('#self-qr-canvas'), selfLink, {
-        width: 220,
-        margin: 2,
-        color: { dark: '#e0e0e0', light: '#0a0a0a' },
-      }, function(err) {
-        if (err) console.error('[Self QR] render error:', err);
-      });
+    if (typeof qrcode !== 'undefined') {
+      const qr = qrcode(0, 'L');
+      qr.addData(selfLink);
+      qr.make();
+      qrContainer.innerHTML = `
+        <div style="text-align:center">
+          ${qr.createSvgTag({ cellSize: 4, margin: 4, scalable: true })}
+          <p style="font-size:.7rem; color:var(--g30); margin-top:.5rem">
+            Scan with the Self app &middot; Scope: belle-epoch-humans
+          </p>
+        </div>`;
+      // Style the SVG for dark theme
+      const svg = qrContainer.querySelector('svg');
+      if (svg) {
+        svg.style.width = '220px';
+        svg.style.height = '220px';
+        svg.querySelectorAll('rect[fill="#000000"]').forEach(r => r.setAttribute('fill', '#e0e0e0'));
+        svg.querySelectorAll('rect[fill="#ffffff"]').forEach(r => r.setAttribute('fill', '#0a0a0a'));
+      }
     } else {
-      console.error('[Self QR] QRCode library not loaded');
+      console.error('[Self QR] qrcode-generator library not loaded');
       qrContainer.innerHTML = `
         <div style="text-align:center; color:var(--redhi); padding:2rem">
           QR code library failed to load. Try refreshing the page.
