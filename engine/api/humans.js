@@ -19,6 +19,7 @@ module.exports = function mountHumansRoutes(app, redis) {
       new DefaultConfigStore({
         minimumAge: 18,
         ofac: true,
+        excludedCountries: [],
       }),
       'hex'
     );
