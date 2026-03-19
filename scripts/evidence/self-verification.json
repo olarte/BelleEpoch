@@ -1,0 +1,37 @@
+{
+  "endpoint": "https://api.belleepoch.xyz/humans/verify",
+  "verifierConfig": {
+    "scope": "belle-epoch-humans",
+    "network": "mainnet",
+    "minimumAge": 18,
+    "ofac": true,
+    "excludedCountries": []
+  },
+  "verificationFlow": {
+    "step1": "User connects wallet on https://belleepoch.xyz (Humans tab)",
+    "step2": "Frontend generates Self Protocol QR code with wallet address as userContextData",
+    "step3": "User scans QR with Self app — ZK proof generated from passport NFC chip",
+    "step4": "Self relayer POSTs proof to /humans/verify",
+    "step5": "Backend verifies: age >= 18, OFAC sanctions clear, Sybil check via nullifier",
+    "step6": "Verified wallet stored in Redis — eligible for human provider registration"
+  },
+  "sybilProtection": {
+    "mechanism": "One passport = one registration. Nullifier derived from passport, stored in Redis. Re-verification allowed only if wallet data wasn't persisted from prior attempt.",
+    "endpoints": {
+      "verify": "POST /humans/verify",
+      "checkStatus": "GET /humans/verified/:address",
+      "register": "POST /humans/register",
+      "heartbeat": "POST /humans/heartbeat"
+    }
+  },
+  "humanProviderFeatures": {
+    "categories": ["physician", "attorney", "security-researcher", "financial-analyst", "data-scientist", "other"],
+    "settlementChain": "Celo (default) or Base",
+    "epochDuration": "30s minimum for human providers",
+    "maxCapacity": 5,
+    "heartbeatInterval": "60s (90s timeout)",
+    "providerLoop": "Auto-starts when heartbeat detected, stops when offline"
+  },
+  "frontendPage": "https://belleepoch.xyz (Humans tab in navigation)",
+  "sdkUsed": "@selfxyz/core (SelfBackendVerifier, DefaultConfigStore, AllIds)"
+}

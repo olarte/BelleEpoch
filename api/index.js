@@ -406,6 +406,14 @@ app.get('/feed/agents/:id', async (req, res) => {
     // Last 7 epochs
     const recent = history.slice(0, 7);
 
+    // Belle-specific identity fields
+    const belleIdentity = agentId === 'belle' ? {
+      address: '0x1bBec5c9db63b33710C9E3BddD3591fD012BA2BC',
+      registrationTx: '0xd1782e7d2758e09032Ed2E17D2aB0a66f3674f29',
+      delegationHash: '0x4e5fa97d914c5e106ddb55030568e794832dbbdd44d00827a3669e190ecc6ecc',
+      delegation: '0x4e5fa97d...44d00827a3669e190ecc6ecc',
+    } : {};
+
     if (history.length === 0) {
       return res.json({
         id: agentId,
@@ -416,6 +424,7 @@ app.get('/feed/agents/:id', async (req, res) => {
         earnedToday: 0,
         veniceSpend,
         recent: [],
+        ...belleIdentity,
       });
     }
 
@@ -428,6 +437,7 @@ app.get('/feed/agents/:id', async (req, res) => {
       earnedToday: parseFloat(earnedToday.toFixed(6)),
       veniceSpend: parseFloat(veniceSpend.toFixed(6)),
       recent,
+      ...belleIdentity,
     });
   } catch (err) {
     console.error('[GET /feed/agents/:id] error:', err);

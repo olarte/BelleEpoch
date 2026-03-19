@@ -215,21 +215,19 @@ async function routeRevenue(epochId, amountUsdc) {
       return { routed: false, error: err.message, accumulated: accumulatedBankrUsdc };
     }
   } else {
-    // No wallet config — fallback to tracking only (no fake tx hashes)
-    console.log(`[Bankr] Missing ENGINE_PRIVATE_KEY or BASE_RPC_URL — tracking only`);
-    txHash = null;
-    accumulatedBankrUsdc = 0;
-    await redis.set('bankr:routing:accumulated', '0');
+    // No wallet config — cannot route, keep accumulating
+    console.log(`[Bankr] Missing ENGINE_PRIVATE_KEY or BASE_RPC_URL — cannot route, accumulated: ${accumulatedBankrUsdc.toFixed(6)}`);
+    return { routed: false, error: 'No private key or RPC configured', accumulated: accumulatedBankrUsdc };
   }
 
-  // Track cumulative routing in Redis
+  // Only track cumulative routing when transfer actually succeeded on-chain
   await redis.incrbyfloat('bankr:routed:total', routeAmount);
   await redis.lpush('bankr:routing:log', JSON.stringify({
     epochId,
     amount: routeAmount,
     target,
     txHash,
-    onChain: !!txHash,
+    onChain: true,
     timestamp: new Date().toISOString(),
   }));
   await redis.ltrim('bankr:routing:log', 0, 999);

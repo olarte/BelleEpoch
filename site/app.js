@@ -1016,7 +1016,7 @@ const BelleEpoch = (() => {
               <div class="human-stat-value">${p.epochsServed || 0}</div>
             </div>
           </div>
-          <button class="btn btn-primary btn-sm" style="width:100%; margin-top:.5rem">Bid now &rarr;</button>
+          <button class="btn btn-primary btn-sm" style="width:100%; margin-top:.5rem" onclick="showPage('belle');BelleEpoch.scrollToConsole('expert-routing')">Bid now &rarr;</button>
         </div>`;
     }).join('');
   }

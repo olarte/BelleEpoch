@@ -1,0 +1,83 @@
+{
+  "timestamp": "2026-03-19T20:25:31.840Z",
+  "summary": {
+    "veniceQueries": 4,
+    "bankrQueries": 4,
+    "totalTokens": 2424,
+    "bankrCost": 0
+  },
+  "results": [
+    {
+      "type": "bid-strategy",
+      "path": "venice-direct",
+      "success": true,
+      "tokens": 297,
+      "id": "chatcmpl-RdEduUExVP3pc000jWsijzTR",
+      "model": "llama-3.3-70b",
+      "proofHash": "af105edb832d14bb9c9c9f4a1e683e93d3d7a2868adb947aab389453ece971b6"
+    },
+    {
+      "type": "bid-strategy",
+      "path": "bankr-gateway",
+      "success": true,
+      "tokens": 216,
+      "id": "chatcmpl-wDTzME_a-zUsZnsCmY2wQ",
+      "model": "gemini-3-flash-preview",
+      "cost": 0
+    },
+    {
+      "type": "treasury-planning",
+      "path": "venice-direct",
+      "success": true,
+      "tokens": 517,
+      "id": "chatcmpl-REPSsYrpWZVzTzcbLPzOTyry",
+      "model": "llama-3.3-70b",
+      "proofHash": "4cb20e94dfefd6ecff1180ef23bd1d596b51596fdddbcec14d790be36d9048c6"
+    },
+    {
+      "type": "treasury-planning",
+      "path": "bankr-gateway",
+      "success": true,
+      "tokens": 221,
+      "id": "chatcmpl-gA8ZLJPVTVPM_9f3tmg4D",
+      "model": "gemini-3-flash-preview",
+      "cost": 0
+    },
+    {
+      "type": "agent-negotiation",
+      "path": "venice-direct",
+      "success": true,
+      "tokens": 445,
+      "id": "chatcmpl-RzauB1V8F3pXQI5DMwLCxaOe",
+      "model": "llama-3.3-70b",
+      "proofHash": "dde11a521923c6a8a5f71b9d41ac79dbe418be47e331377b215ab2eb706888cb"
+    },
+    {
+      "type": "agent-negotiation",
+      "path": "bankr-gateway",
+      "success": true,
+      "tokens": 245,
+      "id": "chatcmpl-M_fWTFNCLMnaApXhJjE6X",
+      "model": "gemini-3-flash-preview",
+      "cost": 0
+    },
+    {
+      "type": "human-routing",
+      "path": "venice-direct",
+      "success": true,
+      "tokens": 243,
+      "id": "chatcmpl-Rb5jKgoJoi0KTUNNek8STFWB",
+      "model": "llama-3.3-70b",
+      "proofHash": "fd414997e7b623ae7630cf64bfe42abcfcb267d3dd0c6acabc5cf09ed10d3824"
+    },
+    {
+      "type": "human-routing",
+      "path": "bankr-gateway",
+      "success": true,
+      "tokens": 240,
+      "id": "chatcmpl-LF3u8qH3KnhyDkWrfthe2",
+      "model": "gemini-3-flash-preview",
+      "cost": 0
+    }
+  ]
+}

@@ -13,10 +13,10 @@
     "epochMs": 5000,
     "settlement": "x402/usdc",
     "protocolFeeRate": 0.015,
-    "feed": "https://belleepoch.xyz/feed"
+    "feed": "https://api.belleepoch.xyz/feed"
   },
   "identity": {
-    "selfAttestation": true,
+    "selfAttestation": false,
     "veniceNoRetention": true,
     "metamaskDelegation": "ERC-7715",
     "delegationHash": "0x4e5fa97d914c5e106ddb55030568e794832dbbdd44d00827a3669e190ecc6ecc"
