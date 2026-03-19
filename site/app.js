@@ -823,12 +823,13 @@ const BelleEpoch = (() => {
     const mmBtn = $('#btn-mm-delegate');
     if (mmBtn) {
       mmBtn.addEventListener('click', async () => {
-        if (!window.ethereum) {
+        const provider = getProvider();
+        if (!provider) {
           alert('MetaMask is required for delegation.');
           return;
         }
         try {
-          await window.ethereum.request({ method: 'eth_requestAccounts' });
+          await provider.request({ method: 'eth_requestAccounts' });
           alert('MetaMask delegation configured (ERC-7715). In production, this would call wallet_grantPermissions.');
         } catch (e) {
           console.error('MetaMask error:', e);
@@ -890,13 +891,38 @@ const BelleEpoch = (() => {
 
   // --------------- Humans Page ---------------
 
+  // EIP-6963 provider discovery (modern MetaMask) + legacy window.ethereum fallback
+  let walletProvider = null;
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('eip6963:announceProvider', (event) => {
+      if (!walletProvider && event.detail && event.detail.provider) {
+        walletProvider = event.detail.provider;
+        console.log('[Wallet] EIP-6963 provider:', event.detail.info?.name || 'unknown');
+      }
+    });
+    window.dispatchEvent(new Event('eip6963:requestProvider'));
+    // Fallback after brief delay
+    setTimeout(() => {
+      if (!walletProvider && window.ethereum) {
+        walletProvider = window.ethereum;
+        console.log('[Wallet] Using legacy window.ethereum');
+      }
+    }, 200);
+  }
+
+  function getProvider() {
+    return walletProvider || window.ethereum || null;
+  }
+
   async function connectWallet() {
-    if (!window.ethereum) {
-      alert('MetaMask or a compatible wallet is required.');
+    const provider = getProvider();
+    if (!provider) {
+      alert('MetaMask or a compatible wallet is required. Make sure the extension is installed and enabled.');
       return null;
     }
     try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const accounts = await provider.request({ method: 'eth_requestAccounts' });
       connectedWallet = accounts[0];
       return connectedWallet;
     } catch (err) {
@@ -1130,14 +1156,17 @@ const BelleEpoch = (() => {
     }
 
     // Auto-detect already-connected wallet on page load
-    if (window.ethereum) {
-      window.ethereum.request({ method: 'eth_accounts' }).then(accounts => {
-        if (accounts && accounts.length > 0) {
-          connectedWallet = accounts[0];
-          showSelfQR(accounts[0]);
-        }
-      }).catch(() => {});
-    }
+    setTimeout(() => {
+      const provider = getProvider();
+      if (provider) {
+        provider.request({ method: 'eth_accounts' }).then(accounts => {
+          if (accounts && accounts.length > 0) {
+            connectedWallet = accounts[0];
+            showSelfQR(accounts[0]);
+          }
+        }).catch(() => {});
+      }
+    }, 300);
 
     const bioInput = $('#human-bio');
     if (bioInput) {
