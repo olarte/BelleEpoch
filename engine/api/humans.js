@@ -10,10 +10,11 @@ module.exports = function mountHumansRoutes(app, redis) {
 
   try {
     const { SelfBackendVerifier, DefaultConfigStore, AllIds } = require('@selfxyz/core');
+    // Always use mainnet (false) — testnet RPC is unreachable (dead DNS)
     verifier = new SelfBackendVerifier(
       process.env.SELF_SCOPE || 'belle-epoch-humans',
       process.env.SELF_ENDPOINT || 'https://api.belleepoch.xyz/humans/verify',
-      process.env.SELF_MOCK === 'true',
+      false,
       AllIds,
       new DefaultConfigStore({
         minimumAge: 18,
@@ -21,7 +22,7 @@ module.exports = function mountHumansRoutes(app, redis) {
       }),
       'hex'
     );
-    console.log(`[Humans] Self verifier initialized (mock: ${process.env.SELF_MOCK === 'true'})`);
+    console.log('[Humans] Self verifier initialized (mainnet)');
   } catch (err) {
     console.warn('[Humans] Self SDK not available — verification will reject all proofs:', err.message);
   }
@@ -46,9 +47,11 @@ module.exports = function mountHumansRoutes(app, redis) {
         });
       }
 
+      console.log(`[Humans] Verifying proof: attestationId=${attestationId}, publicSignals.length=${publicSignals?.length}, userContextData=${userContextData}`);
       const result = await verifier.verify(
         attestationId, proof, publicSignals, userContextData
       );
+      console.log('[Humans] Verify result:', JSON.stringify(result?.isValidDetails || {}));
 
       const { isValid, isMinimumAgeValid, isOfacValid } = result.isValidDetails || {};
 
