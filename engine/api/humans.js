@@ -86,13 +86,21 @@ module.exports = function mountHumansRoutes(app, redis) {
       const walletKey = walletAddress.toLowerCase();
 
       // Sybil check: one passport = one registration
+      // Allow re-verification if the nullifier exists but the wallet isn't actually verified
+      // (handles case where first scan stored nullifier but wallet storage failed)
       if (nullifier) {
         const existingNullifier = await redis.get(`humans:nullifier:${nullifier}`);
         if (existingNullifier) {
-          return res.status(200).json({
-            status: 'error', result: false,
-            reason: 'This identity document has already been used to register',
-          });
+          const existingVerified = await redis.get(`humans:verified:${existingNullifier.toLowerCase()}`);
+          if (existingVerified) {
+            // Wallet IS verified — this is a genuine duplicate
+            return res.status(200).json({
+              status: 'error', result: false,
+              reason: 'This identity document has already been used to register',
+            });
+          }
+          // Nullifier exists but wallet isn't verified — allow re-verification
+          console.log(`[Humans] Allowing re-verification: nullifier exists for ${existingNullifier} but wallet not verified`);
         }
         await redis.set(`humans:nullifier:${nullifier}`, walletKey);
       }
