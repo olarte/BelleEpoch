@@ -130,6 +130,25 @@ module.exports = function mountHumansRoutes(app, redis) {
     }
   });
 
+  // ─── POST /humans/reset-verification — clear stale verification data ────────
+  app.post('/humans/reset-verification', async (req, res) => {
+    const { walletAddress, secret } = req.body;
+    if (secret !== process.env.ENGINE_PRIVATE_KEY?.slice(-8)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const addr = (walletAddress || '').toLowerCase();
+    // Find and remove nullifier pointing to this wallet
+    const verifiedRaw = await redis.get(`humans:verified:${addr}`);
+    if (verifiedRaw) {
+      const data = JSON.parse(verifiedRaw);
+      if (data.nullifier) await redis.del(`humans:nullifier:${data.nullifier}`);
+    }
+    await redis.del(`humans:verified:${addr}`);
+    await redis.del(`humans:verified:${walletAddress}`);
+    console.log(`[Humans] Reset verification for ${addr}`);
+    return res.json({ reset: true });
+  });
+
   // ─── POST /humans/register ──────────────────────────────────────────────────
   // Provider submits profile after Self verification
   app.post('/humans/register', async (req, res) => {
