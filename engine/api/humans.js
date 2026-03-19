@@ -68,12 +68,22 @@ module.exports = function mountHumansRoutes(app, redis) {
 
       // Extract disclosed data
       const nationality = result.discloseOutput ? result.discloseOutput.nationality : null;
-      const walletAddress = result.userData ? result.userData.userDefinedData : null;
+      const rawWallet = result.userData ? result.userData.userDefinedData : null;
       const nullifier = result.userData ? result.userData.userIdentifier : null;
+
+      console.log('[Humans] Extracted: wallet=%s, nationality=%s, nullifier=%s', rawWallet, nationality, nullifier);
+      console.log('[Humans] Full userData:', JSON.stringify(result.userData || {}));
+      console.log('[Humans] Full discloseOutput:', JSON.stringify(result.discloseOutput || {}));
+
+      // Use userContextData as fallback wallet address (what was in the QR code)
+      const walletAddress = rawWallet || userContextData || null;
 
       if (!walletAddress) {
         return res.status(200).json({ status: 'error', result: false, reason: 'No wallet address provided' });
       }
+
+      // Normalize to lowercase for consistent lookups
+      const walletKey = walletAddress.toLowerCase();
 
       // Sybil check: one passport = one registration
       if (nullifier) {
@@ -84,16 +94,21 @@ module.exports = function mountHumansRoutes(app, redis) {
             reason: 'This identity document has already been used to register',
           });
         }
-        await redis.set(`humans:nullifier:${nullifier}`, walletAddress);
+        await redis.set(`humans:nullifier:${nullifier}`, walletKey);
       }
 
-      await redis.set(`humans:verified:${walletAddress}`, JSON.stringify({
+      // Store under both lowercase and original case for safe lookups
+      const verifiedData = JSON.stringify({
         nationality,
         verifiedAt: new Date().toISOString(),
         nullifier,
-      }));
+      });
+      await redis.set(`humans:verified:${walletKey}`, verifiedData);
+      if (walletAddress !== walletKey) {
+        await redis.set(`humans:verified:${walletAddress}`, verifiedData);
+      }
 
-      console.log(`[Humans] Self verified wallet: ${walletAddress} (nationality: ${nationality})`);
+      console.log(`[Humans] Self verified wallet: ${walletKey} (nationality: ${nationality})`);
       return res.status(200).json({ status: 'success', result: true });
     } catch (err) {
       console.error('[POST /humans/verify] error:', err);
@@ -105,7 +120,8 @@ module.exports = function mountHumansRoutes(app, redis) {
   // Check if a wallet has been Self-verified (used by frontend polling)
   app.get('/humans/verified/:address', async (req, res) => {
     try {
-      const raw = await redis.get(`humans:verified:${req.params.address}`);
+      const addr = req.params.address.toLowerCase();
+      const raw = await redis.get(`humans:verified:${addr}`) || await redis.get(`humans:verified:${req.params.address}`);
       if (!raw) return res.json({ verified: false });
       const data = JSON.parse(raw);
       return res.json({ verified: true, nationality: data.nationality, verifiedAt: data.verifiedAt });
@@ -136,8 +152,8 @@ module.exports = function mountHumansRoutes(app, redis) {
         return res.status(400).json({ error: 'Missing required fields: walletAddress, category, bio' });
       }
 
-      // Require Self verification first
-      const verified = await redis.get(`humans:verified:${walletAddress}`);
+      // Require Self verification first (check both original and lowercase)
+      const verified = await redis.get(`humans:verified:${walletAddress.toLowerCase()}`) || await redis.get(`humans:verified:${walletAddress}`);
       if (!verified) {
         return res.status(401).json({ error: 'Self verification required first' });
       }
