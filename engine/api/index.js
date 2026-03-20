@@ -1085,7 +1085,7 @@ app.get('/bankr/routing', async (req, res) => {
 });
 
 // ─── Beast: Market Intelligence Agent ────────────────────────────────────────
-const belleEpochProvider = require('belle-epoch-provider');
+const belleEpochProvider = require('../providerSdk');
 const { beastHandler, QUERY_TYPES } = require('../beast/handler');
 
 const beastGate = belleEpochProvider({
