@@ -2101,7 +2101,7 @@ const BelleEpoch = (() => {
       const resultStr = JSON.stringify(data.result, null, 2);
       const lines = resultStr.split('\n');
       const preview = lines.slice(0, 30).join('\n') + (lines.length > 30 ? '\n  \u2026 (' + lines.length + ' lines total)' : '');
-      consolePrint(container, '<pre style="margin:0;white-space:pre-wrap;font-size:.8rem;color:var(--gold)">' + escapeHtml(preview) + '</pre>', 'result');
+      consolePrint(container, '<pre style="margin:0;white-space:pre-wrap;font-size:.8rem">' + escapeHtml(preview) + '</pre>', 'result');
 
       await delay(200);
       consolePrint(container, '\u2713 Complete. Type: ' + data.type + ' | ' + new Date(data.timestamp).toLocaleTimeString(), 'success');

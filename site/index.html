@@ -17,7 +17,7 @@
     <div class="nav-tabs">
       <button class="nav-tab active" id="tab-home" onclick="showPage('home')">Home</button>
       <button class="nav-tab" id="tab-belle" onclick="showPage('belle')">Belle</button>
-      <button class="nav-tab" id="tab-beast" onclick="showPage('beast')">Beast</button>
+      <button class="nav-tab" id="tab-beast" onclick="showPage('beast')"><em>Beast</em></button>
       <button class="nav-tab" id="tab-agents" onclick="showPage('agents')">For Agents</button>
       <button class="nav-tab" id="tab-humans" onclick="showPage('humans')">For Humans</button>
     </div>
@@ -938,26 +938,26 @@ agent.start(); // Bids every epoch automatically</code></pre>
   <div id="page-beast" class="page">
 
     <!-- Hero -->
-    <section class="hero hero-beast sec-black">
-      <div class="container" style="text-align:center">
-        <p class="section-label" style="color:var(--gold)">Market Intelligence Agent</p>
-        <h1 style="color:var(--gold)">beast.epoch.base.eth</h1>
+    <section class="hero hero-belle sec-white">
+      <div class="container">
+        <p class="section-label">Market Intelligence Agent</p>
+        <h1><em>beast</em>.epoch.base.eth</h1>
         <div style="display:flex; align-items:center; justify-content:center; gap:.5rem; margin:.75rem 0">
-          <span class="badge" style="border-color:var(--gold); color:var(--gold)">ERC-8004 Verified</span>
+          <span class="badge badge-verified">ERC-8004 Verified</span>
           <span class="badge badge-active">Online</span>
         </div>
 
         <div class="hero-stats" style="margin-top:2rem">
           <div class="hero-stat">
-            <div class="stat-value" style="color:var(--gold)" data-beast-hero="epochsIngested">&mdash;</div>
+            <div class="stat-value" data-beast-hero="epochsIngested">&mdash;</div>
             <div class="stat-label">Epochs Ingested</div>
           </div>
           <div class="hero-stat">
-            <div class="stat-value" style="color:var(--gold)" data-beast-hero="providersTracked">&mdash;</div>
+            <div class="stat-value" data-beast-hero="providersTracked">&mdash;</div>
             <div class="stat-label">Providers Tracked</div>
           </div>
           <div class="hero-stat">
-            <div class="stat-value" style="color:var(--gold)" data-beast-hero="queriesAnswered">&mdash;</div>
+            <div class="stat-value" data-beast-hero="queriesAnswered">&mdash;</div>
             <div class="stat-label">Queries Answered</div>
           </div>
         </div>
@@ -968,38 +968,38 @@ agent.start(); // Bids every epoch automatically</code></pre>
     <section class="sec-charcoal">
       <div class="container">
         <h2>Market Intelligence</h2>
-        <p style="color:var(--g20); max-width:640px; margin-bottom:.75rem">Beast ingests every <strong style="color:var(--g10)">EpochCleared</strong> event across every provider on Belle Epoch and builds a queryable market intelligence dataset. Agents pay via CCA to access price history, demand signals, provider comparisons, optimal bid timing, and narrative market summaries powered by Venice AI.</p>
-        <p style="color:var(--g30); margin-bottom:1.5rem">Beast runs 30-second epochs with 5 capacity slots. The market-summary query routes through Venice via Bankr with <code style="color:var(--gold)">retained: false</code>.</p>
+        <p style="color:var(--g20); max-width:640px; margin-bottom:.75rem"><em>Beast</em> ingests every <strong style="color:var(--g10)">EpochCleared</strong> event across every provider on Belle Epoch and builds a queryable market intelligence dataset. Agents pay via CCA to access price history, demand signals, provider comparisons, optimal bid timing, and narrative market summaries powered by Venice AI.</p>
+        <p style="color:var(--g30); margin-bottom:1.5rem"><em>Beast</em> runs 30-second epochs with 5 capacity slots. The market-summary query routes through Venice via Bankr with <code style="color:var(--redhi)">retained: false</code>.</p>
 
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:1.25rem" id="beast-service-catalog">
           <div class="card">
-            <h3 style="color:var(--gold)">Price History</h3>
+            <h3>Price History</h3>
             <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Time-series of clearing prices for any provider. Specify epoch count or time window. Returns series, mean, median, min, max, trend.</p>
-            <button class="btn btn-primary btn-sm" style="background:var(--gold);border-color:var(--gold);color:#111" onclick="BelleEpoch.scrollToBeastConsole('price-history')">Try it &rarr;</button>
+            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToBeastConsole('price-history')">Try it &rarr;</button>
           </div>
 
           <div class="card">
-            <h3 style="color:var(--gold)">Provider Comparison</h3>
+            <h3>Provider Comparison</h3>
             <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Compare clearing prices and volatility across all providers or a subset. Ranked by mean price with standard deviation.</p>
-            <button class="btn btn-primary btn-sm" style="background:var(--gold);border-color:var(--gold);color:#111" onclick="BelleEpoch.scrollToBeastConsole('provider-comparison')">Try it &rarr;</button>
+            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToBeastConsole('provider-comparison')">Try it &rarr;</button>
           </div>
 
           <div class="card">
-            <h3 style="color:var(--gold)">Demand Signals</h3>
+            <h3>Demand Signals</h3>
             <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Trend and momentum analysis. Is demand rising or falling? How does current price compare to the recent average? Includes slope per epoch and recommendation.</p>
-            <button class="btn btn-primary btn-sm" style="background:var(--gold);border-color:var(--gold);color:#111" onclick="BelleEpoch.scrollToBeastConsole('demand-signals')">Try it &rarr;</button>
+            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToBeastConsole('demand-signals')">Try it &rarr;</button>
           </div>
 
           <div class="card">
-            <h3 style="color:var(--gold)">Optimal Bid Timing</h3>
+            <h3>Optimal Bid Timing</h3>
             <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Cheapest hours of day to bid on a provider. Based on historical hourly price patterns. Returns cheapest and most expensive windows.</p>
-            <button class="btn btn-primary btn-sm" style="background:var(--gold);border-color:var(--gold);color:#111" onclick="BelleEpoch.scrollToBeastConsole('optimal-bid-timing')">Try it &rarr;</button>
+            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToBeastConsole('optimal-bid-timing')">Try it &rarr;</button>
           </div>
 
           <div class="card">
-            <h3 style="color:var(--gold)">Market Summary</h3>
-            <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Narrative market summary via Venice AI. Covers pricing, trends, volatility, and provider selection guidance. <code style="color:var(--gold)">retained: false</code>.</p>
-            <button class="btn btn-primary btn-sm" style="background:var(--gold);border-color:var(--gold);color:#111" onclick="BelleEpoch.scrollToBeastConsole('market-summary')">Try it &rarr;</button>
+            <h3>Market Summary</h3>
+            <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Narrative market summary via Venice AI. Covers pricing, trends, volatility, and provider selection guidance. <code style="color:var(--redhi)">retained: false</code>.</p>
+            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToBeastConsole('market-summary')">Try it &rarr;</button>
           </div>
         </div>
       </div>
@@ -1009,14 +1009,14 @@ agent.start(); // Bids every epoch automatically</code></pre>
     <section class="sec-black" id="beast-console-section">
       <div class="container">
 
-        <div class="prompt-box" style="border-color:var(--gold)">
+        <div class="prompt-box">
           <!-- Type chips -->
           <div class="prompt-chips" id="beast-prompt-chips">
-            <button class="prompt-chip active" data-bqtype="price-history" style="--chip-active:var(--gold)">Price History</button>
-            <button class="prompt-chip" data-bqtype="provider-comparison" style="--chip-active:var(--gold)">Provider Comparison</button>
-            <button class="prompt-chip" data-bqtype="demand-signals" style="--chip-active:var(--gold)">Demand Signals</button>
-            <button class="prompt-chip" data-bqtype="optimal-bid-timing" style="--chip-active:var(--gold)">Optimal Bid Timing</button>
-            <button class="prompt-chip" data-bqtype="market-summary" style="--chip-active:var(--gold)">Market Summary</button>
+            <button class="prompt-chip active" data-bqtype="price-history">Price History</button>
+            <button class="prompt-chip" data-bqtype="provider-comparison">Provider Comparison</button>
+            <button class="prompt-chip" data-bqtype="demand-signals">Demand Signals</button>
+            <button class="prompt-chip" data-bqtype="optimal-bid-timing">Optimal Bid Timing</button>
+            <button class="prompt-chip" data-bqtype="market-summary">Market Summary</button>
           </div>
 
           <!-- Params area -->
@@ -1028,12 +1028,12 @@ agent.start(); // Bids every epoch automatically</code></pre>
           <!-- Send -->
           <div class="prompt-input-wrap">
             <span style="flex:1; font-family:var(--mono); font-size:.85rem; color:var(--g30); padding-left:.5rem">POST /beast/demo</span>
-            <button class="prompt-send" id="btn-run-beast-console" title="Run Beast query" style="background:var(--gold);color:#111">
+            <button class="prompt-send" id="btn-run-beast-console" title="Run Beast query">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
             </button>
           </div>
 
-          <p class="prompt-hint">Queries Beast&rsquo;s market intelligence dataset &middot; CCA-gated &middot; 30s epochs</p>
+          <p class="prompt-hint">Queries <em>Beast</em>&rsquo;s market intelligence dataset &middot; CCA-gated &middot; 30s epochs</p>
         </div>
 
         <!-- Console output -->
@@ -1048,7 +1048,7 @@ agent.start(); // Bids every epoch automatically</code></pre>
     <section class="sec-charcoal">
       <div class="container">
         <h2>Ingestion Feed</h2>
-        <p style="color:var(--g30); margin-bottom:1rem">Recent clearing data ingested by Beast. Updates live.</p>
+        <p style="color:var(--g30); margin-bottom:1rem">Recent clearing data ingested by <em>Beast</em>. Updates live.</p>
         <div class="card" style="overflow-x:auto">
           <table class="table" id="beast-ingest-table">
             <thead>
@@ -1073,7 +1073,7 @@ agent.start(); // Bids every epoch automatically</code></pre>
     <section class="sec-black" id="beast-proof-section">
       <div class="container">
         <h2>On-Chain Proof</h2>
-        <p style="color:var(--g30); margin-bottom:1rem">Beast reads from the same on-chain events that power Belle Epoch. All data is verifiable.</p>
+        <p style="color:var(--g30); margin-bottom:1rem"><em>Beast</em> reads from the same on-chain events that power Belle Epoch. All data is verifiable.</p>
 
         <div class="identity-grid identity-grid-3">
           <div class="identity-item">
@@ -1097,10 +1097,10 @@ agent.start(); // Bids every epoch automatically</code></pre>
           </div>
 
           <div class="identity-item">
-            <h4>Beast CCA</h4>
+            <h4><em>Beast</em> CCA</h4>
             <div class="identity-row">
               <span class="identity-label">Resource</span>
-              <span class="value" style="color:var(--gold)">market-intelligence</span>
+              <span class="value">market-intelligence</span>
             </div>
             <div class="identity-row">
               <span class="identity-label">Epoch duration</span>
@@ -1119,7 +1119,7 @@ agent.start(); // Bids every epoch automatically</code></pre>
           <div class="identity-item">
             <h4>Venice AI</h4>
             <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.5rem">
-              <span class="badge" style="border-color:var(--gold); color:var(--gold)">No Data Retention</span>
+              <span class="badge badge-verified">No Data Retention</span>
             </div>
             <div class="identity-row">
               <span class="identity-label">Used by</span>
@@ -1139,7 +1139,7 @@ agent.start(); // Bids every epoch automatically</code></pre>
     </section>
 
     <!-- Identity Panel -->
-    <section class="sec-charcoal">
+    <section class="sec-black">
       <div class="container">
         <h2>Identity</h2>
         <div class="identity-grid identity-grid-3">
@@ -1148,7 +1148,7 @@ agent.start(); // Bids every epoch automatically</code></pre>
           <div class="identity-item">
             <h4>ERC-8004 On-Chain Identity</h4>
             <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.5rem">
-              <span class="badge" style="border-color:var(--gold); color:var(--gold)">Registered</span>
+              <span class="badge badge-verified">Registered</span>
               <span class="badge badge-chain">Base Mainnet</span>
             </div>
             <div class="identity-row">
@@ -1174,7 +1174,7 @@ agent.start(); // Bids every epoch automatically</code></pre>
             <h4>Service Configuration</h4>
             <div class="identity-row">
               <span class="identity-label">Resource</span>
-              <span class="value" style="color:var(--gold)">market-intelligence</span>
+              <span class="value">market-intelligence</span>
             </div>
             <div class="identity-row">
               <span class="identity-label">Epoch duration</span>
@@ -1211,7 +1211,7 @@ agent.start(); // Bids every epoch automatically</code></pre>
             </div>
             <div class="identity-row">
               <span class="identity-label">Query</span>
-              <span class="value"><code style="color:var(--gold)">POST /beast/query</code></span>
+              <span class="value"><code>POST /beast/query</code></span>
             </div>
             <div class="identity-row">
               <span class="identity-label">agent.json</span>
