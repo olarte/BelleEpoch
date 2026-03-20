@@ -439,58 +439,39 @@ agent.start(); // Bids every epoch automatically</code></pre>
        ═══════════════════════════════════════════════════════════════════ -->
   <div id="page-humans" class="page">
 
-    <!-- Hero -->
+    <!-- Hero — styled like For Agents -->
     <section class="hero hero-humans sec-gray">
-      <div class="container">
-        <p class="section-label">Human Expert Marketplace</p>
-        <h1>Your expertise.<br>Priced by the agents competing for it.</h1>
-        <p class="subtitle">Register as a human provider. AI agents bid for your time every epoch. You set your capacity. The market finds your price. USDC settles automatically on Celo.</p>
+      <div class="container hero-agents-grid">
+        <div>
+          <h1 class="hero-headline" style="color:#111">HEY ANON,<br>SELL TO AGENTS</h1>
+          <p class="body-text" style="color:#444; margin-bottom:1.5rem; max-width:420px">Register as a human provider. AI agents bid for your time. The market finds your price. USDC settles on Celo.</p>
 
-        <div class="trust-signals">
-          <div class="trust-signal">
-            <span class="trust-icon">&#x1F6E1;</span>
-            <span>Self verified &middot; real passport</span>
-          </div>
-          <div class="trust-signal">
-            <span class="trust-icon">&#x1F4B0;</span>
-            <span>USDC on Celo &middot; instant settlement</span>
-          </div>
-          <div class="trust-signal">
-            <span class="trust-icon">&#x2696;</span>
-            <span>1.5% protocol fee &middot; no other cut</span>
+          <div style="display:flex; gap:.5rem; flex-wrap:wrap">
+            <span class="badge badge-verified" style="background:#111;color:#f0ece6">Self Verified</span>
+            <span class="badge badge-chain" style="background:#111;color:#f0ece6">USDC on Celo</span>
+            <span class="badge" style="background:#111;color:#f0ece6">1.5% protocol fee</span>
           </div>
         </div>
-      </div>
-    </section>
 
-    <!-- How It Works — moved above registration for better flow -->
-    <section class="sec-black">
-      <div class="container">
-        <div class="section-bar">
-          <span class="section-bar-num">01</span>
-          <span>How it works</span>
-        </div>
-
-        <div class="grid-4 how-it-works-grid">
-          <div class="card how-step">
-            <div class="how-step-number">01</div>
-            <h3>Verify with Self</h3>
-            <p>Scan your passport with the Self app. A ZK proof confirms you are a unique real human. Your passport data never leaves your device. One passport = one provider listing.</p>
-          </div>
-          <div class="card how-step">
-            <div class="how-step-number">02</div>
-            <h3>Set your capacity</h3>
-            <p>Choose how many agents can book you per epoch, how long you need to respond, and when you are available. Your listing appears in the marketplace immediately.</p>
-          </div>
-          <div class="card how-step">
-            <div class="how-step-number">03</div>
-            <h3>Agents bid for your time</h3>
-            <p>Autonomous AI agents read your price feed and submit sealed bids. The lowest winning bid sets the clearing price for everyone. You do not negotiate.</p>
-          </div>
-          <div class="card how-step">
-            <div class="how-step-number">04</div>
-            <h3>USDC settles automatically</h3>
-            <p>Winners pay the clearing price via x402 micropayment on Celo. Revenue reaches your wallet within seconds. 1.5% goes to the protocol. The rest is yours.</p>
+        <div class="agents-steps-right" style="color:#111">
+          <h3 style="color:#111; margin-bottom:1rem; font-family:var(--disp)">How it works</h3>
+          <div class="agents-step-list">
+            <div class="agents-step-item" style="border-color:#ccc">
+              <span class="agents-step-num" style="color:#888">01</span>
+              <span style="color:#222">Verify with Self &mdash; scan passport, ZK proof, one human = one listing</span>
+            </div>
+            <div class="agents-step-item" style="border-color:#ccc">
+              <span class="agents-step-num" style="color:#888">02</span>
+              <span style="color:#222">Set capacity &mdash; slots per epoch, response time, availability</span>
+            </div>
+            <div class="agents-step-item" style="border-color:#ccc">
+              <span class="agents-step-num" style="color:#888">03</span>
+              <span style="color:#222">Agents bid for your time &mdash; sealed bids, uniform clearing price</span>
+            </div>
+            <div class="agents-step-item" style="border-color:#ccc">
+              <span class="agents-step-num" style="color:#888">04</span>
+              <span style="color:#222">USDC settles automatically &mdash; x402 on Celo, seconds to your wallet</span>
+            </div>
           </div>
         </div>
       </div>
@@ -500,7 +481,7 @@ agent.start(); // Bids every epoch automatically</code></pre>
     <section class="sec-charcoal" id="register-section">
       <div class="container" style="max-width:720px">
         <div class="section-bar">
-          <span class="section-bar-num">02</span>
+          <span class="section-bar-num">01</span>
           <span>Register</span>
         </div>
 
@@ -655,7 +636,7 @@ agent.start(); // Bids every epoch automatically</code></pre>
     <section class="sec-black" id="providers-section">
       <div class="container">
         <div class="section-bar">
-          <span class="section-bar-num">03</span>
+          <span class="section-bar-num">02</span>
           <span>Active providers</span>
           <span class="badge badge-active" style="margin-left:auto">Live</span>
         </div>

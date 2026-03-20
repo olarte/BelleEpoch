@@ -1260,11 +1260,27 @@ const BelleEpoch = (() => {
     }
   }
 
+  // Simulated human providers for marketplace demo
+  const SIM_HUMAN_PROVIDERS = [
+    { category: 'physician', bio: 'Board-certified internist. 12 years clinical + telemedicine. Available for diagnostic reasoning, drug interaction analysis, and triage protocol review.', credentialClaim: 'MD, Internal Medicine', nationality: 'USA', chain: 'celo', online: true, capacitySlots: 2, epochMs: 1800000, currentClearingPrice: 0.42, epochsServed: 87, sim: true },
+    { category: 'attorney', bio: 'Smart contract and DeFi regulatory counsel. Barred in NY and CA. Advising DAOs and protocol teams on compliance since 2020.', credentialClaim: 'JD, Securities Law', nationality: 'USA', chain: 'base', online: true, capacitySlots: 1, epochMs: 3600000, currentClearingPrice: 0.65, epochsServed: 34, sim: true },
+    { category: 'security-researcher', bio: 'Solidity auditor. 40+ audits shipped. Specializing in reentrancy, price oracle manipulation, and MEV-related vulnerabilities.', credentialClaim: 'OSCP, Trail of Bits alumni', nationality: 'DEU', chain: 'base', online: true, capacitySlots: 3, epochMs: 900000, currentClearingPrice: 0.38, epochsServed: 152, sim: true },
+    { category: 'financial-analyst', bio: 'On-chain analytics and token economics modeling. Previously at a top-5 crypto fund. DeFi yield strategy and risk assessment.', credentialClaim: 'CFA Level III', nationality: 'GBR', chain: 'celo', online: false, capacitySlots: 2, epochMs: 1800000, currentClearingPrice: 0.29, epochsServed: 63, sim: true },
+    { category: 'data-scientist', bio: 'ML engineer focused on time-series forecasting for DeFi. Building MEV prediction models and liquidity depth estimators.', credentialClaim: 'PhD, Machine Learning', nationality: 'KOR', chain: 'base', online: true, capacitySlots: 2, epochMs: 1800000, currentClearingPrice: 0.31, epochsServed: 41, sim: true },
+    { category: 'physician', bio: 'Psychiatrist and neuroscience researcher. Agent-assisted mental health triage and clinical decision support systems.', credentialClaim: 'MD, Psychiatry', nationality: 'BRA', chain: 'celo', online: true, capacitySlots: 1, epochMs: 3600000, currentClearingPrice: 0.55, epochsServed: 22, sim: true },
+    { category: 'security-researcher', bio: 'Penetration tester and incident responder. Focused on bridge exploits, cross-chain attack vectors, and key management.', credentialClaim: 'CISSP', nationality: 'JPN', chain: 'celo', online: false, capacitySlots: 1, epochMs: 1800000, currentClearingPrice: 0.34, epochsServed: 78, sim: true },
+    { category: 'attorney', bio: 'Privacy and data protection law. GDPR, CCPA, and emerging AI regulation. Advising on-chain identity and ZK compliance frameworks.', credentialClaim: 'LLM, Data Privacy', nationality: 'FRA', chain: 'celo', online: true, capacitySlots: 1, epochMs: 3600000, currentClearingPrice: 0.48, epochsServed: 19, sim: true },
+  ];
+
   function renderHumanProviders(providers) {
     const grid = $('#humans-grid');
     if (!grid) return;
 
-    if (!providers || providers.length === 0) {
+    // Merge real providers with sim providers
+    const real = (providers || []).map(p => ({ ...p, sim: false }));
+    const all = [...real, ...SIM_HUMAN_PROVIDERS];
+
+    if (all.length === 0) {
       grid.innerHTML = `
         <div class="card" style="text-align:center; color:var(--g30); padding:3rem; grid-column:1/-1">
           <p style="margin-bottom:1rem">No providers registered yet. Be the first.</p>
@@ -1273,7 +1289,7 @@ const BelleEpoch = (() => {
       return;
     }
 
-    let filtered = providers;
+    let filtered = all;
     if (humansFilterCategory !== 'all') {
       filtered = filtered.filter(p => p.category === humansFilterCategory);
     }
@@ -1297,6 +1313,7 @@ const BelleEpoch = (() => {
         ? '<span class="badge badge-online">Online</span>'
         : '<span class="badge badge-offline">Offline</span>';
       const chainBadge = `<span class="badge badge-chain">${(p.chain || 'celo').charAt(0).toUpperCase() + (p.chain || 'celo').slice(1)}</span>`;
+      const simBadge = p.sim ? '<span class="badge" style="background:var(--g50);color:var(--g20);font-size:.7rem">Simulator</span>' : '';
       const credential = p.credentialClaim
         ? `<div class="credential-line">\u26A0 Self-attested: ${p.credentialClaim}</div>`
         : '';
@@ -1321,6 +1338,7 @@ const BelleEpoch = (() => {
                 <span class="badge badge-verified">Self Verified</span>
                 ${onlineBadge}
                 ${chainBadge}
+                ${simBadge}
               </div>
             </div>
           </div>
@@ -1345,7 +1363,7 @@ const BelleEpoch = (() => {
               <div class="human-stat-value">${p.epochsServed || 0}</div>
             </div>
           </div>
-          <button class="btn btn-primary btn-sm" style="width:100%; margin-top:.5rem" onclick="showPage('belle');BelleEpoch.scrollToConsole('expert-routing')">Bid now &rarr;</button>
+          <button class="btn btn-primary btn-sm" style="width:100%; margin-top:.5rem" onclick="showPage('belle');BelleEpoch.scrollToConsole('bid-strategy')">Bid now &rarr;</button>
         </div>`;
     }).join('');
   }
