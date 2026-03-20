@@ -976,21 +976,25 @@ const BelleEpoch = (() => {
       return;
     }
 
+    const FEE_RATE = 0.015;
+
     tbody.innerHTML = history.map(ep => {
       const winners = ep.winners || [];
-      const belleWon = winners.includes('belle');
+      const slots = ep.slotsFilled || 0;
+      const price = ep.clearingPrice || 0;
       const winnersStr = winners.map(w =>
-        w === 'belle'
-          ? '<strong style="color:var(--accent)">belle</strong>'
-          : `<span style="color:var(--g30)">${w}</span>`
+        `<span style="color:var(--g30)">${w}</span>`
       ).join(', ');
+
+      // Belle earns provider share = revenue - protocol fee
+      const belleEarned = slots > 0 ? price * slots * (1 - FEE_RATE) : 0;
 
       return `<tr>
         <td>#${ep.epochId}</td>
-        <td>${formatUsdc(ep.clearingPrice)}</td>
-        <td>${ep.slotsFilled || 0} / ${ep.totalBids || 0}</td>
+        <td>${formatUsdc(price)}</td>
+        <td>${slots} / ${ep.totalBids || 0}</td>
         <td style="font-size:.85rem">${winnersStr || '\u2014'}</td>
-        <td style="color:${belleWon ? 'var(--green)' : 'var(--g40)'}">${belleWon ? 'Won' : 'Lost'}</td>
+        <td style="color:${belleEarned > 0 ? 'var(--green)' : 'var(--g40)'}">${belleEarned > 0 ? formatUsdc(belleEarned) : '\u2014'}</td>
         <td style="color:var(--g30);font-size:.85rem">${ep.timestamp ? timeAgo(ep.timestamp) : '\u2014'}</td>
       </tr>`;
     }).join('');
