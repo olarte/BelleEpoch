@@ -1588,7 +1588,7 @@ const BelleEpoch = (() => {
               <div class="human-stat-value">${p.epochsServed || 0}</div>
             </div>
           </div>
-          <button class="btn btn-primary btn-sm" style="width:100%; margin-top:.5rem" onclick="${p.sim ? 'BelleEpoch.openHumanDemo(' + filtered.indexOf(p) + ')' : "showPage('belle');BelleEpoch.scrollToConsole('bid-strategy')"}">Bid now &rarr;</button>
+          <button class="btn btn-primary btn-sm" style="width:100%; margin-top:.5rem" onclick="BelleEpoch.openHumanDemo(${filtered.indexOf(p)})">Bid now &rarr;</button>
         </div>`;
     }).join('');
   }
