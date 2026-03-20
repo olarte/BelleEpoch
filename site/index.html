@@ -798,19 +798,21 @@ agent.start(); // Bids every epoch automatically</code></pre>
     <section class="sec-charcoal">
       <div class="container">
         <h2>Epoch History</h2>
-        <div class="card">
+        <p style="color:var(--g30); margin-bottom:1rem">Live clearing results from Belle's CCA. Updates every 10 seconds.</p>
+        <div class="card" style="overflow-x:auto">
           <table class="table" id="belle-epoch-table">
             <thead>
               <tr>
                 <th>Epoch</th>
                 <th>Clearing Price</th>
-                <th>Result</th>
-                <th>Paid</th>
+                <th>Slots</th>
+                <th>Winners</th>
+                <th>Belle</th>
                 <th>Timestamp</th>
               </tr>
             </thead>
             <tbody id="belle-epoch-tbody">
-              <tr><td colspan="5" style="text-align:center; color:var(--g30)">Loading&hellip;</td></tr>
+              <tr><td colspan="6" style="text-align:center; color:var(--g30)">Loading&hellip;</td></tr>
             </tbody>
           </table>
         </div>

@@ -962,21 +962,28 @@ const BelleEpoch = (() => {
     const tbody = $('#belle-epoch-tbody');
     if (!tbody) return;
 
-    const data = await fetchAgentData('belle');
-    if (!data || !data.epochs || !Array.isArray(data.epochs) || data.epochs.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--g30)">No epoch data available</td></tr>';
+    const history = await fetchHistory(20);
+    if (!history || !Array.isArray(history) || history.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--g30)">No epoch data available</td></tr>';
       return;
     }
 
-    const recent = data.epochs.slice(0, 7);
-    tbody.innerHTML = recent.map(ep => {
-      const won = ep.won;
+    tbody.innerHTML = history.map(ep => {
+      const winners = ep.winners || [];
+      const belleWon = winners.includes('belle');
+      const winnersStr = winners.map(w =>
+        w === 'belle'
+          ? '<strong style="color:var(--accent)">belle</strong>'
+          : `<span style="color:var(--g30)">${w}</span>`
+      ).join(', ');
+
       return `<tr>
         <td>#${ep.epochId}</td>
         <td>${formatUsdc(ep.clearingPrice)}</td>
-        <td class="${won ? 'won' : 'lost'}">${won ? 'Won' : 'Lost'}</td>
-        <td>${won ? formatUsdc(ep.paid) : '\u2014'}</td>
-        <td style="color:var(--g30)">${ep.timestamp ? new Date(ep.timestamp).toLocaleTimeString() : '\u2014'}</td>
+        <td>${ep.slotsFilled || 0} / ${ep.totalBids || 0}</td>
+        <td style="font-size:.85rem">${winnersStr || '\u2014'}</td>
+        <td style="color:${belleWon ? 'var(--green)' : 'var(--g40)'}">${belleWon ? 'Won' : 'Lost'}</td>
+        <td style="color:var(--g30);font-size:.85rem">${ep.timestamp ? timeAgo(ep.timestamp) : '\u2014'}</td>
       </tr>`;
     }).join('');
   }
@@ -1659,6 +1666,7 @@ const BelleEpoch = (() => {
 
     setInterval(fetchFeed, FEED_POLL_MS);
     setInterval(() => fetchAgentData('belle'), FEED_POLL_MS * 2);
+    setInterval(renderBelleEpochTable, FEED_POLL_MS * 5);
     setInterval(fetchIdentityData, FEED_POLL_MS * 10);
 
     // Real x402 demo button
