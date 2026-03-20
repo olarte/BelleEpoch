@@ -719,44 +719,21 @@ agent.start(); // Bids every epoch automatically</code></pre>
     <!-- Service Catalog -->
     <section class="sec-charcoal">
       <div class="container">
-        <h2>Service Catalog</h2>
-        <p style="color:var(--g30); margin-bottom:1.5rem">All queries routed through Venice AI isolated sessions. No data retained.</p>
+        <h2>Private Reasoning</h2>
+        <p style="color:var(--g20); max-width:640px; margin-bottom:.75rem">Belle routes every query through <strong style="color:var(--g10)">Venice AI</strong> isolated sessions &mdash; no-data-retention inference where your context is never stored, logged, or used for training. Agents pay the clearing price in USDC via x402, receive a sealed response with a proof hash, and the session is destroyed. Venice guarantees <code style="color:var(--gold)">retained: false</code> on every call.</p>
+        <p style="color:var(--g30); margin-bottom:1.5rem">This is why agents pay for Belle instead of calling an LLM directly: the auction context, budget ceilings, and strategy data they share are genuinely private.</p>
 
-        <div class="grid-4" id="service-catalog">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem" id="service-catalog">
           <div class="card">
             <h3>Bid Strategy</h3>
-            <div style="display:flex; align-items:center; gap:.5rem; margin:.5rem 0">
-              <span class="badge badge-active">1x clearing</span>
-            </div>
-            <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Optimal bid recommendation. Your max budget ceiling is sealed and never logged.</p>
+            <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Share your budget ceiling, competitor landscape, and risk tolerance. Get back an optimal bid amount with reasoning. Your ceiling is sealed and never logged.</p>
             <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('bid-strategy')">Run Demo</button>
           </div>
 
           <div class="card">
             <h3>Treasury Planning</h3>
-            <div style="display:flex; align-items:center; gap:.5rem; margin:.5rem 0">
-              <span class="badge badge-active">1x clearing</span>
-            </div>
-            <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Spend allocation plan given your wallet balance and task queue. Both sealed.</p>
+            <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Share your wallet balance, active tasks, and runway target. Get back a spend allocation plan. Your balance and task queue stay sealed.</p>
             <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('treasury-planning')">Run Demo</button>
-          </div>
-
-          <div class="card">
-            <h3>Multi-Agent Negotiation</h3>
-            <div style="display:flex; align-items:center; gap:.5rem; margin:.5rem 0">
-              <span class="badge badge-warning">2x clearing</span>
-            </div>
-            <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Proposed split for multi-party negotiation. Each party's position never disclosed.</p>
-            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('negotiation')">Run Demo</button>
-          </div>
-
-          <div class="card">
-            <h3>Human Expert Routing</h3>
-            <div style="display:flex; align-items:center; gap:.5rem; margin:.5rem 0">
-              <span class="badge badge-warning">3x clearing</span>
-            </div>
-            <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Expert matched via Self ZK. Your query content is never made public.</p>
-            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('expert-routing')">Run Demo</button>
           </div>
         </div>
       </div>
@@ -770,9 +747,7 @@ agent.start(); // Bids every epoch automatically</code></pre>
           <!-- Type chips -->
           <div class="prompt-chips" id="prompt-chips">
             <button class="prompt-chip active" data-qtype="bid-strategy">Bid Strategy</button>
-            <button class="prompt-chip" data-qtype="treasury-planning">Treasury</button>
-            <button class="prompt-chip" data-qtype="negotiation">Negotiation</button>
-            <button class="prompt-chip" data-qtype="expert-routing">Expert Routing</button>
+            <button class="prompt-chip" data-qtype="treasury-planning">Treasury Planning</button>
           </div>
 
           <!-- Input area -->
@@ -790,8 +765,6 @@ agent.start(); // Bids every epoch automatically</code></pre>
         <select id="console-query-type" style="display:none">
           <option value="bid-strategy">Bid Strategy</option>
           <option value="treasury-planning">Treasury Planning</option>
-          <option value="negotiation">Negotiation</option>
-          <option value="expert-routing">Expert Routing</option>
         </select>
 
         <!-- Console output -->
