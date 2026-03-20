@@ -56,35 +56,35 @@
           </div>
         </div>
 
-        <!-- Right column — network stats -->
+        <!-- Right column — CCA demonstration -->
         <div class="hero-home-right">
           <div class="stats-panel">
             <div class="stats-panel-header">
-              <span>NETWORK STATS</span>
-              <span class="badge badge-active" style="font-size:.75rem">LIVE</span>
+              <span>CCA DEMO</span>
+              <span class="badge badge-active" style="font-size:.75rem">CLEARING</span>
             </div>
 
             <div class="stats-grid-2x2">
               <div class="stat-block">
                 <div class="stat-label">Providers online</div>
-                <div class="stat-value-sm" data-metrics="providersOnline">&mdash;</div>
+                <div class="stat-value-sm" id="demo-providers">6</div>
               </div>
               <div class="stat-block">
                 <div class="stat-label">Epochs cleared today</div>
-                <div class="stat-value-sm" data-metrics="epochsClearedToday">&mdash;</div>
+                <div class="stat-value-sm" id="demo-epochs">14,209</div>
               </div>
               <div class="stat-block">
                 <div class="stat-label">USDC settled today</div>
-                <div class="stat-value-sm" data-metrics="usdcSettledToday">&mdash;</div>
+                <div class="stat-value-sm" id="demo-usdc">47.83</div>
               </div>
               <div class="stat-block">
-                <div class="stat-label">Active bids</div>
-                <div class="stat-value-sm" data-feed="totalBids">&mdash;</div>
+                <div class="stat-label">Clearing price</div>
+                <div class="stat-value-sm" id="demo-price" style="color:var(--redhi)">0.0052</div>
               </div>
             </div>
 
-            <div class="events-list" id="events-list">
-              <div style="text-align:center; color:var(--g30); padding:1rem; font-size:.9rem">Loading events&hellip;</div>
+            <div class="events-list" id="demo-bid-stream">
+              <!-- Populated by JS -->
             </div>
 
             <div class="next-epoch-bar">

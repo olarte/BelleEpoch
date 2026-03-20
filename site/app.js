@@ -383,6 +383,107 @@ const BelleEpoch = (() => {
     }).join('');
   }
 
+  // --------------- Hero CCA Demo ---------------
+
+  const DEMO_AGENTS = [
+    { id: 'ATLAS-7', base: 0.0080 },
+    { id: 'belle',   base: 0.0070 },
+    { id: 'NEXUS-3', base: 0.0060 },
+    { id: 'FORGE-1', base: 0.0045 },
+    { id: 'SIGMA-9', base: 0.0030 },
+    { id: 'ECHO-4',  base: 0.0015 },
+  ];
+  const DEMO_PROVIDERS = ['belle.epoch', 'cortex', 'sentinel', 'dataweave', 'oracle-7', 'dr-chen'];
+  let demoEpochCounter = 14209;
+  let demoUsdcTotal = 47.83;
+  let demoBidLog = [];
+
+  function runDemoEpoch() {
+    // Generate bids with variance
+    const bids = DEMO_AGENTS.map(a => {
+      const drift = 1 + (Math.random() - 0.5) * 0.4;
+      return { id: a.id, bid: parseFloat((a.base * drift).toFixed(4)) };
+    }).sort((a, b) => b.bid - a.bid);
+
+    const capacity = 3;
+    const winners = bids.slice(0, capacity);
+    const losers = bids.slice(capacity);
+    const clearingPrice = winners[winners.length - 1].bid;
+    const revenue = clearingPrice * capacity;
+
+    demoEpochCounter++;
+    demoUsdcTotal = parseFloat((demoUsdcTotal + revenue).toFixed(4));
+
+    // Build log entries
+    const provider = DEMO_PROVIDERS[Math.floor(Math.random() * DEMO_PROVIDERS.length)];
+    const newEntries = [];
+
+    // Show bids arriving
+    for (const b of bids) {
+      const won = winners.some(w => w.id === b.id);
+      newEntries.push({
+        type: won ? 'win' : 'loss',
+        agent: b.id,
+        bid: b.bid.toFixed(4),
+        price: clearingPrice.toFixed(4),
+        epoch: demoEpochCounter,
+        provider,
+      });
+    }
+
+    // Settlement entry
+    newEntries.push({
+      type: 'settle',
+      epoch: demoEpochCounter,
+      price: clearingPrice.toFixed(4),
+      slots: capacity,
+      provider,
+    });
+
+    demoBidLog = [...newEntries, ...demoBidLog].slice(0, 8);
+
+    // Update DOM
+    const priceEl = document.getElementById('demo-price');
+    const epochsEl = document.getElementById('demo-epochs');
+    const usdcEl = document.getElementById('demo-usdc');
+    if (priceEl) priceEl.textContent = clearingPrice.toFixed(4);
+    if (epochsEl) epochsEl.textContent = demoEpochCounter.toLocaleString();
+    if (usdcEl) usdcEl.textContent = demoUsdcTotal.toFixed(2);
+
+    renderDemoBidStream();
+  }
+
+  function renderDemoBidStream() {
+    const container = document.getElementById('demo-bid-stream');
+    if (!container) return;
+
+    container.innerHTML = demoBidLog.map(e => {
+      if (e.type === 'settle') {
+        return `<div class="event-row" style="color:var(--redhi)">
+          <span class="event-epoch">#${e.epoch}</span>
+          <span class="event-provider">${e.provider}</span>
+          <span class="event-price">${e.price} USDC &times; ${e.slots}</span>
+          <span class="event-time">settled</span>
+        </div>`;
+      }
+      const color = e.type === 'win' ? 'color:#27ae60' : 'color:var(--g40)';
+      const label = e.type === 'win' ? 'won' : 'lost';
+      return `<div class="event-row" style="${color}">
+        <span class="event-epoch" style="font-family:var(--mono);font-size:.8rem">${e.agent}</span>
+        <span class="event-provider">${e.bid} USDC</span>
+        <span class="event-price">${label}</span>
+        <span class="event-time">#${e.epoch}</span>
+      </div>`;
+    }).join('');
+  }
+
+  function startDemoCCA() {
+    // Run first epoch immediately
+    runDemoEpoch();
+    // Then every 5 seconds
+    setInterval(runDemoEpoch, 5000);
+  }
+
   // --------------- Countdown ---------------
 
   function startCountdown() {
@@ -1379,11 +1480,15 @@ const BelleEpoch = (() => {
 
   function initHome() {
     fetchFeed();
-    fetchMetrics();
-    fetchEvents();
     renderHomeMarketplace();
-    startCountdown();
     startUTCClock();
+
+    // Start mock CCA demo in hero (runs its own 5s epoch loop + countdown)
+    startDemoCCA();
+    // Demo countdown — resets every 5s independently of real feed
+    targetEpochMs = Date.now() + 5000;
+    setInterval(() => { targetEpochMs = Date.now() + 5000; }, 5000);
+    startCountdown();
 
     // Copy terminal CTA
     const termCta = $('#home-terminal-cta');
@@ -1400,10 +1505,8 @@ const BelleEpoch = (() => {
       });
     }
 
-    // Polling
+    // Polling (marketplace refresh only — hero stats are mocked)
     setInterval(fetchFeed, FEED_POLL_MS);
-    setInterval(fetchMetrics, FEED_POLL_MS * 5);
-    setInterval(fetchEvents, FEED_POLL_MS * 3);
     setInterval(renderHomeMarketplace, FEED_POLL_MS * 10);
   }
 
