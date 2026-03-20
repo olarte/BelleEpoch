@@ -427,59 +427,103 @@ const BelleEpoch = (() => {
 
   // --------------- Home Marketplace ---------------
 
+  // ─── Simulated marketplace providers ──────────────────────────────────────
+  // These show what a live CCA marketplace looks like — diverse agent services
+  // with realistic clearing data. Belle is real; the rest are simulations.
+  const SIM_PROVIDERS = [
+    { id: 'belle', name: 'belle.epoch.base.eth', resource: 'private-reasoning', capacity: 3, epochMs: 5000, chain: 'base', featured: true, sim: false },
+    { id: 'cortex-gpu', name: 'cortex.base.eth', resource: 'gpu-inference', capacity: 8, epochMs: 5000, chain: 'base', sim: true,
+      desc: 'A100 inference slots. Llama 70B, Mixtral, SDXL.' },
+    { id: 'sentinel-audit', name: 'sentinel.base.eth', resource: 'smart-contract-audit', capacity: 2, epochMs: 30000, chain: 'base', sim: true,
+      desc: 'Automated Solidity audit with formal verification.' },
+    { id: 'dataweave', name: 'dataweave.base.eth', resource: 'data-enrichment', capacity: 5, epochMs: 5000, chain: 'base', sim: true,
+      desc: 'Real-time on-chain data enrichment and labeling.' },
+    { id: 'oracle-7', name: 'oracle-7.celo.eth', resource: 'market-data', capacity: 10, epochMs: 5000, chain: 'celo', sim: true,
+      desc: 'Sub-second price feeds across 200+ pairs.' },
+    { id: 'dr-chen', name: 'Dr. Chen', resource: 'physician', capacity: 1, epochMs: 300000, chain: 'celo', sim: true, human: true,
+      desc: 'Board-certified radiologist. Second opinions.' },
+  ];
+
+  // Generate drifting simulated prices so the market looks alive
+  const simPriceState = {};
+  function getSimPrice(id, base) {
+    if (!simPriceState[id]) simPriceState[id] = base;
+    const drift = 1 + (Math.random() - 0.5) * 0.15;
+    simPriceState[id] = parseFloat((simPriceState[id] * drift).toFixed(4));
+    return Math.max(0.0001, simPriceState[id]);
+  }
+
+  // Generate a plausible sparkline
+  function simSparkline(base, n) {
+    const pts = [];
+    let v = base;
+    for (let i = 0; i < n; i++) {
+      v *= 1 + (Math.random() - 0.48) * 0.2;
+      pts.push(Math.max(0.0001, v));
+    }
+    return pts;
+  }
+
   async function renderHomeMarketplace() {
     const grid = $('#home-marketplace-grid');
     if (!grid) return;
 
-    const providers = await fetchProviders();
-    if (!providers || !Array.isArray(providers) || providers.length === 0) {
-      grid.innerHTML = '<div class="card" style="text-align:center; color:var(--g30); padding:3rem">No providers registered yet.</div>';
-      appendGhostCard(grid);
-      return;
-    }
+    // Fetch Belle's real data to merge in
+    let belleFeed = null;
+    try {
+      const real = await fetchProviders();
+      if (real && Array.isArray(real)) belleFeed = real.find(p => p.id === 'belle');
+    } catch (e) { /* use defaults */ }
+
+    // Base prices for sim providers
+    const basePrices = {
+      'belle': 0.005, 'cortex-gpu': 0.012, 'sentinel-audit': 0.045,
+      'dataweave': 0.003, 'oracle-7': 0.0015, 'dr-chen': 0.08,
+    };
 
     grid.innerHTML = '';
 
-    for (const p of providers) {
+    for (const p of SIM_PROVIDERS) {
       const card = document.createElement('div');
       card.className = 'card provider-card';
-      if (p.id === 'belle') card.classList.add('featured');
+      if (p.featured) card.classList.add('featured');
 
-      const initial = (p.name || p.ens || p.id || '?')[0].toUpperCase();
-      const verified = p.selfVerified ? '<span class="badge badge-verified">Self Verified</span>' : '';
-      const featured = p.id === 'belle' ? '<span class="badge badge-warning" style="font-size:.75rem">Featured</span>' : '';
+      const initial = (p.name || '?')[0].toUpperCase();
+      const price = p.id === 'belle' && belleFeed ? belleFeed.clearingPrice : getSimPrice(p.id, basePrices[p.id] || 0.005);
+      const filled = p.id === 'belle' && belleFeed ? belleFeed.slotsFilled : Math.floor(Math.random() * (p.capacity + 1));
+      const epochLabel = p.epochMs >= 60000 ? (p.epochMs / 60000) + 'min' : (p.epochMs / 1000) + 's';
 
-      // Check if human capacity
-      const isHuman = p.resource === 'human-capacity' || p.epochMs >= 60000;
-      const humanBadges = isHuman
-        ? '<span class="badge badge-verified" style="font-size:.75rem">Self Verified</span><span class="badge badge-online" style="font-size:.75rem">Online</span>'
-        : '';
+      const badges = [];
+      if (p.featured) badges.push('<span class="badge badge-warning" style="font-size:.75rem">Featured</span>');
+      if (p.sim) badges.push('<span class="badge badge-chain" style="font-size:.7rem">SIM</span>');
+      if (p.human) badges.push('<span class="badge badge-verified" style="font-size:.75rem">Self Verified</span>');
 
       card.innerHTML = `
         <div class="provider-header">
           <div class="provider-avatar">${initial}</div>
           <div>
-            <h3 style="margin-bottom:.15rem">${p.name || p.ens || p.id}</h3>
-            <span style="font-size:.85rem; color:var(--g30)">${p.resource || '\u2014'}</span>
-            ${featured}${verified}
+            <h3 style="margin-bottom:.15rem">${p.name}</h3>
+            <span style="font-size:.85rem; color:var(--g30)">${p.resource}</span>
+            <div style="margin-top:.25rem">${badges.join(' ')}</div>
           </div>
         </div>
+        ${p.desc ? '<p style="font-size:.82rem; color:var(--g30); margin:.5rem 0">' + p.desc + '</p>' : ''}
         <div class="provider-stats">
           <div>
             <div class="provider-stat-label">Clearing Price</div>
-            <div class="provider-stat-value" style="color:var(--redhi)">${formatUsdc(p.clearingPrice)}</div>
+            <div class="provider-stat-value" style="color:var(--redhi)">${formatUsdc(price)}</div>
           </div>
           <div>
             <div class="provider-stat-label">Capacity</div>
-            <div class="provider-stat-value">${p.capacity != null ? p.capacity : '\u2014'}</div>
+            <div class="provider-stat-value">${p.capacity}</div>
           </div>
           <div>
-            <div class="provider-stat-label">Win Rate</div>
-            <div class="provider-stat-value">${formatPercent(p.winRate)}</div>
+            <div class="provider-stat-label">Epoch</div>
+            <div class="provider-stat-value">${epochLabel}</div>
           </div>
           <div>
-            <div class="provider-stat-label">Slots Filled</div>
-            <div class="provider-stat-value">${p.slotsFilled != null ? p.slotsFilled : '\u2014'}</div>
+            <div class="provider-stat-label">Filled</div>
+            <div class="provider-stat-value">${filled} / ${p.capacity}</div>
           </div>
         </div>
         <div class="sparkline"><svg viewBox="0 0 64 24" data-sparkline-id="${p.id}"></svg></div>
@@ -488,18 +532,20 @@ const BelleEpoch = (() => {
 
       grid.appendChild(card);
 
-      // load sparkline
-      fetchProviderHistory(p.id).then(hist => {
-        if (!hist || !Array.isArray(hist)) return;
+      // Sparkline — real data for Belle, simulated for others
+      if (p.id === 'belle') {
+        fetchProviderHistory(p.id).then(hist => {
+          if (!hist || !Array.isArray(hist)) return;
+          const svg = $(`[data-sparkline-id="${p.id}"]`);
+          if (svg) renderSparkline(svg, hist.map(h => Number(h.clearingPrice || 0)));
+        });
+      } else {
         const svg = $(`[data-sparkline-id="${p.id}"]`);
-        if (svg) renderSparkline(svg, hist.map(h => Number(h.clearingPrice || 0)));
-      });
+        if (svg) renderSparkline(svg, simSparkline(basePrices[p.id] || 0.005, 12));
+      }
     }
 
-    appendGhostCard(grid);
-  }
-
-  function appendGhostCard(grid) {
+    // Ghost card
     const ghost = document.createElement('div');
     ghost.className = 'card provider-card ghost-card';
     ghost.innerHTML = `
