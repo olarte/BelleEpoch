@@ -979,12 +979,6 @@ agent.start(); // Bids every epoch automatically</code></pre>
           </div>
 
           <div class="card">
-            <h3>Provider Comparison</h3>
-            <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Compare clearing prices and volatility across all providers or a subset. Ranked by mean price with standard deviation.</p>
-            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToBeastConsole('provider-comparison')">Try it &rarr;</button>
-          </div>
-
-          <div class="card">
             <h3>Demand Signals</h3>
             <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Trend and momentum analysis. Is demand rising or falling? How does current price compare to the recent average? Includes slope per epoch and recommendation.</p>
             <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToBeastConsole('demand-signals')">Try it &rarr;</button>
@@ -996,11 +990,6 @@ agent.start(); // Bids every epoch automatically</code></pre>
             <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToBeastConsole('optimal-bid-timing')">Try it &rarr;</button>
           </div>
 
-          <div class="card">
-            <h3>Market Summary</h3>
-            <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Narrative market summary via Venice AI. Covers pricing, trends, volatility, and provider selection guidance. <code style="color:var(--redhi)">retained: false</code>.</p>
-            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToBeastConsole('market-summary')">Try it &rarr;</button>
-          </div>
         </div>
       </div>
     </section>
@@ -1013,10 +1002,8 @@ agent.start(); // Bids every epoch automatically</code></pre>
           <!-- Type chips -->
           <div class="prompt-chips" id="beast-prompt-chips">
             <button class="prompt-chip active" data-bqtype="price-history">Price History</button>
-            <button class="prompt-chip" data-bqtype="provider-comparison">Provider Comparison</button>
             <button class="prompt-chip" data-bqtype="demand-signals">Demand Signals</button>
             <button class="prompt-chip" data-bqtype="optimal-bid-timing">Optimal Bid Timing</button>
-            <button class="prompt-chip" data-bqtype="market-summary">Market Summary</button>
           </div>
 
           <!-- Params area -->
