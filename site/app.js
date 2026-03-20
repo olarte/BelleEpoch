@@ -1095,10 +1095,34 @@ const BelleEpoch = (() => {
 
   let selfPollInterval = null;
 
-  function showSelfQR(addr) {
+  async function showSelfQR(addr) {
     $('#wallet-not-connected').style.display = 'none';
     $('#wallet-connected').style.display = 'block';
     $('#connected-address').textContent = truncateAddr(addr);
+
+    // Check if already verified — skip QR if so
+    try {
+      const checkRes = await fetch(API + '/humans/verified/' + addr);
+      const checkData = await checkRes.json();
+      if (checkData.verified) {
+        $('#self-qr-container').style.display = 'none';
+        $('#self-verify-status').style.display = 'none';
+        const alreadyDiv = $('#self-already-verified');
+        alreadyDiv.style.display = 'block';
+        const detail = $('#self-verified-detail');
+        if (detail) {
+          const parts = [];
+          if (checkData.nationality) parts.push('Nationality: ' + checkData.nationality);
+          if (checkData.verifiedAt) parts.push('Verified: ' + new Date(checkData.verifiedAt).toLocaleDateString());
+          detail.textContent = parts.join(' · ');
+        }
+        const continueBtn = $('#btn-already-verified-continue');
+        if (continueBtn) {
+          continueBtn.addEventListener('click', () => advanceRegStep(2));
+        }
+        return;
+      }
+    } catch (e) { /* not verified, show QR */ }
 
     const qrContainer = $('#self-qr-container');
     const sessionId = crypto.randomUUID();
@@ -1315,10 +1339,6 @@ const BelleEpoch = (() => {
     startCountdown();
     startUTCClock();
 
-    // Simulator
-    const simBtn = $('#btn-run-simulator');
-    if (simBtn) simBtn.addEventListener('click', runSimulator);
-
     // Copy terminal CTA
     const termCta = $('#home-terminal-cta');
     if (termCta) {
@@ -1359,13 +1379,16 @@ const BelleEpoch = (() => {
   function initBelle() {
     fetchFeed();
     fetchAgentData('belle');
-    fetchQueue();
     fetchIdentityData();
     renderBelleEpochTable();
+    startCountdown();
+
+    // Epoch simulator (relocated from Home)
+    const simBtn = $('#btn-run-simulator');
+    if (simBtn) simBtn.addEventListener('click', runSimulator);
 
     setInterval(fetchFeed, FEED_POLL_MS);
     setInterval(() => fetchAgentData('belle'), FEED_POLL_MS * 2);
-    setInterval(fetchQueue, FEED_POLL_MS * 2);
     setInterval(fetchIdentityData, FEED_POLL_MS * 10);
 
     // Console

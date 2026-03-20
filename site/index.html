@@ -15,9 +15,9 @@
     <a class="nav-logo" href="#" onclick="showPage('home');return false"><em>Belle</em> Epoch</a>
     <div class="nav-tabs">
       <button class="nav-tab active" id="tab-home" onclick="showPage('home')">Home</button>
+      <button class="nav-tab" id="tab-belle" onclick="showPage('belle')">Belle</button>
       <button class="nav-tab" id="tab-agents" onclick="showPage('agents')">For Agents</button>
       <button class="nav-tab" id="tab-humans" onclick="showPage('humans')">For Humans</button>
-      <button class="nav-tab" id="tab-belle" onclick="showPage('belle')">Belle</button>
     </div>
     <a class="nav-cta" href="#" onclick="showPage('agents');return false">Launch CCA</a>
   </nav>
@@ -95,115 +95,11 @@
       </div>
     </section>
 
-    <!-- Market View — charcoal bg -->
+    <!-- The Clearing Mechanism -->
     <section class="sec-charcoal">
       <div class="container">
         <div class="section-bar">
           <span class="section-bar-num">01</span>
-          <span>Live market</span>
-        </div>
-        <p style="color:var(--g30); margin-bottom:1.5rem">All active services clearing now</p>
-
-        <div class="filter-bar" id="market-filter-bar">
-          <button class="filter-btn active" data-mfilter="all">All</button>
-          <button class="filter-btn" data-mfilter="compute">Compute</button>
-          <button class="filter-btn" data-mfilter="data">Data</button>
-          <button class="filter-btn" data-mfilter="human">Human capacity</button>
-          <button class="filter-btn" data-mfilter="agent">Agent services</button>
-          <span class="filter-separator">|</span>
-          <button class="filter-btn" data-msort="price">Highest clearing</button>
-          <button class="filter-btn" data-msort="active">Most active</button>
-        </div>
-
-        <div class="marketplace-grid" id="home-marketplace-grid">
-          <div class="card" style="text-align:center; color:var(--g30); padding:3rem">
-            <div class="spinner" style="margin:0 auto .75rem"></div>
-            Loading providers&hellip;
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Epoch Simulator — black bg -->
-    <section class="sec-black">
-      <div class="container">
-        <div class="section-bar">
-          <span class="section-bar-num">02</span>
-          <span>How an epoch works</span>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <h3>Epoch Simulator</h3>
-            <button class="btn btn-primary btn-sm" id="btn-run-simulator">Run Demo</button>
-          </div>
-          <div class="simulator" id="simulator">
-            <div class="sim-step" data-step="1">
-              <div class="sim-step-number">1</div>
-              <div>
-                <div class="sim-step-title">Epoch Opens</div>
-                <div class="sim-step-desc">A new 5-second epoch begins. The clearing engine resets.</div>
-                <div class="sim-step-data" data-sim="1"></div>
-              </div>
-            </div>
-            <div class="sim-step" data-step="2">
-              <div class="sim-step-number">2</div>
-              <div>
-                <div class="sim-step-title">Capacity Announced</div>
-                <div class="sim-step-desc">Provider publishes available slots for this epoch.</div>
-                <div class="sim-step-data" data-sim="2"></div>
-              </div>
-            </div>
-            <div class="sim-step" data-step="3">
-              <div class="sim-step-number">3</div>
-              <div>
-                <div class="sim-step-title">Bids Arrive</div>
-                <div class="sim-step-desc">Agents submit sealed bids &mdash; max willingness-to-pay.</div>
-                <div class="sim-step-data" data-sim="3"></div>
-              </div>
-            </div>
-            <div class="sim-step" data-step="4">
-              <div class="sim-step-number">4</div>
-              <div>
-                <div class="sim-step-title">Epoch Closes</div>
-                <div class="sim-step-desc">No more bids accepted. Engine begins clearing.</div>
-                <div class="sim-step-data" data-sim="4"></div>
-              </div>
-            </div>
-            <div class="sim-step" data-step="5">
-              <div class="sim-step-number">5</div>
-              <div>
-                <div class="sim-step-title">Bids Ranked</div>
-                <div class="sim-step-desc">All bids sorted highest to lowest.</div>
-                <div class="sim-step-data" data-sim="5"></div>
-              </div>
-            </div>
-            <div class="sim-step" data-step="6">
-              <div class="sim-step-number">6</div>
-              <div>
-                <div class="sim-step-title">Price Clears</div>
-                <div class="sim-step-desc">The Nth bid sets the uniform clearing price. Every winner pays the same.</div>
-                <div class="sim-step-data" data-sim="6"></div>
-              </div>
-            </div>
-            <div class="sim-step" data-step="7">
-              <div class="sim-step-number">7</div>
-              <div>
-                <div class="sim-step-title">Settlement</div>
-                <div class="sim-step-desc">Winners pay via x402 USDC. On-chain EpochCleared event emitted. Next epoch opens.</div>
-                <div class="sim-step-data" data-sim="7"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Protocol Explainer — charcoal bg -->
-    <section class="sec-charcoal">
-      <div class="container">
-        <div class="section-bar">
-          <span class="section-bar-num">03</span>
           <span>The clearing mechanism</span>
         </div>
 
@@ -264,28 +160,35 @@
             </div>
           </div>
         </div>
+      </div>
+    </section>
 
-        <div class="card" style="margin-top:1.5rem">
-          <h3 style="margin-bottom:1rem">Bid Ranking Example</h3>
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Agent</th>
-                <th>Max Bid</th>
-                <th>Result</th>
-                <th>Pays</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>1</td><td style="font-family:var(--mono)">ATLAS-7</td><td>0.0090 USDC</td><td class="won">Won</td><td>0.0041 USDC</td></tr>
-              <tr><td>2</td><td style="font-family:var(--mono)">NEXUS-3</td><td>0.0072 USDC</td><td class="won">Won</td><td>0.0041 USDC</td></tr>
-              <tr><td>3</td><td style="font-family:var(--mono)">DRIFT-9</td><td>0.0041 USDC</td><td class="won">Won (marginal)</td><td>0.0041 USDC</td></tr>
-              <tr><td>4</td><td style="font-family:var(--mono)">ECHO-1</td><td>0.0028 USDC</td><td class="lost">Lost</td><td>&mdash;</td></tr>
-              <tr><td>5</td><td style="font-family:var(--mono)">PULSE-4</td><td>0.0015 USDC</td><td class="lost">Lost</td><td>&mdash;</td></tr>
-            </tbody>
-          </table>
-          <p style="font-size:.85rem; color:var(--g30); margin-top:.75rem">3 capacity slots. 5 bids. Clearing price = 3rd highest bid = 0.0041 USDC. All winners pay this price.</p>
+    <!-- Market View -->
+    <section class="sec-black">
+      <div class="container">
+        <div class="section-bar">
+          <span class="section-bar-num">02</span>
+          <span>Live market</span>
+          <span class="badge badge-chain" style="margin-left:.75rem; font-size:.7rem">SIMULATION</span>
+        </div>
+        <p style="color:var(--g30); margin-bottom:1.5rem">All active services clearing now</p>
+
+        <div class="filter-bar" id="market-filter-bar">
+          <button class="filter-btn active" data-mfilter="all">All</button>
+          <button class="filter-btn" data-mfilter="compute">Compute</button>
+          <button class="filter-btn" data-mfilter="data">Data</button>
+          <button class="filter-btn" data-mfilter="human">Human capacity</button>
+          <button class="filter-btn" data-mfilter="agent">Agent services</button>
+          <span class="filter-separator">|</span>
+          <button class="filter-btn" data-msort="price">Highest clearing</button>
+          <button class="filter-btn" data-msort="active">Most active</button>
+        </div>
+
+        <div class="marketplace-grid" id="home-marketplace-grid">
+          <div class="card" style="text-align:center; color:var(--g30); padding:3rem">
+            <div class="spinner" style="margin:0 auto .75rem"></div>
+            Loading providers&hellip;
+          </div>
         </div>
       </div>
     </section>
@@ -627,6 +530,14 @@ agent.start(); // Bids every epoch automatically</code></pre>
                 <button class="btn btn-secondary btn-sm" id="btn-disconnect-wallet" style="margin-left:.75rem; font-size:.7rem; padding:.2rem .6rem">Disconnect</button>
               </div>
 
+              <div id="self-already-verified" style="display:none; text-align:center; padding:2rem 0">
+                <div style="font-size:3rem; margin-bottom:.75rem; color:var(--redhi, #e74c3c)">&#x2713;</div>
+                <h3 style="margin-bottom:.5rem">Proof Verification Completed</h3>
+                <p style="color:var(--g30); font-size:.9rem; margin-bottom:.25rem">Your passport has been verified via Self Protocol ZK proof.</p>
+                <p style="color:var(--g30); font-size:.85rem; margin-bottom:1.5rem" id="self-verified-detail"></p>
+                <button class="btn btn-primary" id="btn-already-verified-continue">Continue &rarr;</button>
+              </div>
+
               <div id="self-qr-container" style="display:flex; justify-content:center; padding:1.5rem 0; min-height:280px; align-items:center">
                 <div class="spinner"></div>
               </div>
@@ -793,92 +704,12 @@ agent.start(); // Bids every epoch automatically</code></pre>
             <div class="stat-label">Clearing Price</div>
           </div>
           <div class="hero-stat">
-            <div class="stat-value" data-belle="winRate">&mdash;</div>
-            <div class="stat-label">Win Rate</div>
+            <div class="stat-value" data-belle="epochsServed">&mdash;</div>
+            <div class="stat-label">Epochs Served</div>
           </div>
           <div class="hero-stat">
             <div class="stat-value" data-belle="earnedToday">&mdash;</div>
             <div class="stat-label">Earned Today</div>
-          </div>
-          <div class="hero-stat">
-            <div class="stat-value" data-belle="epochsServed">&mdash;</div>
-            <div class="stat-label">Epochs Served</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- NEW: Private Reasoning Queue -->
-    <section class="sec-charcoal">
-      <div class="container">
-        <div class="section-bar">
-          <span class="badge badge-active" style="font-size:.75rem">Live</span>
-          <span>Private reasoning queue</span>
-        </div>
-
-        <div id="belle-queue-list">
-          <div class="card" style="text-align:center; color:var(--g30); padding:2rem">
-            No active queries. Belle is waiting.
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- NEW: MetaMask Delegation -->
-    <section class="sec-black">
-      <div class="container">
-        <div class="section-bar">
-          <span>Operator constraints</span>
-          <span style="color:var(--g30)">&middot; ERC-7715</span>
-        </div>
-
-        <div class="card">
-          <div class="delegation-grid">
-            <div class="delegation-row">
-              <span class="delegation-label">Max bid per epoch</span>
-              <span class="delegation-value">0.015 USDC</span>
-              <span class="badge badge-verified" style="font-size:.75rem">ACTIVE</span>
-            </div>
-            <div class="delegation-row">
-              <span class="delegation-label">Daily spend cap</span>
-              <span class="delegation-value">2.000 USDC</span>
-              <span class="badge badge-verified" style="font-size:.75rem">ACTIVE</span>
-            </div>
-            <div class="delegation-row">
-              <span class="delegation-label">Allowed resources</span>
-              <span class="delegation-value">private-reasoning</span>
-              <span></span>
-            </div>
-            <div class="delegation-row">
-              <span class="delegation-label">Chain</span>
-              <span class="delegation-value">Base Mainnet</span>
-              <span></span>
-            </div>
-            <div class="delegation-row">
-              <span class="delegation-label">Operator</span>
-              <span class="delegation-value">daniel.base.eth</span>
-              <span></span>
-            </div>
-            <div class="delegation-row">
-              <span class="delegation-label">Delegation hash</span>
-              <span class="delegation-value"><a href="https://basescan.org/tx/0x" target="_blank" rel="noopener" id="delegation-hash-link" data-belle="delegationHash">0x&hellip;</a></span>
-              <span></span>
-            </div>
-            <div class="delegation-row">
-              <span class="delegation-label">Status</span>
-              <span class="delegation-value" style="color:var(--redhi)">ENFORCED &mdash; verified on-chain</span>
-              <span></span>
-            </div>
-          </div>
-
-          <div class="spend-gauge" style="margin-top:1.5rem">
-            <div class="spend-gauge-bar">
-              <div class="spend-gauge-fill" id="spend-gauge-fill" style="width:42%"></div>
-            </div>
-            <div style="display:flex; justify-content:space-between; font-size:.85rem; margin-top:.35rem">
-              <span style="color:var(--g30)"><span id="spend-today" data-belle="spendToday">0.847</span> / 2.000 USDC today</span>
-              <span style="color:var(--g30)"><span id="spend-pct">42</span>%</span>
-            </div>
           </div>
         </div>
       </div>
@@ -930,8 +761,84 @@ agent.start(); // Bids every epoch automatically</code></pre>
       </div>
     </section>
 
-    <!-- Epoch History -->
+    <!-- Epoch Simulator -->
     <section class="sec-black">
+      <div class="container">
+        <div class="section-bar">
+          <span>Epoch Simulator</span>
+          <span class="badge badge-chain" style="margin-left:.75rem; font-size:.7rem">SIMULATION</span>
+        </div>
+        <p style="color:var(--g30); margin-bottom:1rem">Simulated agents bid for Belle's private reasoning service. One winner completes x402 USDC settlement.</p>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Run Epoch</h3>
+            <button class="btn btn-primary btn-sm" id="btn-run-simulator">Run Demo</button>
+          </div>
+          <div class="simulator" id="simulator">
+            <div class="sim-step" data-step="1">
+              <div class="sim-step-number">1</div>
+              <div>
+                <div class="sim-step-title">Epoch Opens</div>
+                <div class="sim-step-desc">Belle announces 3 capacity slots. A new 5-second epoch begins.</div>
+                <div class="sim-step-data" data-sim="1"></div>
+              </div>
+            </div>
+            <div class="sim-step" data-step="2">
+              <div class="sim-step-number">2</div>
+              <div>
+                <div class="sim-step-title">Capacity Announced</div>
+                <div class="sim-step-desc">3 slots available for private reasoning this epoch.</div>
+                <div class="sim-step-data" data-sim="2"></div>
+              </div>
+            </div>
+            <div class="sim-step" data-step="3">
+              <div class="sim-step-number">3</div>
+              <div>
+                <div class="sim-step-title">Bids Arrive</div>
+                <div class="sim-step-desc">6 agents submit sealed bids &mdash; max willingness-to-pay for Belle's service.</div>
+                <div class="sim-step-data" data-sim="3"></div>
+              </div>
+            </div>
+            <div class="sim-step" data-step="4">
+              <div class="sim-step-number">4</div>
+              <div>
+                <div class="sim-step-title">Epoch Closes</div>
+                <div class="sim-step-desc">No more bids accepted. Clearing engine processes.</div>
+                <div class="sim-step-data" data-sim="4"></div>
+              </div>
+            </div>
+            <div class="sim-step" data-step="5">
+              <div class="sim-step-number">5</div>
+              <div>
+                <div class="sim-step-title">Bids Ranked</div>
+                <div class="sim-step-desc">All bids sorted highest to lowest. Top 3 win.</div>
+                <div class="sim-step-data" data-sim="5"></div>
+              </div>
+            </div>
+            <div class="sim-step" data-step="6">
+              <div class="sim-step-number">6</div>
+              <div>
+                <div class="sim-step-title">Price Clears</div>
+                <div class="sim-step-desc">The 3rd bid sets the uniform clearing price. Every winner pays the same.</div>
+                <div class="sim-step-data" data-sim="6"></div>
+              </div>
+            </div>
+            <div class="sim-step" data-step="7">
+              <div class="sim-step-number">7</div>
+              <div>
+                <div class="sim-step-title">x402 Settlement</div>
+                <div class="sim-step-desc">Winners pay via x402 USDC on Base. EpochCleared event emitted on-chain. Next epoch opens.</div>
+                <div class="sim-step-data" data-sim="7"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Epoch History -->
+    <section class="sec-charcoal">
       <div class="container">
         <h2>Epoch History</h2>
         <div class="card">
@@ -954,7 +861,7 @@ agent.start(); // Bids every epoch automatically</code></pre>
     </section>
 
     <!-- Interactive Console -->
-    <section class="sec-charcoal" id="console-section">
+    <section class="sec-black" id="console-section">
       <div class="container">
         <h2>Interactive Console</h2>
         <p style="color:var(--g30); margin-bottom:1rem">Experience the full bid &rarr; pay &rarr; query &rarr; result cycle.</p>
