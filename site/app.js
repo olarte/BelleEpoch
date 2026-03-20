@@ -747,6 +747,8 @@ const BelleEpoch = (() => {
     consolePrint(container, 'Executing real x402 settlement on Base mainnet\u2026', 'info');
     consolePrint(container, '<span class="console-spinner"></span> Transferring USDC + querying Venice AI (this takes 10\u201320s)\u2026', 'info');
 
+    let demoData = null;
+
     try {
       const res = await fetch(API + '/demo/run', {
         method: 'POST',
@@ -764,74 +766,58 @@ const BelleEpoch = (() => {
         return;
       }
 
+      demoData = data;
+
       // Remove spinner line
       const spinnerLine = container.querySelector('.console-spinner');
       if (spinnerLine) spinnerLine.closest('.console-line').remove();
 
-      // Display each step
+      // Display each step in console
       for (const step of data.steps) {
         await delay(300);
 
         if (step.name === 'epoch') {
           consolePrint(container,
-            `<strong>Step 1 \u2014 Epoch Found</strong><br>` +
-            `Epoch #${step.epochId} | Clearing price: ${formatUsdc(step.clearingPrice)} | ` +
-            `${step.slotsFilled}/${step.totalBids} slots filled | Winner: ${step.winnerAgent}`,
+            `<strong>Step 1 \u2014 Epoch Found</strong>  ` +
+            `#${step.epochId} | ${formatUsdc(step.clearingPrice)} | ` +
+            `${step.slotsFilled}/${step.totalBids} slots`,
             'success');
         }
 
         else if (step.name === 'transfer') {
           consolePrint(container,
-            `<strong>Step 2 \u2014 Real USDC Transfer</strong><br>` +
-            `Amount: ${step.amount} USDC | Block: ${step.blockNumber}<br>` +
-            `tx: <a href="${step.baseScanUrl}" target="_blank" rel="noopener" style="color:var(--accent)">${step.txHash.slice(0, 18)}\u2026</a><br>` +
-            `<a href="${step.baseScanUrl}" target="_blank" rel="noopener" style="color:var(--accent);font-size:.8em">View on BaseScan \u2197</a>`,
+            `<strong>Step 2 \u2014 USDC Transfer</strong>  ` +
+            `${step.amount} USDC | Block ${step.blockNumber} | ` +
+            `<a href="${step.baseScanUrl}" target="_blank" rel="noopener" style="color:var(--accent)">${step.txHash.slice(0, 14)}\u2026</a>`,
             'result');
         }
 
         else if (step.name === 'settlement') {
-          if (step.verified) {
-            consolePrint(container,
-              `<strong>Step 3 \u2014 x402 Payment Verified</strong><br>` +
-              `On-chain USDC transfer confirmed. Access token issued.`,
-              'success');
-          } else {
-            consolePrint(container, 'Step 3 \u2014 Payment verification failed', 'error');
-          }
+          consolePrint(container,
+            step.verified
+              ? `<strong>Step 3 \u2014 x402 Verified</strong>  On-chain payment confirmed. Token issued.`
+              : `<strong>Step 3</strong>  Payment verification failed`,
+            step.verified ? 'success' : 'error');
         }
 
         else if (step.name === 'query') {
           consolePrint(container,
-            `<strong>Step 4 \u2014 Venice AI Query</strong><br>` +
-            `Type: ${step.type} | ID: ${step.queryId}<br>` +
-            `Routed via: ${step.routedVia}`,
+            `<strong>Step 4 \u2014 Venice Query</strong>  ${step.type} via ${step.routedVia}`,
             'info');
         }
 
         else if (step.name === 'result') {
-          if (step.result) {
-            const resultStr = typeof step.result === 'string'
-              ? step.result
-              : JSON.stringify(step.result, null, 2);
-            const truncated = resultStr.length > 500 ? resultStr.slice(0, 500) + '\u2026' : resultStr;
-            consolePrint(container,
-              `<strong>Step 5 \u2014 Venice Response</strong><br>` +
-              `retained: <strong>${step.retained}</strong> | ` +
-              `proof: ${(step.veniceProof || 'n/a').slice(0, 24)}\u2026<br>` +
-              `<pre style="margin:.5rem 0;white-space:pre-wrap;font-size:.8em;color:var(--g20)">${truncated}</pre>`,
-              'result');
-          } else {
-            consolePrint(container,
-              `<strong>Step 5 \u2014 Venice Response</strong><br>` +
-              `Query submitted. Result may still be processing (Venice can take up to 30s).`,
-              'info');
-          }
+          consolePrint(container,
+            step.result
+              ? `<strong>Step 5 \u2014 Result</strong>  retained: ${step.retained} | proof: ${(step.veniceProof || '').slice(0, 16)}\u2026`
+              : `<strong>Step 5</strong>  Processing (Venice can take up to 30s)`,
+            step.result ? 'result' : 'info');
         }
       }
 
       await delay(200);
       consolePrint(container,
-        `\u2713 <strong>Complete.</strong> Real USDC paid on Base. Real Venice query answered. Nothing simulated. (${(data.totalTimeMs / 1000).toFixed(1)}s)`,
+        `\u2713 <strong>Complete.</strong> Real USDC. Real Venice. Nothing simulated. (${(data.totalTimeMs / 1000).toFixed(1)}s)`,
         'success');
 
     } catch (err) {
@@ -841,9 +827,129 @@ const BelleEpoch = (() => {
     btn.disabled = false;
     btn.textContent = 'Run Demo';
     consoleRunning = false;
+
+    // Populate the on-chain proof section below
+    if (demoData) renderDemoProof(demoData);
+  }
+
+  // --------------- On-Chain Proof Panel ---------------
+
+  function renderDemoProof(data) {
+    const section = $('#demo-proof-section');
+    const content = $('#demo-proof-content');
+    if (!section || !content) return;
+
+    const steps = data.steps || [];
+    const epoch   = steps.find(s => s.name === 'epoch');
+    const transfer = steps.find(s => s.name === 'transfer');
+    const settle  = steps.find(s => s.name === 'settlement');
+    const query   = steps.find(s => s.name === 'query');
+    const result  = steps.find(s => s.name === 'result');
+
+    let html = '';
+
+    // Header row
+    html += `<div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap">`;
+    html += `<span class="badge badge-verified">VERIFIED ON-CHAIN</span>`;
+    html += `<span style="color:var(--g30);font-size:.85rem">${new Date().toISOString().replace('T', ' ').slice(0, 19)} UTC</span>`;
+    html += `<span style="color:var(--g30);font-size:.85rem">${(data.totalTimeMs / 1000).toFixed(1)}s total</span>`;
+    html += `</div>`;
+
+    // Grid of proof items
+    html += `<div class="identity-grid identity-grid-3" style="gap:1.25rem">`;
+
+    // Clearing Epoch
+    if (epoch) {
+      html += `<div class="identity-item">`;
+      html += `<h4>Clearing Epoch</h4>`;
+      html += proofRow('Epoch ID', `#${epoch.epochId}`);
+      html += proofRow('Clearing Price', formatUsdc(epoch.clearingPrice));
+      html += proofRow('Slots Filled', `${epoch.slotsFilled} / ${epoch.totalBids}`);
+      html += proofRow('Winner', epoch.winnerAgent);
+      html += `</div>`;
+    }
+
+    // USDC Transfer
+    if (transfer) {
+      html += `<div class="identity-item">`;
+      html += `<h4>x402 USDC Settlement</h4>`;
+      html += proofRow('Amount', `${transfer.amount} USDC`);
+      html += proofRow('Block', transfer.blockNumber);
+      html += proofRow('From', proofAddr(transfer.from));
+      html += proofRow('To', proofAddr(transfer.to));
+      html += proofRow('Transaction', proofTxLink(transfer.txHash));
+      html += `</div>`;
+    }
+
+    // Venice / Bankr Query
+    html += `<div class="identity-item">`;
+    html += `<h4>Venice AI Query</h4>`;
+    if (query) {
+      html += proofRow('Type', query.type);
+      html += proofRow('Query ID', `<code style="font-size:.8em">${query.queryId}</code>`);
+      html += proofRow('Routed Via', query.routedVia);
+    }
+    if (settle) {
+      html += proofRow('x402 Verified', settle.verified ? '<span style="color:var(--green)">Yes</span>' : '<span style="color:var(--redhi)">No</span>');
+    }
+    if (result) {
+      html += proofRow('Data Retained', `<strong>${result.retained}</strong>`);
+      if (result.veniceProof) {
+        html += proofRow('Proof Hash', `<code style="font-size:.75em;word-break:break-all">${result.veniceProof}</code>`);
+      }
+    }
+    html += `</div>`;
+
+    html += `</div>`; // close grid
+
+    // Venice response (full output)
+    if (result && result.result) {
+      const resultStr = typeof result.result === 'string'
+        ? result.result
+        : JSON.stringify(result.result, null, 2);
+      html += `<div style="margin-top:1.25rem">`;
+      html += `<h4 style="margin-bottom:.5rem">Venice AI Response</h4>`;
+      html += `<pre style="background:var(--bg);border:1px solid var(--g50);border-radius:8px;padding:1rem;white-space:pre-wrap;font-size:.8rem;color:var(--g10);max-height:400px;overflow:auto">${escapeHtml(resultStr)}</pre>`;
+      html += `</div>`;
+    }
+
+    // Direct BaseScan links at the bottom
+    if (transfer) {
+      html += `<div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--g50)">`;
+      html += `<h4 style="margin-bottom:.5rem">Verify On-Chain</h4>`;
+      html += `<div style="display:flex;flex-direction:column;gap:.4rem">`;
+      html += `<a href="${transfer.baseScanUrl}" target="_blank" rel="noopener" style="color:var(--accent);font-size:.9rem">BaseScan: USDC Transfer \u2197</a>`;
+      html += `<span style="color:var(--g30);font-size:.8rem;word-break:break-all;font-family:var(--mono)">${transfer.txHash}</span>`;
+      html += `</div>`;
+      html += `</div>`;
+    }
+
+    content.innerHTML = html;
+    section.style.display = '';
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function proofRow(label, value) {
+    return `<div class="identity-row"><span class="identity-label">${label}</span><span class="value">${value}</span></div>`;
+  }
+
+  function proofAddr(addr) {
+    if (!addr) return '\u2014';
+    return `<a href="https://basescan.org/address/${addr}" target="_blank" rel="noopener" style="color:var(--g10)">${addr.slice(0, 6)}\u2026${addr.slice(-4)}</a>`;
+  }
+
+  function proofTxLink(hash) {
+    if (!hash) return '\u2014';
+    return `<a href="https://basescan.org/tx/${hash}" target="_blank" rel="noopener" style="color:var(--accent)">${hash.slice(0, 10)}\u2026${hash.slice(-6)}</a>`;
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
   function scrollToConsole(queryType) {
+    // Switch to Belle page if not already there
+    if (currentPage !== 'belle') showPage('belle');
     const select = $('#console-query-type');
     if (select) select.value = queryType;
     const section = $('#console-section');
@@ -1551,15 +1657,11 @@ const BelleEpoch = (() => {
     renderBelleEpochTable();
     startCountdown();
 
-    // Epoch simulator (relocated from Home)
-    const simBtn = $('#btn-run-simulator');
-    if (simBtn) simBtn.addEventListener('click', runSimulator);
-
     setInterval(fetchFeed, FEED_POLL_MS);
     setInterval(() => fetchAgentData('belle'), FEED_POLL_MS * 2);
     setInterval(fetchIdentityData, FEED_POLL_MS * 10);
 
-    // Console
+    // Real x402 demo button
     const btn = $('#btn-run-console');
     if (btn) {
       btn.addEventListener('click', () => {

@@ -729,7 +729,7 @@ agent.start(); // Bids every epoch automatically</code></pre>
               <span class="badge badge-active">1x clearing</span>
             </div>
             <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Optimal bid recommendation. Your max budget ceiling is sealed and never logged.</p>
-            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('bid-strategy')">Try It</button>
+            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('bid-strategy')">Run Demo</button>
           </div>
 
           <div class="card">
@@ -738,7 +738,7 @@ agent.start(); // Bids every epoch automatically</code></pre>
               <span class="badge badge-active">1x clearing</span>
             </div>
             <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Spend allocation plan given your wallet balance and task queue. Both sealed.</p>
-            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('treasury-planning')">Try It</button>
+            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('treasury-planning')">Run Demo</button>
           </div>
 
           <div class="card">
@@ -747,7 +747,7 @@ agent.start(); // Bids every epoch automatically</code></pre>
               <span class="badge badge-warning">2x clearing</span>
             </div>
             <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Proposed split for multi-party negotiation. Each party's position never disclosed.</p>
-            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('negotiation')">Try It</button>
+            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('negotiation')">Run Demo</button>
           </div>
 
           <div class="card">
@@ -756,83 +756,39 @@ agent.start(); // Bids every epoch automatically</code></pre>
               <span class="badge badge-warning">3x clearing</span>
             </div>
             <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Expert matched via Self ZK. Your query content is never made public.</p>
-            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('expert-routing')">Try It</button>
+            <button class="btn btn-primary btn-sm" onclick="BelleEpoch.scrollToConsole('expert-routing')">Run Demo</button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Epoch Simulator -->
-    <section class="sec-black">
+    <!-- Epoch Simulator + Real x402 Demo -->
+    <section class="sec-black" id="console-section">
       <div class="container">
         <div class="section-bar">
-          <span>Epoch Simulator</span>
-          <span class="badge badge-chain" style="margin-left:.75rem; font-size:.7rem">SIMULATION</span>
+          <span>Live x402 Demo</span>
+          <span class="badge badge-active" style="margin-left:.75rem; font-size:.7rem">BASE MAINNET</span>
         </div>
-        <p style="color:var(--g30); margin-bottom:1rem">Simulated agents bid for Belle's private reasoning service. One winner completes x402 USDC settlement.</p>
+        <p style="color:var(--g30); margin-bottom:1rem">Real USDC settlement on Base &rarr; real Venice AI query via Bankr &rarr; real proof hash. Every step verifiable on-chain.</p>
 
         <div class="card">
-          <div class="card-header">
-            <h3>Run Epoch</h3>
-            <button class="btn btn-primary btn-sm" id="btn-run-simulator">Run Demo</button>
+          <div class="card-header" style="flex-wrap:wrap; gap:.75rem">
+            <h3>Run Real Settlement</h3>
+            <div style="display:flex; gap:.75rem; align-items:center; flex-wrap:wrap">
+              <select class="form-input" id="console-query-type" style="min-width:180px; padding:.4rem .6rem; font-size:.85rem">
+                <option value="bid-strategy">Bid Strategy (1x)</option>
+                <option value="treasury-planning">Treasury Planning (1x)</option>
+                <option value="negotiation">Negotiation (2x)</option>
+                <option value="expert-routing">Expert Routing (3x)</option>
+              </select>
+              <button class="btn btn-primary btn-sm" id="btn-run-console">Run Demo</button>
+            </div>
           </div>
-          <div class="simulator" id="simulator">
-            <div class="sim-step" data-step="1">
-              <div class="sim-step-number">1</div>
-              <div>
-                <div class="sim-step-title">Epoch Opens</div>
-                <div class="sim-step-desc">Belle announces 3 capacity slots. A new 5-second epoch begins.</div>
-                <div class="sim-step-data" data-sim="1"></div>
-              </div>
-            </div>
-            <div class="sim-step" data-step="2">
-              <div class="sim-step-number">2</div>
-              <div>
-                <div class="sim-step-title">Capacity Announced</div>
-                <div class="sim-step-desc">3 slots available for private reasoning this epoch.</div>
-                <div class="sim-step-data" data-sim="2"></div>
-              </div>
-            </div>
-            <div class="sim-step" data-step="3">
-              <div class="sim-step-number">3</div>
-              <div>
-                <div class="sim-step-title">Bids Arrive</div>
-                <div class="sim-step-desc">6 agents submit sealed bids &mdash; max willingness-to-pay for Belle's service.</div>
-                <div class="sim-step-data" data-sim="3"></div>
-              </div>
-            </div>
-            <div class="sim-step" data-step="4">
-              <div class="sim-step-number">4</div>
-              <div>
-                <div class="sim-step-title">Epoch Closes</div>
-                <div class="sim-step-desc">No more bids accepted. Clearing engine processes.</div>
-                <div class="sim-step-data" data-sim="4"></div>
-              </div>
-            </div>
-            <div class="sim-step" data-step="5">
-              <div class="sim-step-number">5</div>
-              <div>
-                <div class="sim-step-title">Bids Ranked</div>
-                <div class="sim-step-desc">All bids sorted highest to lowest. Top 3 win.</div>
-                <div class="sim-step-data" data-sim="5"></div>
-              </div>
-            </div>
-            <div class="sim-step" data-step="6">
-              <div class="sim-step-number">6</div>
-              <div>
-                <div class="sim-step-title">Price Clears</div>
-                <div class="sim-step-desc">The 3rd bid sets the uniform clearing price. Every winner pays the same.</div>
-                <div class="sim-step-data" data-sim="6"></div>
-              </div>
-            </div>
-            <div class="sim-step" data-step="7">
-              <div class="sim-step-number">7</div>
-              <div>
-                <div class="sim-step-title">x402 Settlement</div>
-                <div class="sim-step-desc">Winners pay via x402 USDC on Base. EpochCleared event emitted on-chain. Next epoch opens.</div>
-                <div class="sim-step-data" data-sim="7"></div>
-              </div>
-            </div>
+
+          <!-- Console output for real demo -->
+          <div class="console" id="belle-console" style="min-height:120px">
+            <div class="console-line info">Ready. Select a query type and press Run Demo.</div>
+            <div class="console-cursor"></div>
           </div>
         </div>
       </div>
@@ -861,29 +817,14 @@ agent.start(); // Bids every epoch automatically</code></pre>
       </div>
     </section>
 
-    <!-- Interactive Console -->
-    <section class="sec-black" id="console-section">
+    <!-- On-Chain Proof — populated after demo run -->
+    <section class="sec-black" id="demo-proof-section" style="display:none">
       <div class="container">
-        <h2>Interactive Console</h2>
-        <p style="color:var(--g30); margin-bottom:1rem">Experience the full bid &rarr; pay &rarr; query &rarr; result cycle.</p>
+        <h2>On-Chain Proof</h2>
+        <p style="color:var(--g30); margin-bottom:1rem">Every field below links to a real transaction on Base mainnet. Nothing simulated.</p>
 
-        <div class="card">
-          <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1rem; flex-wrap:wrap">
-            <div class="form-group" style="margin-bottom:0; flex:1; min-width:200px">
-              <select class="form-input" id="console-query-type">
-                <option value="bid-strategy">Bid Strategy (1x)</option>
-                <option value="treasury-planning">Treasury Planning (1x)</option>
-                <option value="negotiation">Multi-Agent Negotiation (2x)</option>
-                <option value="expert-routing">Human Expert Routing (3x)</option>
-              </select>
-            </div>
-            <button class="btn btn-primary" id="btn-run-console">Run Query</button>
-          </div>
-
-          <div class="console" id="belle-console">
-            <div class="console-line info">Ready. Select a query type and press Run Query.</div>
-            <div class="console-cursor"></div>
-          </div>
+        <div class="card" id="demo-proof-card">
+          <div id="demo-proof-content"></div>
         </div>
       </div>
     </section>
