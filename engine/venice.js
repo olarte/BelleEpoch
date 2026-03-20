@@ -142,23 +142,33 @@ async function callVenice(systemPrompt, userPrompt) {
   }
 
   let result;
+  let routedViaBankr = false;
 
   if (useBankr) {
-    // ─── Route through Bankr LLM Gateway ──────────────────────────────
-    // Bankr pays for inference from its wallet balance automatically.
-    // Uses OpenAI-compatible format; Bankr routes to the model provider.
-    result = await bankr.chatCompletion(BANKR_MODEL, [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt },
-    ], { temperature: 0.3, max_tokens: 1024 });
+    // ─── Try Bankr LLM Gateway first, fall back to direct Venice ──────
+    try {
+      result = await bankr.chatCompletion(BANKR_MODEL, [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ], { temperature: 0.3, max_tokens: 1024 });
+      routedViaBankr = true;
 
-    // Track Bankr inference cost in Redis
-    const cost = result.usage
-      ? (result.usage.prompt_tokens + result.usage.completion_tokens) * 0.000001
-      : 0.0005; // estimate if usage not returned
-    await redis.incrbyfloat('bankr:inference:cost', cost);
-  } else {
+      // Track Bankr inference cost in Redis
+      const cost = result.usage
+        ? (result.usage.prompt_tokens + result.usage.completion_tokens) * 0.000001
+        : 0.0005;
+      await redis.incrbyfloat('bankr:inference:cost', cost);
+    } catch (bankrErr) {
+      console.warn(`[Venice] Bankr failed (${bankrErr.message}) — falling back to direct Venice API`);
+      // Fall through to direct Venice call below
+    }
+  }
+
+  if (!result) {
     // ─── Direct Venice API call ────────────────────────────────────────
+    if (!VENICE_API_KEY) {
+      throw new Error('Venice AI not available — Bankr failed and no VENICE_API_KEY configured');
+    }
     const response = await fetch(`${VENICE_API_URL}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -199,9 +209,9 @@ async function callVenice(systemPrompt, userPrompt) {
     content,
     veniceId: result.id || null,
     veniceProof: proofHash,
-    model: result.model || (useBankr ? BANKR_MODEL : VENICE_MODEL),
+    model: result.model || (routedViaBankr ? BANKR_MODEL : VENICE_MODEL),
     retained: false,
-    routedViaBankr: useBankr,
+    routedViaBankr,
   };
 }
 
