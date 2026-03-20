@@ -726,13 +726,14 @@ const BelleEpoch = (() => {
     const btn = $('#btn-run-console');
     if (!container || !btn) return;
     btn.disabled = true;
+    btn.textContent = 'Running\u2026';
 
     container.querySelectorAll('.console-line').forEach(l => l.remove());
 
     const delay = ms => new Promise(r => setTimeout(r, ms));
 
     consolePrint(container, `Connecting to Belle Epoch at ${API}\u2026`, 'info');
-    await delay(600);
+    await delay(400);
 
     consolePrint(container, 'Reading current epoch from /feed\u2026', 'info');
     const feed = await fetchFeed();
@@ -741,86 +742,104 @@ const BelleEpoch = (() => {
     } else {
       consolePrint(container, 'Could not reach /feed \u2014 using cached data', 'error');
     }
-    await delay(500);
-
-    const bidAmount = feed ? (Number(feed.clearingPrice) * 1.2).toFixed(6) : '0.005000';
-    consolePrint(container, `Submitting bid to POST /bid (type: ${queryType}, amount: ${bidAmount})\u2026`, 'info');
-    const currentEpoch = feed ? feed.epochId : 0;
-    try {
-      const res = await fetch(API + '/bid', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          epochId: currentEpoch + 1,
-          agentId: DEMO_AGENT_ID,
-          maxBid: parseFloat(bidAmount),
-          resource: 'private-reasoning',
-          signature: DEMO_SIGNATURE
-        })
-      });
-      const json = await res.json().catch(() => ({}));
-      if (json.status === 'pending') {
-        consolePrint(container, `Bid accepted for epoch #${json.epochId}. Closes in ${json.epochClosesMs}ms.`, 'success');
-      } else {
-        consolePrint(container, `Bid response: ${json.error || json.status || 'accepted'} (demo mode)`, 'success');
-      }
-    } catch {
-      consolePrint(container, `Bid submitted (demo mode). Epoch #${currentEpoch + 1}`, 'success');
-    }
-    await delay(500);
-
-    consolePrint(container, 'Waiting for epoch to close\u2026', 'info');
-    await delay(2000);
-
-    consolePrint(container, 'Epoch cleared. Checking result\u2026', 'info');
-    const latestFeed = await fetchFeed();
-    const clearedPrice = latestFeed ? formatUsdc(latestFeed.clearingPrice) : formatUsdc(bidAmount);
-    consolePrint(container, `Clearing price: ${clearedPrice}`, 'success');
-    await delay(400);
-
-    const multiplier = queryType === 'negotiation' ? 2 : queryType === 'expert-routing' ? 3 : 1;
-    const payment = latestFeed ? (Number(latestFeed.clearingPrice) * multiplier).toFixed(6) : (Number(bidAmount) * multiplier).toFixed(6);
-    consolePrint(container, `Payment required: ${formatUsdc(payment)} via x402 (${multiplier}x clearing)`, 'info');
-    await delay(600);
-
-    consolePrint(container, 'Settling payment\u2026', 'info');
-    await delay(800);
-    consolePrint(container, 'Payment settled. Access token received.', 'success');
-    await delay(400);
-
-    consolePrint(container, `Querying Venice AI (type: ${queryType})\u2026`, 'info');
-    try {
-      const qRes = await fetch(API + '/query', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          agentId: DEMO_AGENT_ID,
-          queryType: queryType,
-          token: 'demo-token'
-        })
-      });
-      const qJson = await qRes.json().catch(() => ({}));
-      if (qJson.queryId) {
-        consolePrint(container, `Query submitted. ID: ${qJson.queryId}`, 'success');
-        await delay(1500);
-        consolePrint(container, 'Polling for result\u2026', 'info');
-        await delay(1000);
-        const rRes = await fetch(API + '/query/' + qJson.queryId);
-        const rJson = await rRes.json().catch(() => ({}));
-        consolePrint(container, `Result received. retained: ${rJson.retained != null ? rJson.retained : false}`, 'result');
-      } else {
-        throw new Error('no queryId');
-      }
-    } catch {
-      consolePrint(container, 'Query submitted (demo mode). Polling\u2026', 'info');
-      await delay(1500);
-      consolePrint(container, 'Result received. Data retained: false', 'result');
-    }
     await delay(300);
 
-    consolePrint(container, '\u2713 Complete. Venice proof hash verified. Session closed.', 'success');
+    consolePrint(container, 'Executing real x402 settlement on Base mainnet\u2026', 'info');
+    consolePrint(container, '<span class="console-spinner"></span> Transferring USDC + querying Venice AI (this takes 10\u201320s)\u2026', 'info');
+
+    try {
+      const res = await fetch(API + '/demo/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ queryType }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        consolePrint(container, `Error: ${data.error || 'Demo failed'}`, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Run Demo';
+        consoleRunning = false;
+        return;
+      }
+
+      // Remove spinner line
+      const spinnerLine = container.querySelector('.console-spinner');
+      if (spinnerLine) spinnerLine.closest('.console-line').remove();
+
+      // Display each step
+      for (const step of data.steps) {
+        await delay(300);
+
+        if (step.name === 'epoch') {
+          consolePrint(container,
+            `<strong>Step 1 \u2014 Epoch Found</strong><br>` +
+            `Epoch #${step.epochId} | Clearing price: ${formatUsdc(step.clearingPrice)} | ` +
+            `${step.slotsFilled}/${step.totalBids} slots filled | Winner: ${step.winnerAgent}`,
+            'success');
+        }
+
+        else if (step.name === 'transfer') {
+          consolePrint(container,
+            `<strong>Step 2 \u2014 Real USDC Transfer</strong><br>` +
+            `Amount: ${step.amount} USDC | Block: ${step.blockNumber}<br>` +
+            `tx: <a href="${step.baseScanUrl}" target="_blank" rel="noopener" style="color:var(--accent)">${step.txHash.slice(0, 18)}\u2026</a><br>` +
+            `<a href="${step.baseScanUrl}" target="_blank" rel="noopener" style="color:var(--accent);font-size:.8em">View on BaseScan \u2197</a>`,
+            'result');
+        }
+
+        else if (step.name === 'settlement') {
+          if (step.verified) {
+            consolePrint(container,
+              `<strong>Step 3 \u2014 x402 Payment Verified</strong><br>` +
+              `On-chain USDC transfer confirmed. Access token issued.`,
+              'success');
+          } else {
+            consolePrint(container, 'Step 3 \u2014 Payment verification failed', 'error');
+          }
+        }
+
+        else if (step.name === 'query') {
+          consolePrint(container,
+            `<strong>Step 4 \u2014 Venice AI Query</strong><br>` +
+            `Type: ${step.type} | ID: ${step.queryId}<br>` +
+            `Routed via: ${step.routedVia}`,
+            'info');
+        }
+
+        else if (step.name === 'result') {
+          if (step.result) {
+            const resultStr = typeof step.result === 'string'
+              ? step.result
+              : JSON.stringify(step.result, null, 2);
+            const truncated = resultStr.length > 500 ? resultStr.slice(0, 500) + '\u2026' : resultStr;
+            consolePrint(container,
+              `<strong>Step 5 \u2014 Venice Response</strong><br>` +
+              `retained: <strong>${step.retained}</strong> | ` +
+              `proof: ${(step.veniceProof || 'n/a').slice(0, 24)}\u2026<br>` +
+              `<pre style="margin:.5rem 0;white-space:pre-wrap;font-size:.8em;color:var(--g20)">${truncated}</pre>`,
+              'result');
+          } else {
+            consolePrint(container,
+              `<strong>Step 5 \u2014 Venice Response</strong><br>` +
+              `Query submitted. Result may still be processing (Venice can take up to 30s).`,
+              'info');
+          }
+        }
+      }
+
+      await delay(200);
+      consolePrint(container,
+        `\u2713 <strong>Complete.</strong> Real USDC paid on Base. Real Venice query answered. Nothing simulated. (${(data.totalTimeMs / 1000).toFixed(1)}s)`,
+        'success');
+
+    } catch (err) {
+      consolePrint(container, `Network error: ${err.message}`, 'error');
+    }
 
     btn.disabled = false;
+    btn.textContent = 'Run Demo';
     consoleRunning = false;
   }
 

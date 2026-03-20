@@ -1007,6 +1007,18 @@ h3 {
 .console-line.info    { color: var(--g30); }
 .console-line.result  { color: var(--gold); }
 
+.console-spinner {
+  display: inline-block;
+  width: .75em; height: .75em;
+  border: 2px solid var(--g30);
+  border-top-color: var(--redhi);
+  border-radius: 50%;
+  animation: spin-console .6s linear infinite;
+  vertical-align: middle;
+  margin-right: .4em;
+}
+@keyframes spin-console { to { transform: rotate(360deg); } }
+
 .console-cursor::after {
   content: '\2588';
   animation: blink-cursor 0.7s step-end infinite;

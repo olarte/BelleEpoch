@@ -763,6 +763,198 @@ app.get('/query/:id', async (req, res) => {
   }
 });
 
+// ─── POST /demo/run ─────────────────────────────────────────────────────────
+// Orchestrates a REAL x402 settlement + Venice query cycle for the Belle page demo.
+// Private key stays server-side. Returns step-by-step results with real tx hashes.
+let lastDemoRunTs = 0;
+const DEMO_COOLDOWN_MS = 20000; // 20s between runs
+const DEMO_AGENT_ID = 'demo-x402';
+
+app.post('/demo/run', async (req, res) => {
+  try {
+    const now = Date.now();
+    if (now - lastDemoRunTs < DEMO_COOLDOWN_MS) {
+      const waitSec = Math.ceil((DEMO_COOLDOWN_MS - (now - lastDemoRunTs)) / 1000);
+      return res.status(429).json({ error: `Demo cooldown — try again in ${waitSec}s`, cooldownMs: DEMO_COOLDOWN_MS });
+    }
+
+    const AGENT_PRIVATE_KEY = process.env.AGENT_PRIVATE_KEY;
+    const BASE_RPC_URL = process.env.BASE_RPC_URL;
+    const PROTOCOL_WALLET = process.env.PROTOCOL_WALLET;
+    const USDC_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+
+    if (!AGENT_PRIVATE_KEY) {
+      return res.status(503).json({ error: 'Demo wallet not configured (AGENT_PRIVATE_KEY)' });
+    }
+    if (!BASE_RPC_URL || !PROTOCOL_WALLET) {
+      return res.status(503).json({ error: 'Missing BASE_RPC_URL or PROTOCOL_WALLET' });
+    }
+
+    lastDemoRunTs = now;
+    const startTime = now;
+    const steps = [];
+    const { ethers } = require('ethers');
+
+    // Map frontend query type names to server-side valid types
+    const queryTypeMap = {
+      'bid-strategy': 'bid-strategy',
+      'treasury-planning': 'treasury-planning',
+      'negotiation': 'agent-negotiation',
+      'agent-negotiation': 'agent-negotiation',
+      'expert-routing': 'human-routing',
+      'human-routing': 'human-routing',
+    };
+    const rawType = req.body.queryType || 'bid-strategy';
+    const queryType = queryTypeMap[rawType] || 'bid-strategy';
+
+    // ── Step 1: Find a recent cleared epoch ────────────────────────────────
+    const history = await getEpochHistory(3);
+    const recentEpoch = history.find(e => e.slotsFilled > 0);
+    if (!recentEpoch) {
+      return res.status(503).json({ error: 'No cleared epochs with winners yet — engine may be starting up' });
+    }
+
+    const epochResult = await getEpochResult(recentEpoch.epochId);
+    const clearingPrice = recentEpoch.clearingPrice;
+    const winnerAgent = recentEpoch.winners?.[0] || 'ATLAS-7';
+
+    steps.push({
+      step: 1, name: 'epoch',
+      epochId: recentEpoch.epochId,
+      clearingPrice,
+      slotsFilled: recentEpoch.slotsFilled,
+      totalBids: recentEpoch.totalBids,
+      winnerAgent,
+    });
+
+    // ── Step 2: Real USDC transfer on Base ─────────────────────────────────
+    const provider = new ethers.JsonRpcProvider(BASE_RPC_URL);
+    const wallet = new ethers.Wallet(AGENT_PRIVATE_KEY, provider);
+    const usdc = new ethers.Contract(USDC_ADDRESS, [
+      'function transfer(address to, uint256 amount) returns (bool)',
+      'function balanceOf(address) view returns (uint256)',
+    ], wallet);
+
+    const amount = BigInt(Math.round(clearingPrice * 1e6));
+    const balance = await usdc.balanceOf(wallet.address);
+
+    if (balance < amount) {
+      return res.status(402).json({
+        error: 'Demo wallet low on USDC',
+        balance: ethers.formatUnits(balance, 6),
+        needed: ethers.formatUnits(amount, 6),
+        walletAddress: wallet.address,
+      });
+    }
+
+    const tx = await usdc.transfer(PROTOCOL_WALLET, amount);
+    const receipt = await tx.wait();
+
+    steps.push({
+      step: 2, name: 'transfer',
+      txHash: tx.hash,
+      blockNumber: receipt.blockNumber,
+      amount: ethers.formatUnits(amount, 6),
+      from: wallet.address,
+      to: PROTOCOL_WALLET,
+      baseScanUrl: `https://basescan.org/tx/${tx.hash}`,
+    });
+
+    // ── Step 3: Verify payment on-chain + issue access token ───────────────
+    const verification = await verifyPayment(tx.hash, recentEpoch.epochId, clearingPrice);
+
+    let accessToken = null;
+    if (verification.valid) {
+      const epochEndTimestamp = Date.now() + engine.EPOCH_DURATION;
+      accessToken = signAccessToken(recentEpoch.epochId, DEMO_AGENT_ID, 0, 'private-reasoning', epochEndTimestamp);
+      await markPaid(recentEpoch.epochId, `demo:${DEMO_AGENT_ID}`, tx.hash);
+    }
+
+    steps.push({
+      step: 3, name: 'settlement',
+      verified: verification.valid,
+      accessToken: accessToken ? accessToken.slice(0, 40) + '...' : null,
+      txHash: tx.hash,
+    });
+
+    // ── Step 4: Real Venice/Bankr query ────────────────────────────────────
+    let queryResult = null;
+    let queryId = null;
+    let veniceProof = null;
+
+    if (accessToken) {
+      // Build context based on query type
+      const contexts = {
+        'bid-strategy': {
+          currentPrice: clearingPrice,
+          budget: clearingPrice * 5,
+          strategy: 'adaptive',
+          epochId: recentEpoch.epochId,
+          note: 'Live demo — real x402 USDC settlement on Base mainnet',
+        },
+        'treasury-planning': {
+          walletBalance: 2.5,
+          currency: 'USDC',
+          activeTasks: ['inference-queries', 'data-enrichment', 'monitoring'],
+          epochCost: clearingPrice,
+          runwayTarget: '48 hours',
+        },
+        'agent-negotiation': {
+          partyA: { role: 'data-provider', minPrice: 0.008, volume: '500 queries/day' },
+          partyB: { role: 'consumer', maxBudget: 0.006, volume: '300 queries/day' },
+          subject: 'Data enrichment service pricing',
+        },
+        'human-routing': {
+          domain: 'smart-contract-security',
+          urgency: 'high',
+          description: 'Review Solidity clearing auction contract for vulnerabilities',
+          budget: 0.05,
+        },
+      };
+
+      const context = contexts[queryType] || contexts['bid-strategy'];
+      queryId = await venice.submitQuery(queryType, context, DEMO_AGENT_ID, recentEpoch.epochId);
+
+      steps.push({
+        step: 4, name: 'query',
+        queryId,
+        type: queryType,
+        status: 'processing',
+        routedVia: bankr.isInitialized() ? 'Bankr LLM Gateway' : 'Venice AI Direct',
+      });
+
+      // Poll for result (up to 20s)
+      for (let i = 0; i < 10; i++) {
+        await new Promise(r => setTimeout(r, 2000));
+        const result = await venice.getQueryResult(queryId);
+        if (!result) continue;
+        if (result.status === 'processing') continue;
+        queryResult = result.result;
+        veniceProof = result.veniceProof;
+        break;
+      }
+    }
+
+    steps.push({
+      step: 5, name: 'result',
+      queryId,
+      result: queryResult,
+      veniceProof: veniceProof || null,
+      retained: false,
+    });
+
+    const totalTimeMs = Date.now() - startTime;
+
+    console.log(`[Demo] Real x402 cycle complete — tx: ${tx.hash} | venice: ${queryId} | ${totalTimeMs}ms`);
+
+    res.json({ steps, totalTimeMs });
+  } catch (err) {
+    console.error('[POST /demo/run] error:', err);
+    lastDemoRunTs = 0; // Reset cooldown on error so user can retry
+    res.status(500).json({ error: err.message || 'Demo failed' });
+  }
+});
+
 // ─── GET /delegation ─────────────────────────────────────────────────────────
 // Returns current ERC-7715 delegation status and constraints.
 app.get('/delegation', async (req, res) => {
