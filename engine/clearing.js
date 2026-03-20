@@ -154,37 +154,31 @@ async function runEpoch() {
       console.log(`[x402] epoch ${epochId} settled: [${ids}] paid ${result.clearingPrice.toFixed(4)} USDC each (sim)`);
     }
 
-    // ─── Track earnings in Redis (no real on-chain transfers) ────────
+    // ─── Track Belle's provider earnings in Redis ─────────────────────
+    // Belle is the provider — she earns from every winning bid's clearing price
     if (result.slotsFilled > 0) {
-      const belleWon = result.winners.some(w => w.agentId === 'belle');
-
-      if (belleWon) {
-        await redis.incr('belle:wins:total');
-        await redis.lpush('belle:wins:log', JSON.stringify({
-          epochId,
-          clearingPrice: result.clearingPrice,
-          timestamp: new Date().toISOString(),
-        }));
-      }
-
-      // Track protocol fees in Redis (accumulated, not routed on-chain)
+      // Track protocol fees (accumulated in Redis, not routed on-chain)
       const epochProtocolFee = result.clearingPrice * result.slotsFilled * PROTOCOL_FEE_RATE;
       if (epochProtocolFee > 0) {
         await redis.incrbyfloat('protocol:fees:total', epochProtocolFee);
       }
+
+      // Belle earns provider share = total clearing revenue - protocol fees
+      const epochRevenue = result.clearingPrice * result.slotsFilled;
+      const providerShare = epochRevenue - epochProtocolFee;
+      const epochInferenceCost = 0.0005 * result.slotsFilled; // estimated Venice cost per slot
+
+      await redis.incrbyfloat('belle:margin:earned', providerShare);
+      await redis.incrbyfloat('belle:margin:spent', epochInferenceCost);
+
+      await redis.incr('belle:epochs:served');
     }
 
     // ─── Margin logging ────────────────────────────────────────────────
-    const earned = result.clearingPrice * result.slotsFilled;
-    const belleEntry = result.winners.find(w => w.agentId === 'belle');
-    const belleBidCost = belleEntry ? result.clearingPrice : 0;
-    const epochInferenceCost = result.slotsFilled > 0 ? 0.0005 * result.slotsFilled : 0;
-    const spent = belleBidCost + epochInferenceCost;
+    const earned = result.slotsFilled > 0 ? result.clearingPrice * result.slotsFilled * (1 - PROTOCOL_FEE_RATE) : 0;
+    const spent = result.slotsFilled > 0 ? 0.0005 * result.slotsFilled : 0;
     const netMargin = earned - spent;
     const marginPct = earned > 0 ? ((netMargin / earned) * 100).toFixed(1) : '0.0';
-
-    await redis.incrbyfloat('belle:margin:earned', earned);
-    await redis.incrbyfloat('belle:margin:spent', spent);
 
     if (epochId % 50 === 0) {
       console.log(

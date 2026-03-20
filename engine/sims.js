@@ -1,4 +1,5 @@
-// engine/sims.js — 5 simulated agents that auto-bid each epoch
+// engine/sims.js — simulated agents that auto-bid each epoch
+// Belle is the PROVIDER — she does not bid on her own service.
 
 const { addBid, getEpochResult, markPaid, redis } = require('./bids');
 const { verifyPayment, signAccessToken, splitFee } = require('./x402');
@@ -6,7 +7,6 @@ const { verifyPayment, signAccessToken, splitFee } = require('./x402');
 // Each agent has an intrinsic valuation (what the service is worth to them)
 // plus aggression that scales their willingness to bid above/below intrinsic
 const AGENTS = [
-  { id: 'belle',   intrinsic: 0.0070, aggression: 1.1 },  // Belle bids for her own service (self-consumption + demo)
   { id: 'ATLAS-7', intrinsic: 0.0080, aggression: 1.2 },
   { id: 'NEXUS-3', intrinsic: 0.0060, aggression: 0.9 },
   { id: 'FORGE-1', intrinsic: 0.0045, aggression: 0.7 },
