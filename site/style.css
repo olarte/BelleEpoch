@@ -986,6 +986,105 @@ h3 {
 .sec-red .t-success       { color: #7dffc0; }
 .sec-red .t-dim           { color: rgba(255,255,255,0.4); }
 
+/* ─── Prompt box (ChatGPT / Claude style) ─── */
+.prompt-box {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 2.5rem 0 1rem;
+}
+
+.prompt-chips {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.prompt-chip {
+  background: var(--g70);
+  border: 1px solid var(--g50);
+  color: var(--g30);
+  font-family: var(--mono);
+  font-size: .8rem;
+  padding: .35rem .85rem;
+  cursor: pointer;
+  transition: all .15s;
+  letter-spacing: .02em;
+}
+.prompt-chip:hover {
+  border-color: var(--g30);
+  color: var(--g10);
+}
+.prompt-chip.active {
+  background: var(--g60);
+  border-color: var(--redhi);
+  color: var(--white);
+}
+
+.prompt-input-wrap {
+  position: relative;
+  background: var(--g80);
+  border: 1px solid var(--g50);
+  display: flex;
+  align-items: flex-end;
+  transition: border-color .15s;
+}
+.prompt-input-wrap:focus-within {
+  border-color: var(--g30);
+}
+
+.prompt-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--g10);
+  font-family: var(--mono);
+  font-size: .9rem;
+  line-height: 1.6;
+  padding: 14px 16px;
+  resize: none;
+  overflow-y: auto;
+  max-height: 200px;
+  min-height: 48px;
+}
+.prompt-input:focus { outline: none; }
+.prompt-input::placeholder { color: var(--g40); }
+
+.prompt-send {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  margin: 4px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--redhi);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.prompt-send:hover { opacity: .85; }
+.prompt-send:disabled {
+  background: var(--g50);
+  color: var(--g30);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.prompt-hint {
+  text-align: center;
+  color: var(--g40);
+  font-size: .75rem;
+  margin-top: .6rem;
+  letter-spacing: .02em;
+}
+.prompt-hint code {
+  font-family: var(--mono);
+  color: var(--g30);
+}
+
 /* Console (interactive) */
 .console {
   background: var(--g90);

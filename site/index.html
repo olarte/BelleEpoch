@@ -762,36 +762,43 @@ agent.start(); // Bids every epoch automatically</code></pre>
       </div>
     </section>
 
-    <!-- Epoch Simulator + Real x402 Demo -->
+    <!-- Live x402 Demo -->
     <section class="sec-black" id="console-section">
       <div class="container">
-        <div class="section-bar">
-          <span>Live x402 Demo</span>
-          <span class="badge badge-active" style="margin-left:.75rem; font-size:.7rem">BASE MAINNET</span>
-        </div>
-        <p style="color:var(--g30); margin-bottom:1rem">Real USDC settlement on Base &rarr; real Venice AI query via Bankr &rarr; real proof hash. Every step verifiable on-chain.</p>
 
-        <div class="card">
-          <div class="card-header" style="flex-wrap:wrap; gap:.75rem">
-            <h3>Run Real Settlement</h3>
-            <div style="display:flex; gap:.75rem; align-items:center; flex-wrap:wrap">
-              <select class="form-input" id="console-query-type" style="min-width:180px; padding:.4rem .6rem; font-size:.85rem">
-                <option value="bid-strategy">Bid Strategy (1x)</option>
-                <option value="treasury-planning">Treasury Planning (1x)</option>
-                <option value="negotiation">Negotiation (2x)</option>
-                <option value="expert-routing">Expert Routing (3x)</option>
-              </select>
-              <button class="btn btn-primary btn-sm" id="btn-run-console">Run Demo</button>
-            </div>
+        <div class="prompt-box">
+          <!-- Type chips -->
+          <div class="prompt-chips" id="prompt-chips">
+            <button class="prompt-chip active" data-qtype="bid-strategy">Bid Strategy</button>
+            <button class="prompt-chip" data-qtype="treasury-planning">Treasury</button>
+            <button class="prompt-chip" data-qtype="negotiation">Negotiation</button>
+            <button class="prompt-chip" data-qtype="expert-routing">Expert Routing</button>
           </div>
-          <textarea class="form-input" id="console-prompt" rows="3" placeholder="Optional: describe your query context (leave blank for a default scenario)" style="width:100%; margin-bottom:1rem; font-size:.85rem; resize:vertical"></textarea>
 
-          <!-- Console output for real demo -->
-          <div class="console" id="belle-console" style="min-height:120px">
-            <div class="console-line info">Ready. Select a query type, optionally enter a prompt, and press Run Demo.</div>
-            <div class="console-cursor"></div>
+          <!-- Input area -->
+          <div class="prompt-input-wrap">
+            <textarea class="prompt-input" id="console-prompt" rows="1" placeholder="Ask Belle anything &mdash; bid strategy, treasury planning, negotiation&hellip;"></textarea>
+            <button class="prompt-send" id="btn-run-console" title="Run real x402 demo">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            </button>
           </div>
+
+          <p class="prompt-hint">Pays real USDC on Base mainnet &middot; Queries Venice AI via Bankr &middot; <code>retained: false</code></p>
         </div>
+
+        <!-- Hidden select for backward compat -->
+        <select id="console-query-type" style="display:none">
+          <option value="bid-strategy">Bid Strategy</option>
+          <option value="treasury-planning">Treasury Planning</option>
+          <option value="negotiation">Negotiation</option>
+          <option value="expert-routing">Expert Routing</option>
+        </select>
+
+        <!-- Console output -->
+        <div class="console" id="belle-console" style="display:none; margin-top:1.5rem">
+          <div class="console-cursor"></div>
+        </div>
+
       </div>
     </section>
 

@@ -726,8 +726,9 @@ const BelleEpoch = (() => {
     const btn = $('#btn-run-console');
     if (!container || !btn) return;
     btn.disabled = true;
-    btn.textContent = 'Running\u2026';
 
+    // Show console
+    container.style.display = '';
     container.querySelectorAll('.console-line').forEach(l => l.remove());
 
     const delay = ms => new Promise(r => setTimeout(r, ms));
@@ -762,7 +763,6 @@ const BelleEpoch = (() => {
       if (!res.ok) {
         consolePrint(container, `Error: ${data.error || 'Demo failed'}`, 'error');
         btn.disabled = false;
-        btn.textContent = 'Run Demo';
         consoleRunning = false;
         return;
       }
@@ -826,7 +826,6 @@ const BelleEpoch = (() => {
     }
 
     btn.disabled = false;
-    btn.textContent = 'Run Demo';
     consoleRunning = false;
 
     // Populate the on-chain proof section below
@@ -951,10 +950,18 @@ const BelleEpoch = (() => {
   function scrollToConsole(queryType) {
     // Switch to Belle page if not already there
     if (currentPage !== 'belle') showPage('belle');
+    // Update hidden select
     const select = $('#console-query-type');
     if (select) select.value = queryType;
+    // Update active chip
+    $$('.prompt-chip').forEach(c => {
+      c.classList.toggle('active', c.dataset.qtype === queryType);
+    });
+    // Scroll and focus
     const section = $('#console-section');
     if (section) section.scrollIntoView({ behavior: 'smooth' });
+    const textarea = $('#console-prompt');
+    if (textarea) setTimeout(() => textarea.focus(), 400);
   }
 
   // --------------- Belle Epoch History Table ---------------
@@ -1670,11 +1677,39 @@ const BelleEpoch = (() => {
     setInterval(renderBelleEpochTable, FEED_POLL_MS * 5);
     setInterval(fetchIdentityData, FEED_POLL_MS * 10);
 
-    // Real x402 demo button
+    // ─── Prompt box wiring ───────────────────────────────────────
     const btn = $('#btn-run-console');
+    const textarea = $('#console-prompt');
+    const hiddenSelect = $('#console-query-type');
+
+    // Chip selection
+    $$('.prompt-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        $$('.prompt-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        if (hiddenSelect) hiddenSelect.value = chip.dataset.qtype;
+      });
+    });
+
+    // Auto-grow textarea
+    if (textarea) {
+      textarea.addEventListener('input', () => {
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+      });
+      // Enter to submit (Shift+Enter for newline)
+      textarea.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          if (btn && !btn.disabled) btn.click();
+        }
+      });
+    }
+
+    // Run demo
     if (btn) {
       btn.addEventListener('click', () => {
-        const type = $('#console-query-type').value;
+        const type = hiddenSelect ? hiddenSelect.value : 'bid-strategy';
         runConsoleDemo(type);
       });
     }
