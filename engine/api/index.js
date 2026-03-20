@@ -1427,6 +1427,12 @@ async function start() {
 
   // ── Ensure Belle's loop always runs ─────────────────────────────────
   await ensureBelleLoop();
+
+  // ── Start Beast (market intelligence agent) ───────────────────────
+  const { startBeast } = require('../beast');
+  startBeast().catch(err =>
+    console.error('[beast] startup error:', err.message)
+  );
 }
 
 // ─── Restore active provider loops from Redis ───────────────────────────────

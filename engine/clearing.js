@@ -17,6 +17,7 @@ if (process.env.SIMS_DISABLED === 'true') {
   console.log('[sims] simulated agents active');
 }
 const bankr = require('./bankr');
+const { ingestEpoch: beastIngest } = require('./beast/ingest');
 let uniswap = null;
 try { uniswap = require('./uniswap'); } catch (e) { /* optional */ }
 
@@ -142,6 +143,21 @@ async function runEpoch() {
 
   // Store epoch history for feed/history endpoint
   await storeEpochHistory(epochId, result);
+
+  // Feed Beast's market intelligence pipeline
+  if (result.slotsFilled > 0) {
+    beastIngest({
+      epochId,
+      provider:    'belle.epoch.base.eth',
+      providerEns: 'belle.epoch.base.eth',
+      clearingPrice: result.clearingPrice,
+      slotsFilled: result.slotsFilled,
+      totalBids:   result.totalBids,
+      chain:       'base',
+      timestamp:   Date.now(),
+      resourceId:  'private-reasoning',
+    }).catch(err => console.error('[beast] ingest error:', err.message));
+  }
 
   // On-chain recording disabled in background loop to conserve gas.
   // Real on-chain settlement only happens via POST /demo/run.

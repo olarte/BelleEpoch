@@ -8,6 +8,7 @@
 
 const engine = require('./clearing');
 const { redis } = require('./bids');
+const { ingestEpoch: beastIngest } = require('./beast/ingest');
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -176,16 +177,24 @@ async function startProviderLoop(provider) {
           await redis.expire(`provider:${provider.id}:epoch:${epochId}:result`, 300);
 
           // Publish to feed events
-          await redis.lpush('feed:events', JSON.stringify({
+          const feedEvent = {
             epochId,
             provider: provider.id,
+            providerEns: provider.ens || provider.id,
             clearingPrice,
             slotsFilled: winners.length,
             totalBids: bids.length,
             chain: provider.chain || 'base',
-            timestamp: new Date().toISOString(),
-          }));
-          await redis.ltrim('feed:events', 0, 99);
+            timestamp: Date.now(),
+            resourceId: provider.resource || 'unknown',
+          };
+          await redis.lpush('feed:events', JSON.stringify(feedEvent));
+          await redis.ltrim('feed:events', 0, 9999);
+
+          // Feed Beast's market intelligence pipeline
+          beastIngest(feedEvent).catch(err =>
+            console.error('[beast] ingest error:', err.message)
+          );
 
           // Clean up bid key
           await redis.del(bidKey);
