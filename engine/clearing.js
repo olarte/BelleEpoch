@@ -3,17 +3,18 @@
 const { getBids, clearEpoch, recordAgentEpoch, storeEpochResult, storeEpochHistory, redis } = require('./bids');
 const { PROTOCOL_FEE_RATE } = require('./x402');
 
-// Simulated agents — only loaded in development
+// Simulated agents — provide market activity for CCA demonstration.
+// Enabled by default. Set SIMS_DISABLED=true to disable.
 let generateBids, settleEpoch;
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.SIMS_DISABLED === 'true') {
+  generateBids = async () => {};
+  settleEpoch = async () => [];
+  console.log('[sims] simulated agents disabled (SIMS_DISABLED=true)');
+} else {
   const sims = require('./sims');
   generateBids = sims.generateBids;
   settleEpoch = sims.settleEpoch;
-  console.log('[sims] simulated agents running (dev mode)');
-} else {
-  generateBids = async () => {};
-  settleEpoch = async () => [];
-  console.log('[sims] simulated agents disabled in production');
+  console.log('[sims] simulated agents active');
 }
 const bankr = require('./bankr');
 let uniswap = null;
