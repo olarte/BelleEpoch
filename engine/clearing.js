@@ -143,33 +143,20 @@ async function runEpoch() {
   // Store epoch history for feed/history endpoint
   await storeEpochHistory(epochId, result);
 
-  // Record on-chain if recorder is set
-  if (onChainRecorder) {
-    onChainRecorder(result).catch(err =>
-      console.error(`[OnChain] epoch ${epochId} failed:`, err.message)
-    );
-  }
+  // On-chain recording disabled in background loop to conserve gas.
+  // Real on-chain settlement only happens via POST /demo/run.
 
-  // Simulated agents settle their winning bids (x402 flow)
+  // Simulated agents settle their winning bids (sim proofs only — no real USDC)
   settleEpoch(epochId).then(async (settlements) => {
     const paid = settlements.filter(s => s.paid > 0);
     if (paid.length > 0) {
       const ids = paid.map(s => s.agentId).join(', ');
-      console.log(`[x402] epoch ${epochId} settled: [${ids}] paid ${result.clearingPrice.toFixed(4)} USDC each`);
+      console.log(`[x402] epoch ${epochId} settled: [${ids}] paid ${result.clearingPrice.toFixed(4)} USDC each (sim)`);
     }
 
-    // ─── Revenue routing to Bankr ──────────────────────────────────────
-    if (result.slotsFilled > 0 && bankr.isInitialized()) {
+    // ─── Track earnings in Redis (no real on-chain transfers) ────────
+    if (result.slotsFilled > 0) {
       const belleWon = result.winners.some(w => w.agentId === 'belle');
-      const providerEarnings = result.clearingPrice * result.slotsFilled;
-      const bankrShare = parseFloat((providerEarnings * 0.8).toFixed(6));
-
-      if (bankrShare > 0) {
-        const routing = await bankr.routeRevenue(epochId, bankrShare);
-        if (routing.routed) {
-          await redis.incrbyfloat('belle:earnings:routed', bankrShare);
-        }
-      }
 
       if (belleWon) {
         await redis.incr('belle:wins:total');
@@ -179,17 +166,11 @@ async function runEpoch() {
           timestamp: new Date().toISOString(),
         }));
       }
-    }
 
-    // ─── Uniswap protocol fee routing ─────────────────────────────────
-    if (result.slotsFilled > 0 && uniswap) {
+      // Track protocol fees in Redis (accumulated, not routed on-chain)
       const epochProtocolFee = result.clearingPrice * result.slotsFilled * PROTOCOL_FEE_RATE;
       if (epochProtocolFee > 0) {
-        uniswap.accumulateFee(epochId, epochProtocolFee).then(routing => {
-          if (routing.routed) {
-            console.log(`[Uniswap] Fee routed: ${routing.amountUsdc.toFixed(6)} USDC — tx: ${routing.txHash}`);
-          }
-        }).catch(err => console.error(`[Uniswap] Fee routing error:`, err.message));
+        await redis.incrbyfloat('protocol:fees:total', epochProtocolFee);
       }
     }
 
@@ -197,8 +178,6 @@ async function runEpoch() {
     const earned = result.clearingPrice * result.slotsFilled;
     const belleEntry = result.winners.find(w => w.agentId === 'belle');
     const belleBidCost = belleEntry ? result.clearingPrice : 0;
-    const inferenceCostRaw = await redis.get('bankr:inference:cost');
-    const totalInferenceCost = parseFloat(inferenceCostRaw || '0');
     const epochInferenceCost = result.slotsFilled > 0 ? 0.0005 * result.slotsFilled : 0;
     const spent = belleBidCost + epochInferenceCost;
     const netMargin = earned - spent;
@@ -207,23 +186,12 @@ async function runEpoch() {
     await redis.incrbyfloat('belle:margin:earned', earned);
     await redis.incrbyfloat('belle:margin:spent', spent);
 
-    console.log(
-      `[Margin] epoch ${epochId} | ` +
-      `earned: ${earned.toFixed(6)} | spent: ${spent.toFixed(6)} | ` +
-      `net: ${netMargin.toFixed(6)} | margin: ${marginPct}%`
-    );
-
-    // ─── Balance monitoring (every 10 epochs) ──────────────────────────
-    if (epochId % 10 === 0 && bankr.isInitialized()) {
-      const balance = await bankr.getBalance();
-      if (balance.error) {
-        console.log(`[Bankr] Balance check error: ${balance.error}`);
-      } else {
-        console.log(`[Bankr] Wallet balance: ${balance.usdc.toFixed(6)} USDC`);
-        if (balance.usdc < 0.005) {
-          console.warn(`[Bankr] WARNING: Balance below 0.005 USDC (${balance.usdc.toFixed(6)}). Top-up may be needed.`);
-        }
-      }
+    if (epochId % 50 === 0) {
+      console.log(
+        `[Margin] epoch ${epochId} | ` +
+        `earned: ${earned.toFixed(6)} | spent: ${spent.toFixed(6)} | ` +
+        `net: ${netMargin.toFixed(6)} | margin: ${marginPct}%`
+      );
     }
   }).catch(err => console.error(`[x402] epoch ${epochId} settlement error:`, err.message));
 

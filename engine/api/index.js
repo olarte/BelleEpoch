@@ -1411,7 +1411,8 @@ async function start() {
   await uniswap.init();
 
   await engine.initEpochId();
-  await setupOnChain();
+  // On-chain recording disabled to conserve gas — real txs only via POST /demo/run
+  // await setupOnChain();
 
   console.log('Belle Epoch — Clearing Engine + API');
   console.log(`Capacity: ${engine.CAPACITY} slots | Epoch: ${engine.EPOCH_DURATION}ms`);
