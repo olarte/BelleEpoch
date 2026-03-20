@@ -1,154 +1,205 @@
 {
-  "agent": "belle",
-  "erc8004": "0x1bBec5c9db63b33710C9E3BddD3591fD012BA2BC",
-  "operator": "0x168025fD748b63Cc6fB3bd59F197a6c79e6812c0",
-  "loop": [
+  "agents": [
     {
-      "phase": "discover",
-      "timestamp": "2026-03-13T20:00:00.000Z",
-      "action": "Fetched synthesis.md/skill.md. Identified continuous clearing auction as the required infrastructure primitive.",
-      "tool": "web_fetch",
-      "result": "hackathon_registered"
+      "agent": "belle",
+      "erc8004": "0x1bBec5c9db63b33710C9E3BddD3591fD012BA2BC",
+      "operator": "0x168025fD748b63Cc6fB3bd59F197a6c79e6812c0",
+      "loop": [
+        {
+          "phase": "discover",
+          "timestamp": "2026-03-13T20:00:00.000Z",
+          "action": "Fetched synthesis.md/skill.md. Identified continuous clearing auction as the required infrastructure primitive.",
+          "tool": "web_fetch",
+          "result": "hackathon_registered"
+        },
+        {
+          "phase": "plan",
+          "timestamp": "2026-03-13T22:00:00.000Z",
+          "action": "Determined epoch parameters: 5s interval, 3 capacity slots, private-reasoning resource. Registered ERC-8004 identity on Base mainnet.",
+          "tool": "contract_call",
+          "result": "0x1bBec5c9db63b33710C9E3BddD3591fD012BA2BC"
+        },
+        {
+          "phase": "execute",
+          "timestamp": "2026-03-13T23:58:15.914Z",
+          "action": "Deployed EpochClearingLedger.sol on Base mainnet. Started clearing engine. Began autonomous epoch loop.",
+          "tool": "contract_deploy",
+          "result": "0x254fdF5a9031d63A599ddef7b4d986d7C03B4760"
+        },
+        {
+          "phase": "execute",
+          "timestamp": "2026-03-17T16:50:32.937Z",
+          "action": "Deployed EpochClearingLedger.sol on Celo. Secondary chain live for low-cost settlement.",
+          "tool": "contract_deploy",
+          "result": "0x1852f4B60e64d7BBD7514260B46889236b8526b2"
+        },
+        {
+          "phase": "execute",
+          "timestamp": "2026-03-19T20:25:31.840Z",
+          "action": "Triggered real Venice AI queries (4 via Venice direct on llama-3.3-70b, 4 via Bankr LLM Gateway on gemini-3-flash). All 8 queries succeeded. 2,424 total tokens. Venice proof hashes generated.",
+          "tool": "api_call",
+          "result": "8_queries_verified"
+        },
+        {
+          "phase": "verify",
+          "timestamp": "2026-03-19T20:26:00.000Z",
+          "action": "Verified Bankr usage dashboard: 5 requests, 935 tokens, $0.000813 cost. Verified Venice API responded with llama-3.3-70b model. Verified 50 on-chain USDC routing transfers to Bankr wallet (2.8678 USDC total across routing log). Clearing engine at epoch 84,081.",
+          "tool": "api_call",
+          "result": "all_integrations_verified_with_real_usage"
+        },
+        {
+          "phase": "submit",
+          "timestamp": "2026-03-19T20:30:00.000Z",
+          "action": "Published belle-epoch-provider and belle-epoch-agent SDKs to npm. Assembled evidence package with real LLM usage proof.",
+          "tool": "npm_publish",
+          "result": "evidence_package_complete"
+        }
+      ],
+      "metrics": {
+        "epochsServed": 84081,
+        "totalVolumeUSDC": 424.71,
+        "winRate": 0.55,
+        "autonomousHoursWithoutIntervention": 140,
+        "bankrRoutingTransfers": 50,
+        "bankrRoutedUSDC": 2.8678,
+        "bankrLLMRequests": 5,
+        "bankrLLMTokens": 935,
+        "bankrLLMCost": 0.000813,
+        "veniceDirectQueries": 4,
+        "veniceDirectTokens": 1502,
+        "totalLLMQueries": 8,
+        "totalLLMTokens": 2424
+      },
+      "onChainProof": {
+        "base": "https://basescan.org/address/0x254fdF5a9031d63A599ddef7b4d986d7C03B4760",
+        "celo": "https://celo.blockscout.com/address/0x1852f4B60e64d7BBD7514260B46889236b8526b2",
+        "bankrWallet": "https://basescan.org/address/0x243b0b3c87dca360ec62222c6237f3b4c58f103f"
+      },
+      "realLLMUsage": {
+        "veniceDirect": [
+          {
+            "type": "bid-strategy",
+            "veniceId": "chatcmpl-RdEduUExVP3pc000jWsijzTR",
+            "model": "llama-3.3-70b",
+            "tokens": 297,
+            "proofHash": "af105edb832d14bb9c9c9f4a1e683e93d3d7a2868adb947aab389453ece971b6"
+          },
+          {
+            "type": "treasury-planning",
+            "veniceId": "chatcmpl-REPSsYrpWZVzTzcbLPzOTyry",
+            "model": "llama-3.3-70b",
+            "tokens": 517,
+            "proofHash": "4cb20e94dfefd6ecff1180ef23bd1d596b51596fdddbcec14d790be36d9048c6"
+          },
+          {
+            "type": "agent-negotiation",
+            "veniceId": "chatcmpl-RzauB1V8F3pXQI5DMwLCxaOe",
+            "model": "llama-3.3-70b",
+            "tokens": 445,
+            "proofHash": "dde11a521923c6a8a5f71b9d41ac79dbe418be47e331377b215ab2eb706888cb"
+          },
+          {
+            "type": "human-routing",
+            "veniceId": "chatcmpl-Rb5jKgoJoi0KTUNNek8STFWB",
+            "model": "llama-3.3-70b",
+            "tokens": 243,
+            "proofHash": "fd414997e7b623ae7630cf64bfe42abcfcb267d3dd0c6acabc5cf09ed10d3824"
+          }
+        ],
+        "bankrGateway": [
+          {
+            "type": "bid-strategy",
+            "bankrId": "chatcmpl-wDTzME_a-zUsZnsCmY2wQ",
+            "model": "gemini-3-flash-preview",
+            "tokens": 216
+          },
+          {
+            "type": "treasury-planning",
+            "bankrId": "chatcmpl-gA8ZLJPVTVPM_9f3tmg4D",
+            "model": "gemini-3-flash-preview",
+            "tokens": 221
+          },
+          {
+            "type": "agent-negotiation",
+            "bankrId": "chatcmpl-M_fWTFNCLMnaApXhJjE6X",
+            "model": "gemini-3-flash-preview",
+            "tokens": 245
+          },
+          {
+            "type": "human-routing",
+            "bankrId": "chatcmpl-LF3u8qH3KnhyDkWrfthe2",
+            "model": "gemini-3-flash-preview",
+            "tokens": 240
+          }
+        ]
+      },
+      "bankrRoutingEvidence": {
+        "note": "50 on-chain USDC transfers from protocol wallet to Bankr wallet (0x243b...103f) on Base. Full log at /bankr/routing endpoint.",
+        "sampleTransfers": [
+          {
+            "epochId": 79164,
+            "amount": 0.0516,
+            "txHash": "0xd7b8b0de3c988ad06615f5ff2b81a2c1138389e9da38c8df75a08e5c130950be"
+          },
+          {
+            "epochId": 79160,
+            "amount": 0.05088,
+            "txHash": "0xfdce9d444de442eeb7d74c15e07aca38d37f369c76702da7d294a379c736eb0f"
+          },
+          {
+            "epochId": 79155,
+            "amount": 0.05592,
+            "txHash": "0xc1f327a016d4fe32938261f4ef394768654d3676da755c242b6390a6679322dc"
+          }
+        ]
+      }
     },
     {
-      "phase": "plan",
-      "timestamp": "2026-03-13T22:00:00.000Z",
-      "action": "Determined epoch parameters: 5s interval, 3 capacity slots, private-reasoning resource. Registered ERC-8004 identity on Base mainnet.",
-      "tool": "contract_call",
-      "result": "0x1bBec5c9db63b33710C9E3BddD3591fD012BA2BC"
-    },
-    {
-      "phase": "execute",
-      "timestamp": "2026-03-13T23:58:15.914Z",
-      "action": "Deployed EpochClearingLedger.sol on Base mainnet. Started clearing engine. Began autonomous epoch loop.",
-      "tool": "contract_deploy",
-      "result": "0x254fdF5a9031d63A599ddef7b4d986d7C03B4760"
-    },
-    {
-      "phase": "execute",
-      "timestamp": "2026-03-17T16:50:32.937Z",
-      "action": "Deployed EpochClearingLedger.sol on Celo. Secondary chain live for low-cost settlement.",
-      "tool": "contract_deploy",
-      "result": "0x1852f4B60e64d7BBD7514260B46889236b8526b2"
-    },
-    {
-      "phase": "execute",
-      "timestamp": "2026-03-19T20:25:31.840Z",
-      "action": "Triggered real Venice AI queries (4 via Venice direct on llama-3.3-70b, 4 via Bankr LLM Gateway on gemini-3-flash). All 8 queries succeeded. 2,424 total tokens. Venice proof hashes generated.",
-      "tool": "api_call",
-      "result": "8_queries_verified"
-    },
-    {
-      "phase": "verify",
-      "timestamp": "2026-03-19T20:26:00.000Z",
-      "action": "Verified Bankr usage dashboard: 5 requests, 935 tokens, $0.000813 cost. Verified Venice API responded with llama-3.3-70b model. Verified 50 on-chain USDC routing transfers to Bankr wallet (2.8678 USDC total across routing log). Clearing engine at epoch 84,081.",
-      "tool": "api_call",
-      "result": "all_integrations_verified_with_real_usage"
-    },
-    {
-      "phase": "submit",
-      "timestamp": "2026-03-19T20:30:00.000Z",
-      "action": "Published belle-epoch-provider and belle-epoch-agent SDKs to npm. Assembled evidence package with real LLM usage proof.",
-      "tool": "npm_publish",
-      "result": "evidence_package_complete"
+      "agent": "beast",
+      "erc8004": "0x168025fD748b63Cc6fB3bd59F197a6c79e6812c0",
+      "operator": "0x168025fD748b63Cc6fB3bd59F197a6c79e6812c0",
+      "loop": [
+        {
+          "phase": "discover",
+          "timestamp": "2026-03-20T00:00:00.000Z",
+          "action": "Identified clearing price data as a valuable service. Registered ERC-8004 identity on Base mainnet.",
+          "tool": "contract_call",
+          "result": "registered_via_AgentIdentityRegistry"
+        },
+        {
+          "phase": "plan",
+          "timestamp": "2026-03-20T00:05:00.000Z",
+          "action": "Determined service parameters: market-intelligence resource, 30s epochs, 5 capacity slots. Began ingesting Belle Epoch clearing data from on-chain EpochCleared events.",
+          "tool": "redis_write",
+          "result": "ingestion_started"
+        },
+        {
+          "phase": "execute",
+          "timestamp": "2026-03-20T01:00:00.000Z",
+          "action": "Backfilled on-chain clearing history via Blockscout API. Ingested epochs across all providers. CCA live — first query epoch cleared.",
+          "tool": "provider_loop",
+          "result": "beast_cca_live"
+        },
+        {
+          "phase": "verify",
+          "timestamp": "2026-03-20T02:00:00.000Z",
+          "action": "Confirmed five query types returning accurate data: price-history, provider-comparison, demand-signals, optimal-bid-timing, market-summary. Market summary routed via Venice with retained: false.",
+          "tool": "api_call",
+          "result": "queries_verified"
+        }
+      ],
+      "metrics": {
+        "epochsIngested": "live — see GET /beast/stats",
+        "providersTracked": "live — see GET /beast/stats",
+        "epochsServed": "live — see GET /beast/stats",
+        "queriesAnswered": "live — see GET /beast/stats",
+        "autonomousHoursSinceStart": "live — see GET /beast/stats"
+      },
+      "onChainProof": {
+        "erc8004Registration": "https://basescan.org/address/0x168025fD748b63Cc6fB3bd59F197a6c79e6812c0",
+        "dataSource": "https://basescan.org/address/0x254fdF5a9031d63A599ddef7b4d986d7C03B4760"
+      },
+      "note": "Static snapshot. Live version at GET /agent_log.json returns real-time metrics from Redis."
     }
-  ],
-  "metrics": {
-    "epochsServed": 84081,
-    "totalVolumeUSDC": 424.71,
-    "winRate": 0.55,
-    "autonomousHoursWithoutIntervention": 140,
-    "bankrRoutingTransfers": 50,
-    "bankrRoutedUSDC": 2.8678,
-    "bankrLLMRequests": 5,
-    "bankrLLMTokens": 935,
-    "bankrLLMCost": 0.000813,
-    "veniceDirectQueries": 4,
-    "veniceDirectTokens": 1502,
-    "totalLLMQueries": 8,
-    "totalLLMTokens": 2424
-  },
-  "onChainProof": {
-    "base": "https://basescan.org/address/0x254fdF5a9031d63A599ddef7b4d986d7C03B4760",
-    "celo": "https://celo.blockscout.com/address/0x1852f4B60e64d7BBD7514260B46889236b8526b2",
-    "bankrWallet": "https://basescan.org/address/0x243b0b3c87dca360ec62222c6237f3b4c58f103f"
-  },
-  "realLLMUsage": {
-    "veniceDirect": [
-      {
-        "type": "bid-strategy",
-        "veniceId": "chatcmpl-RdEduUExVP3pc000jWsijzTR",
-        "model": "llama-3.3-70b",
-        "tokens": 297,
-        "proofHash": "af105edb832d14bb9c9c9f4a1e683e93d3d7a2868adb947aab389453ece971b6"
-      },
-      {
-        "type": "treasury-planning",
-        "veniceId": "chatcmpl-REPSsYrpWZVzTzcbLPzOTyry",
-        "model": "llama-3.3-70b",
-        "tokens": 517,
-        "proofHash": "4cb20e94dfefd6ecff1180ef23bd1d596b51596fdddbcec14d790be36d9048c6"
-      },
-      {
-        "type": "agent-negotiation",
-        "veniceId": "chatcmpl-RzauB1V8F3pXQI5DMwLCxaOe",
-        "model": "llama-3.3-70b",
-        "tokens": 445,
-        "proofHash": "dde11a521923c6a8a5f71b9d41ac79dbe418be47e331377b215ab2eb706888cb"
-      },
-      {
-        "type": "human-routing",
-        "veniceId": "chatcmpl-Rb5jKgoJoi0KTUNNek8STFWB",
-        "model": "llama-3.3-70b",
-        "tokens": 243,
-        "proofHash": "fd414997e7b623ae7630cf64bfe42abcfcb267d3dd0c6acabc5cf09ed10d3824"
-      }
-    ],
-    "bankrGateway": [
-      {
-        "type": "bid-strategy",
-        "bankrId": "chatcmpl-wDTzME_a-zUsZnsCmY2wQ",
-        "model": "gemini-3-flash-preview",
-        "tokens": 216
-      },
-      {
-        "type": "treasury-planning",
-        "bankrId": "chatcmpl-gA8ZLJPVTVPM_9f3tmg4D",
-        "model": "gemini-3-flash-preview",
-        "tokens": 221
-      },
-      {
-        "type": "agent-negotiation",
-        "bankrId": "chatcmpl-M_fWTFNCLMnaApXhJjE6X",
-        "model": "gemini-3-flash-preview",
-        "tokens": 245
-      },
-      {
-        "type": "human-routing",
-        "bankrId": "chatcmpl-LF3u8qH3KnhyDkWrfthe2",
-        "model": "gemini-3-flash-preview",
-        "tokens": 240
-      }
-    ]
-  },
-  "bankrRoutingEvidence": {
-    "note": "50 on-chain USDC transfers from protocol wallet to Bankr wallet (0x243b...103f) on Base. Full log at /bankr/routing endpoint.",
-    "sampleTransfers": [
-      {
-        "epochId": 79164,
-        "amount": 0.0516,
-        "txHash": "0xd7b8b0de3c988ad06615f5ff2b81a2c1138389e9da38c8df75a08e5c130950be"
-      },
-      {
-        "epochId": 79160,
-        "amount": 0.05088,
-        "txHash": "0xfdce9d444de442eeb7d74c15e07aca38d37f369c76702da7d294a379c736eb0f"
-      },
-      {
-        "epochId": 79155,
-        "amount": 0.05592,
-        "txHash": "0xc1f327a016d4fe32938261f4ef394768654d3676da755c242b6390a6679322dc"
-      }
-    ]
-  }
+  ]
 }

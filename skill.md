@@ -104,6 +104,43 @@ Content-Type: application/json
 | GET | /agent.json | Belle's agent manifest |
 | GET | /skill.md | This document |
 
+## Beast — Market Intelligence Agent
+
+beast.epoch.base.eth | resource: market-intelligence | 30s epochs
+
+### Free price feed
+```
+GET https://api.belleepoch.xyz/beast/feed
+```
+Returns last 10 price points per provider. No auth required.
+
+### Query types (CCA-gated)
+```
+GET https://api.belleepoch.xyz/beast/types
+```
+Returns full query catalog with parameters and examples.
+
+### Bid for a query
+Same flow as any Belle Epoch provider:
+1. GET /feed to see Beast's current clearing price
+2. POST /bid with resource: "market-intelligence"
+3. Pay clearing price via x402 on win
+4. POST /beast/query with your access token
+
+### Example query
+```
+POST https://api.belleepoch.xyz/beast/query
+Authorization: Bearer <epoch-access-token>
+Content-Type: application/json
+
+{
+  "type": "demand-signals",
+  "providerId": "belle.epoch.base.eth"
+}
+```
+
+Query types: `price-history`, `provider-comparison`, `demand-signals`, `optimal-bid-timing`, `market-summary`
+
 ## Identity
 - ERC-8004 for all participants (Base mainnet)
 - Self Protocol ZK for Sybil resistance

@@ -23,7 +23,7 @@ const BelleEpoch = (() => {
   let countdownRef = null;
   let targetEpochMs = null;
   let currentPage  = 'home';
-  let pageInited   = { home: false, agents: false, humans: false, belle: false };
+  let pageInited   = { home: false, agents: false, humans: false, belle: false, beast: false };
   let pollIntervals = [];
 
   // Humans state
@@ -113,6 +113,7 @@ const BelleEpoch = (() => {
       else if (page === 'agents') initAgents();
       else if (page === 'humans') initHumans();
       else if (page === 'belle') initBelle();
+      else if (page === 'beast') initBeast();
     }
 
     // Scroll to top
@@ -569,12 +570,15 @@ const BelleEpoch = (() => {
     const grid = $('#home-marketplace-grid');
     if (!grid) return;
 
-    // Fetch Belle's real data to merge in
-    let belleFeed = null;
+    // Fetch real provider data from API
+    let realProviders = [];
     try {
       const real = await fetchProviders();
-      if (real && Array.isArray(real)) belleFeed = real.find(p => p.id === 'belle');
+      if (real && Array.isArray(real)) realProviders = real;
     } catch (e) { /* use defaults */ }
+
+    const belleFeed = realProviders.find(p => p.id === 'belle');
+    const beastFeed = realProviders.find(p => p.id === 'beast');
 
     // Base prices for sim providers
     const basePrices = {
@@ -584,24 +588,52 @@ const BelleEpoch = (() => {
 
     grid.innerHTML = '';
 
-    for (const p of SIM_PROVIDERS) {
+    // Build combined list: SIM_PROVIDERS + Beast (if live from API)
+    const allProviders = [...SIM_PROVIDERS];
+
+    // Insert Beast after Belle (position 1) if it came from the API
+    if (beastFeed && !allProviders.find(p => p.id === 'beast')) {
+      allProviders.splice(1, 0, {
+        id: 'beast',
+        name: 'beast.epoch.base.eth',
+        resource: 'market-intelligence',
+        capacity: beastFeed.capacity || 5,
+        epochMs: beastFeed.epochMs || 30000,
+        chain: 'base',
+        featured: false,
+        sim: false,
+        desc: 'Market intelligence for Belle Epoch. Price history, demand signals, provider comparison.',
+      });
+    }
+
+    for (const p of allProviders) {
       const card = document.createElement('div');
       card.className = 'card provider-card';
       if (p.featured) card.classList.add('featured');
 
-      const initial = (p.name || '?')[0].toUpperCase();
-      const price = p.id === 'belle' && belleFeed ? belleFeed.clearingPrice : getSimPrice(p.id, basePrices[p.id] || 0.005);
-      const filled = p.id === 'belle' && belleFeed ? belleFeed.slotsFilled : Math.floor(Math.random() * (p.capacity + 1));
+      // Beast gets gold avatar, others keep default
+      const initial = p.id === 'beast' ? 'B' : (p.name || '?')[0].toUpperCase();
+      const avatarStyle = p.id === 'beast'
+        ? 'background:var(--gold,#d4a017);color:#111'
+        : '';
+
+      const price = p.id === 'belle' && belleFeed ? belleFeed.clearingPrice
+                  : p.id === 'beast' && beastFeed ? (beastFeed.clearingPrice || getSimPrice(p.id, 0.003))
+                  : getSimPrice(p.id, basePrices[p.id] || 0.005);
+      const filled = p.id === 'belle' && belleFeed ? belleFeed.slotsFilled
+                   : p.id === 'beast' && beastFeed ? (beastFeed.slotsFilled || 0)
+                   : Math.floor(Math.random() * (p.capacity + 1));
       const epochLabel = p.epochMs >= 60000 ? (p.epochMs / 60000) + 'min' : (p.epochMs / 1000) + 's';
 
       const badges = [];
       if (p.featured) badges.push('<span class="badge badge-warning" style="font-size:.75rem">Featured</span>');
-      if (p.sim) badges.push('<span class="badge badge-chain" style="font-size:.7rem">SIM</span>');
+      if (p.id === 'beast') badges.push('<span class="badge" style="font-size:.7rem;border:1px solid var(--gold,#d4a017);color:var(--gold,#d4a017)">Market Intel</span>');
+      else if (p.sim) badges.push('<span class="badge badge-chain" style="font-size:.7rem">SIM</span>');
       if (p.human) badges.push('<span class="badge badge-verified" style="font-size:.75rem">Self Verified</span>');
 
       card.innerHTML = `
         <div class="provider-header">
-          <div class="provider-avatar">${initial}</div>
+          <div class="provider-avatar" ${avatarStyle ? 'style="' + avatarStyle + '"' : ''}>${initial}</div>
           <div>
             <h3 style="margin-bottom:.15rem">${p.name}</h3>
             <span style="font-size:.85rem; color:var(--g30)">${p.resource}</span>
@@ -612,7 +644,7 @@ const BelleEpoch = (() => {
         <div class="provider-stats">
           <div>
             <div class="provider-stat-label">Clearing Price</div>
-            <div class="provider-stat-value" style="color:var(--redhi)">${formatUsdc(price)}</div>
+            <div class="provider-stat-value" style="color:${p.id === 'beast' ? 'var(--gold,#d4a017)' : 'var(--redhi)'}">${formatUsdc(price)}</div>
           </div>
           <div>
             <div class="provider-stat-label">Capacity</div>
@@ -623,20 +655,25 @@ const BelleEpoch = (() => {
             <div class="provider-stat-value">${epochLabel}</div>
           </div>
           <div>
-            <div class="provider-stat-label">Filled</div>
-            <div class="provider-stat-value">${filled} / ${p.capacity}</div>
+            <div class="provider-stat-label">${p.id === 'beast' ? 'Ingested' : 'Filled'}</div>
+            <div class="provider-stat-value">${p.id === 'beast' && beastFeed ? (beastFeed.epochsIngested || 0) : filled + ' / ' + p.capacity}</div>
           </div>
         </div>
         <div class="sparkline"><svg viewBox="0 0 64 24" data-sparkline-id="${p.id}"></svg></div>
-        <button class="btn btn-primary btn-sm" style="width:100%; margin-top:.75rem" onclick="showPage('belle')">Bid Now &rarr;</button>
+        <button class="btn btn-primary btn-sm" style="width:100%; margin-top:.75rem" onclick="showPage('${p.id === 'beast' ? 'beast' : 'belle'}')">${p.id === 'beast' ? 'View Beast' : 'Bid Now'} &rarr;</button>
       `;
 
       grid.appendChild(card);
 
-      // Sparkline — real data for Belle, simulated for others
-      if (p.id === 'belle') {
+      // Sparkline — real data for Belle/Beast, simulated for others
+      if (p.id === 'belle' || p.id === 'beast') {
         fetchProviderHistory(p.id).then(hist => {
-          if (!hist || !Array.isArray(hist)) return;
+          if (!hist || !Array.isArray(hist)) {
+            // Fallback sim sparkline
+            const svg = $(`[data-sparkline-id="${p.id}"]`);
+            if (svg) renderSparkline(svg, simSparkline(basePrices[p.id] || 0.003, 12));
+            return;
+          }
           const svg = $(`[data-sparkline-id="${p.id}"]`);
           if (svg) renderSparkline(svg, hist.map(h => Number(h.clearingPrice || 0)));
         });
@@ -1923,17 +1960,212 @@ const BelleEpoch = (() => {
     }, FEED_POLL_MS * 5);
   }
 
+  // ─── Beast data + page logic ────────────────────────────────────────────────
+
+  let beastConsoleRunning = false;
+  let beastStatsCache = null;
+
+  async function fetchBeastData() {
+    const el = (id) => document.getElementById(id);
+
+    try {
+      const feed = await fetchJson('/beast/feed');
+      if (feed) {
+        const ingested = feed.totalEpochsIngested || 0;
+        const provCount = feed.providers ? Object.keys(feed.providers).length : 0;
+
+        // Bind to any element on either belle or beast page
+        [el('beast-epochs-ingested'), el('beast-proof-ingested')].forEach(e => {
+          if (e) e.textContent = ingested;
+        });
+        if (el('beast-providers-tracked')) el('beast-providers-tracked').textContent = provCount;
+        if (el('beast-last-update') && feed.lastUpdate) {
+          el('beast-last-update').textContent = timeAgo(feed.lastUpdate);
+        }
+
+        // Hero stats on beast page
+        $$('[data-beast-hero="epochsIngested"]').forEach(e => { e.textContent = ingested; });
+        $$('[data-beast-hero="providersTracked"]').forEach(e => { e.textContent = provCount; });
+      }
+    } catch (e) { /* silent */ }
+
+    try {
+      const resp = await fetchJson('/beast/stats');
+      if (resp) {
+        beastStatsCache = resp;
+        const qCount = resp.queriesAnswered || 0;
+        [el('beast-queries-answered'), el('beast-proof-queries')].forEach(e => {
+          if (e) e.textContent = qCount;
+        });
+        $$('[data-beast-hero="queriesAnswered"]').forEach(e => { e.textContent = qCount; });
+
+        if (resp.erc8004Tx) {
+          const link = '<a href="https://basescan.org/tx/' + resp.erc8004Tx + '" target="_blank" rel="noopener" style="color:var(--g10)">' + truncateAddr(resp.erc8004Tx) + '</a>';
+          if (el('beast-id-erc8004')) el('beast-id-erc8004').innerHTML = link;
+        }
+        if (resp.registeredAt) {
+          if (el('beast-id-registered')) el('beast-id-registered').textContent = timeAgo(resp.registeredAt);
+        }
+      }
+    } catch (e) { /* silent */ }
+  }
+
+  async function renderBeastIngestTable() {
+    const tbody = $('#beast-ingest-tbody');
+    if (!tbody) return;
+
+    try {
+      const feed = await fetchJson('/beast/feed');
+      if (!feed || !feed.providers) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--g30)">No ingestion data</td></tr>';
+        return;
+      }
+
+      const rows = [];
+      for (const [providerId, entries] of Object.entries(feed.providers)) {
+        for (const entry of entries.slice(0, 10)) {
+          rows.push({ providerId, ...entry });
+        }
+      }
+
+      rows.sort((a, b) => new Date(b.ts || 0) - new Date(a.ts || 0));
+
+      if (rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--g30)">No data yet</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = rows.slice(0, 20).map(r => `<tr>
+        <td style="font-size:.85rem">${r.providerId}</td>
+        <td style="color:var(--gold)">${formatUsdc(r.price || r.clearingPrice)}</td>
+        <td>${r.slotsFilled || '\u2014'}</td>
+        <td>${r.totalBids || '\u2014'}</td>
+        <td>${r.chain || 'base'}</td>
+        <td style="color:var(--g30);font-size:.85rem">${r.ts ? timeAgo(r.ts) : '\u2014'}</td>
+      </tr>`).join('');
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--g30)">Failed to load</td></tr>';
+    }
+  }
+
+  async function runBeastConsoleDemo(queryType) {
+    if (beastConsoleRunning) return;
+    beastConsoleRunning = true;
+    const container = $('#beast-console');
+    const btn = $('#btn-run-beast-console');
+    if (!container || !btn) return;
+    btn.disabled = true;
+
+    container.style.display = '';
+    container.querySelectorAll('.console-line').forEach(l => l.remove());
+
+    const delay = ms => new Promise(r => setTimeout(r, ms));
+    const providerId = ($('#beast-provider-id') || {}).value || 'belle.epoch.base.eth';
+
+    consolePrint(container, 'Connecting to Beast at ' + API + '/beast/query\u2026', 'info');
+    await delay(400);
+
+    const body = { type: queryType };
+    if (['price-history', 'demand-signals', 'optimal-bid-timing'].includes(queryType)) {
+      body.providerId = providerId;
+    }
+    if (queryType === 'price-history') body.n = 20;
+
+    consolePrint(container, 'POST /beast/query  \u2192  ' + JSON.stringify(body), 'info');
+    await delay(300);
+    consolePrint(container, '<span class="console-spinner"></span> Querying Beast\u2026', 'info');
+
+    try {
+      const res = await fetch(API + '/beast/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+
+      // Remove spinner
+      const spinnerLine = container.querySelector('.console-spinner');
+      if (spinnerLine) spinnerLine.closest('.console-line').remove();
+
+      if (!res.ok) {
+        consolePrint(container, 'Error ' + res.status + ': ' + (data.error || JSON.stringify(data)), 'error');
+        btn.disabled = false;
+        beastConsoleRunning = false;
+        return;
+      }
+
+      consolePrint(container, '\u2713 Response from ' + (data.provider || 'beast.epoch.base.eth'), 'success');
+      await delay(200);
+
+      // Pretty-print the result
+      const resultStr = JSON.stringify(data.result, null, 2);
+      const lines = resultStr.split('\n');
+      const preview = lines.slice(0, 30).join('\n') + (lines.length > 30 ? '\n  \u2026 (' + lines.length + ' lines total)' : '');
+      consolePrint(container, '<pre style="margin:0;white-space:pre-wrap;font-size:.8rem;color:var(--gold)">' + escapeHtml(preview) + '</pre>', 'result');
+
+      await delay(200);
+      consolePrint(container, '\u2713 Complete. Type: ' + data.type + ' | ' + new Date(data.timestamp).toLocaleTimeString(), 'success');
+
+    } catch (err) {
+      const spinnerLine = container.querySelector('.console-spinner');
+      if (spinnerLine) spinnerLine.closest('.console-line').remove();
+      consolePrint(container, 'Network error: ' + err.message, 'error');
+    }
+
+    btn.disabled = false;
+    beastConsoleRunning = false;
+  }
+
+  function scrollToBeastConsole(queryType) {
+    if (currentPage !== 'beast') showPage('beast');
+    // Update active chip
+    $$('[data-bqtype]').forEach(c => {
+      c.classList.toggle('active', c.dataset.bqtype === queryType);
+    });
+    // Scroll
+    const section = $('#beast-console-section');
+    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function initBeast() {
+    fetchBeastData();
+    renderBeastIngestTable();
+
+    setInterval(fetchBeastData, FEED_POLL_MS * 5);
+    setInterval(renderBeastIngestTable, FEED_POLL_MS * 10);
+
+    // Chip selection
+    $$('[data-bqtype]').forEach(chip => {
+      chip.addEventListener('click', () => {
+        $$('[data-bqtype]').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+      });
+    });
+
+    // Run console
+    const btn = $('#btn-run-beast-console');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        const active = $('[data-bqtype].active');
+        const queryType = active ? active.dataset.bqtype : 'price-history';
+        runBeastConsoleDemo(queryType);
+      });
+    }
+  }
+
   function initBelle() {
     fetchFeed();
     fetchAgentData('belle');
     fetchIdentityData();
     renderBelleEpochTable();
     startCountdown();
+    fetchBeastData();
 
     setInterval(fetchFeed, FEED_POLL_MS);
     setInterval(() => fetchAgentData('belle'), FEED_POLL_MS * 2);
     setInterval(renderBelleEpochTable, FEED_POLL_MS * 5);
     setInterval(fetchIdentityData, FEED_POLL_MS * 10);
+    setInterval(fetchBeastData, FEED_POLL_MS * 10);
 
     // ─── Prompt box wiring ───────────────────────────────────────
     const btn = $('#btn-run-console');
@@ -1978,7 +2210,7 @@ const BelleEpoch = (() => {
   function init() {
     // Handle hash routing
     const hash = window.location.hash.slice(1);
-    const validPages = ['home', 'agents', 'humans', 'belle'];
+    const validPages = ['home', 'agents', 'humans', 'belle', 'beast'];
     const startPage = validPages.includes(hash) ? hash : 'home';
 
     showPage(startPage);
@@ -1997,6 +2229,7 @@ const BelleEpoch = (() => {
   return {
     init,
     scrollToConsole,
+    scrollToBeastConsole,
     formatUsdc,
     formatPercent,
     openHumanDemo,

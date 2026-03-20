@@ -1,0 +1,50 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true,  "internalType": "uint256", "name": "epochId",       "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "clearingPrice",  "type": "uint256" },
+      { "indexed": false, "internalType": "uint8",   "name": "slotsFilled",    "type": "uint8"   },
+      { "indexed": false, "internalType": "uint8",   "name": "totalBids",      "type": "uint8"   },
+      { "indexed": false, "internalType": "bytes32", "name": "resourceId",     "type": "bytes32" }
+    ],
+    "name": "EpochCleared",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256",   "name": "epochId",       "type": "uint256" },
+      { "internalType": "uint256",   "name": "clearingPrice",  "type": "uint256" },
+      { "internalType": "address[]", "name": "winners",        "type": "address[]" },
+      { "internalType": "uint8",     "name": "totalBids",      "type": "uint8" },
+      { "internalType": "bytes32",   "name": "resourceId",     "type": "bytes32" }
+    ],
+    "name": "recordEpoch",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "epochId", "type": "uint256" }
+    ],
+    "name": "getEpoch",
+    "outputs": [
+      { "internalType": "uint256",   "name": "clearingPrice", "type": "uint256" },
+      { "internalType": "uint8",     "name": "slotsFilled",   "type": "uint8" },
+      { "internalType": "uint8",     "name": "totalBids",     "type": "uint8" },
+      { "internalType": "address[]", "name": "winners",       "type": "address[]" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "engine",
+    "outputs": [
+      { "internalType": "address", "name": "", "type": "address" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

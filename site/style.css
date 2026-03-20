@@ -587,6 +587,23 @@ h3 {
 .hero-belle .section-label { color: var(--red); }
 .hero-belle .badge { border-color: #ccc; background: rgba(0,0,0,0.04); }
 
+.hero-beast {
+  background: var(--bg);
+  text-align: center;
+  padding: 80px 0 var(--pad-section);
+  border-bottom: 2px solid var(--gold);
+}
+.hero-beast h1 { color: var(--gold); font-family: var(--disp); }
+.hero-beast .section-label { color: var(--gold); }
+.hero-beast .badge { border-color: var(--gold); color: var(--gold); }
+
+/* Beast prompt chip active state */
+[data-bqtype].active {
+  background: var(--gold) !important;
+  color: #111 !important;
+  border-color: var(--gold) !important;
+}
+
 /* ============================================================
    STATS PANEL (Home hero right)
    ============================================================ */

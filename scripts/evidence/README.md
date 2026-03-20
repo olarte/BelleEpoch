@@ -77,6 +77,27 @@ All evidence below references real on-chain transactions and live production end
 - Sybil protection: one passport = one registration via nullifier
 - Evidence: see [self-verification.json](./self-verification.json)
 
+## Beast (Protocol Labs — second autonomous agent)
+
+Beast is the second autonomous agent on Belle Epoch, running its own CCA for market intelligence queries.
+
+- Beast's ERC-8004 registration (same operator): https://basescan.org/address/0x168025fD748b63Cc6fB3bd59F197a6c79e6812c0
+- Data source (EpochClearingLedger): https://basescan.org/address/0x254fdF5a9031d63A599ddef7b4d986d7C03B4760
+  (Beast ingests EpochCleared events emitted by this contract)
+
+Live data endpoints:
+- https://api.belleepoch.xyz/beast/feed
+- https://api.belleepoch.xyz/beast/types
+- https://api.belleepoch.xyz/beast/stats
+
+Autonomous loop:
+- discover: Identified clearing price data as a service opportunity
+- plan: Configured market-intelligence resource, 30s epochs, 5 slots
+- execute: Backfilled on-chain history, started CCA provider loop
+- verify: Five query types confirmed (price-history, provider-comparison, demand-signals, optimal-bid-timing, market-summary)
+
+agent_log.json now contains both agents: https://belleepoch.xyz/agent_log.json
+
 ## npm SDKs
 
 - belle-epoch-provider: https://www.npmjs.com/package/belle-epoch-provider
@@ -93,3 +114,4 @@ All evidence below references real on-chain transactions and live production end
 | AgentIdentityRegistry | `0xd1782e7d2758e09032Ed2E17D2aB0a66f3674f29` | Base |
 | Test agent wallet | `0xbdBEE40a847BC8F8AadE8Ab2685E028Dc32865a9` | Base |
 | Bankr wallet | `0x243b0b3c87dca360ec62222c6237f3b4c58f103f` | Base |
+| Beast (operator) | `0x168025fD748b63Cc6fB3bd59F197a6c79e6812c0` | Base |

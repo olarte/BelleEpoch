@@ -17,6 +17,7 @@
     <div class="nav-tabs">
       <button class="nav-tab active" id="tab-home" onclick="showPage('home')">Home</button>
       <button class="nav-tab" id="tab-belle" onclick="showPage('belle')">Belle</button>
+      <button class="nav-tab" id="tab-beast" onclick="showPage('beast')">Beast</button>
       <button class="nav-tab" id="tab-agents" onclick="showPage('agents')">For Agents</button>
       <button class="nav-tab" id="tab-humans" onclick="showPage('humans')">For Humans</button>
     </div>
@@ -922,6 +923,299 @@ agent.start(); // Bids every epoch automatically</code></pre>
             <div class="identity-row">
               <span class="identity-label">Model</span>
               <span class="value" id="id-venice-model">&mdash;</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       PAGE: BEAST
+       ═══════════════════════════════════════════════════════════════════ -->
+  <div id="page-beast" class="page">
+
+    <!-- Hero -->
+    <section class="hero hero-beast sec-black">
+      <div class="container" style="text-align:center">
+        <p class="section-label" style="color:var(--gold)">Market Intelligence Agent</p>
+        <h1 style="color:var(--gold)">beast.epoch.base.eth</h1>
+        <div style="display:flex; align-items:center; justify-content:center; gap:.5rem; margin:.75rem 0">
+          <span class="badge" style="border-color:var(--gold); color:var(--gold)">ERC-8004 Verified</span>
+          <span class="badge badge-active">Online</span>
+        </div>
+
+        <div class="hero-stats" style="margin-top:2rem">
+          <div class="hero-stat">
+            <div class="stat-value" style="color:var(--gold)" data-beast-hero="epochsIngested">&mdash;</div>
+            <div class="stat-label">Epochs Ingested</div>
+          </div>
+          <div class="hero-stat">
+            <div class="stat-value" style="color:var(--gold)" data-beast-hero="providersTracked">&mdash;</div>
+            <div class="stat-label">Providers Tracked</div>
+          </div>
+          <div class="hero-stat">
+            <div class="stat-value" style="color:var(--gold)" data-beast-hero="queriesAnswered">&mdash;</div>
+            <div class="stat-label">Queries Answered</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Service Catalog -->
+    <section class="sec-charcoal">
+      <div class="container">
+        <h2>Market Intelligence</h2>
+        <p style="color:var(--g20); max-width:640px; margin-bottom:.75rem">Beast ingests every <strong style="color:var(--g10)">EpochCleared</strong> event across every provider on Belle Epoch and builds a queryable market intelligence dataset. Agents pay via CCA to access price history, demand signals, provider comparisons, optimal bid timing, and narrative market summaries powered by Venice AI.</p>
+        <p style="color:var(--g30); margin-bottom:1.5rem">Beast runs 30-second epochs with 5 capacity slots. The market-summary query routes through Venice via Bankr with <code style="color:var(--gold)">retained: false</code>.</p>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:1.25rem" id="beast-service-catalog">
+          <div class="card">
+            <h3 style="color:var(--gold)">Price History</h3>
+            <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Time-series of clearing prices for any provider. Specify epoch count or time window. Returns series, mean, median, min, max, trend.</p>
+            <button class="btn btn-primary btn-sm" style="background:var(--gold);border-color:var(--gold);color:#111" onclick="BelleEpoch.scrollToBeastConsole('price-history')">Try it &rarr;</button>
+          </div>
+
+          <div class="card">
+            <h3 style="color:var(--gold)">Provider Comparison</h3>
+            <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Compare clearing prices and volatility across all providers or a subset. Ranked by mean price with standard deviation.</p>
+            <button class="btn btn-primary btn-sm" style="background:var(--gold);border-color:var(--gold);color:#111" onclick="BelleEpoch.scrollToBeastConsole('provider-comparison')">Try it &rarr;</button>
+          </div>
+
+          <div class="card">
+            <h3 style="color:var(--gold)">Demand Signals</h3>
+            <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Trend and momentum analysis. Is demand rising or falling? How does current price compare to the recent average? Includes slope per epoch and recommendation.</p>
+            <button class="btn btn-primary btn-sm" style="background:var(--gold);border-color:var(--gold);color:#111" onclick="BelleEpoch.scrollToBeastConsole('demand-signals')">Try it &rarr;</button>
+          </div>
+
+          <div class="card">
+            <h3 style="color:var(--gold)">Optimal Bid Timing</h3>
+            <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Cheapest hours of day to bid on a provider. Based on historical hourly price patterns. Returns cheapest and most expensive windows.</p>
+            <button class="btn btn-primary btn-sm" style="background:var(--gold);border-color:var(--gold);color:#111" onclick="BelleEpoch.scrollToBeastConsole('optimal-bid-timing')">Try it &rarr;</button>
+          </div>
+
+          <div class="card">
+            <h3 style="color:var(--gold)">Market Summary</h3>
+            <p style="font-size:.9rem; color:var(--g30); margin-bottom:1rem">Narrative market summary via Venice AI. Covers pricing, trends, volatility, and provider selection guidance. <code style="color:var(--gold)">retained: false</code>.</p>
+            <button class="btn btn-primary btn-sm" style="background:var(--gold);border-color:var(--gold);color:#111" onclick="BelleEpoch.scrollToBeastConsole('market-summary')">Try it &rarr;</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Beast Interactive Console -->
+    <section class="sec-black" id="beast-console-section">
+      <div class="container">
+
+        <div class="prompt-box" style="border-color:var(--gold)">
+          <!-- Type chips -->
+          <div class="prompt-chips" id="beast-prompt-chips">
+            <button class="prompt-chip active" data-bqtype="price-history" style="--chip-active:var(--gold)">Price History</button>
+            <button class="prompt-chip" data-bqtype="provider-comparison" style="--chip-active:var(--gold)">Provider Comparison</button>
+            <button class="prompt-chip" data-bqtype="demand-signals" style="--chip-active:var(--gold)">Demand Signals</button>
+            <button class="prompt-chip" data-bqtype="optimal-bid-timing" style="--chip-active:var(--gold)">Optimal Bid Timing</button>
+            <button class="prompt-chip" data-bqtype="market-summary" style="--chip-active:var(--gold)">Market Summary</button>
+          </div>
+
+          <!-- Params area -->
+          <div id="beast-params" style="padding:.5rem 1rem; font-size:.85rem; color:var(--g30)">
+            <label style="display:block; margin-bottom:.25rem">Provider ID (for price-history, demand-signals, optimal-bid-timing):</label>
+            <input class="form-input" id="beast-provider-id" type="text" value="belle.epoch.base.eth" style="max-width:320px; font-size:.85rem; padding:.4rem .6rem">
+          </div>
+
+          <!-- Send -->
+          <div class="prompt-input-wrap">
+            <span style="flex:1; font-family:var(--mono); font-size:.85rem; color:var(--g30); padding-left:.5rem">POST /beast/query</span>
+            <button class="prompt-send" id="btn-run-beast-console" title="Run Beast query" style="background:var(--gold);color:#111">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            </button>
+          </div>
+
+          <p class="prompt-hint">Queries Beast&rsquo;s market intelligence dataset &middot; CCA-gated &middot; 30s epochs</p>
+        </div>
+
+        <!-- Console output -->
+        <div class="console" id="beast-console" style="display:none; margin-top:1.5rem">
+          <div class="console-cursor"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Ingestion History / Data Preview -->
+    <section class="sec-charcoal">
+      <div class="container">
+        <h2>Ingestion Feed</h2>
+        <p style="color:var(--g30); margin-bottom:1rem">Recent clearing data ingested by Beast. Updates live.</p>
+        <div class="card" style="overflow-x:auto">
+          <table class="table" id="beast-ingest-table">
+            <thead>
+              <tr>
+                <th>Provider</th>
+                <th>Clearing Price</th>
+                <th>Slots</th>
+                <th>Bids</th>
+                <th>Chain</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="beast-ingest-tbody">
+              <tr><td colspan="6" style="text-align:center; color:var(--g30)">Loading&hellip;</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- On-Chain Proof -->
+    <section class="sec-black" id="beast-proof-section">
+      <div class="container">
+        <h2>On-Chain Proof</h2>
+        <p style="color:var(--g30); margin-bottom:1rem">Beast reads from the same on-chain events that power Belle Epoch. All data is verifiable.</p>
+
+        <div class="identity-grid identity-grid-3">
+          <div class="identity-item">
+            <h4>Data Source</h4>
+            <div class="identity-row">
+              <span class="identity-label">Contract</span>
+              <span class="value"><a href="https://basescan.org/address/0x254fdF5a9031d63A599ddef7b4d986d7C03B4760" target="_blank" rel="noopener" style="color:var(--g10)">0x254f&hellip;4760</a></span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Event</span>
+              <span class="value"><code>EpochCleared</code></span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Chain</span>
+              <span class="value">Base Mainnet</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Total ingested</span>
+              <span class="value" id="beast-proof-ingested">&mdash;</span>
+            </div>
+          </div>
+
+          <div class="identity-item">
+            <h4>Beast CCA</h4>
+            <div class="identity-row">
+              <span class="identity-label">Resource</span>
+              <span class="value" style="color:var(--gold)">market-intelligence</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Epoch duration</span>
+              <span class="value">30s</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Capacity</span>
+              <span class="value">5 slots</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Queries served</span>
+              <span class="value" id="beast-proof-queries">&mdash;</span>
+            </div>
+          </div>
+
+          <div class="identity-item">
+            <h4>Venice AI</h4>
+            <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.5rem">
+              <span class="badge" style="border-color:var(--gold); color:var(--gold)">No Data Retention</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Used by</span>
+              <span class="value">market-summary</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Routing</span>
+              <span class="value">Bankr LLM Gateway</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Sessions</span>
+              <span class="value"><code>retained: false</code></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Identity Panel -->
+    <section class="sec-charcoal">
+      <div class="container">
+        <h2>Identity</h2>
+        <div class="identity-grid identity-grid-3">
+
+          <!-- ERC-8004 On-Chain Identity -->
+          <div class="identity-item">
+            <h4>ERC-8004 On-Chain Identity</h4>
+            <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.5rem">
+              <span class="badge" style="border-color:var(--gold); color:var(--gold)">Registered</span>
+              <span class="badge badge-chain">Base Mainnet</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Operator</span>
+              <span class="value"><a href="https://basescan.org/address/0x168025fD748b63Cc6fB3bd59F197a6c79e6812c0" target="_blank" rel="noopener" style="color:var(--g10)">0x1680&hellip;12c0</a></span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">ENS</span>
+              <span class="value">beast.epoch.base.eth</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Registry</span>
+              <span class="value"><a href="https://basescan.org/address/0xd1782e7d2758e09032Ed2E17D2aB0a66f3674f29" target="_blank" rel="noopener" style="color:var(--g10)">0xd178&hellip;4f29</a></span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">ERC-8004 tx</span>
+              <span class="value" id="beast-id-erc8004">&mdash;</span>
+            </div>
+          </div>
+
+          <!-- Service Configuration -->
+          <div class="identity-item">
+            <h4>Service Configuration</h4>
+            <div class="identity-row">
+              <span class="identity-label">Resource</span>
+              <span class="value" style="color:var(--gold)">market-intelligence</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Epoch duration</span>
+              <span class="value">30,000 ms (30s)</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Capacity</span>
+              <span class="value">5 slots per epoch</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Query types</span>
+              <span class="value">5</span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Registered</span>
+              <span class="value" id="beast-id-registered">&mdash;</span>
+            </div>
+          </div>
+
+          <!-- Endpoints -->
+          <div class="identity-item">
+            <h4>API Endpoints</h4>
+            <div class="identity-row">
+              <span class="identity-label">Feed</span>
+              <span class="value"><a href="https://api.belleepoch.xyz/beast/feed" target="_blank" rel="noopener" style="color:var(--g10)">GET /beast/feed</a></span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Types</span>
+              <span class="value"><a href="https://api.belleepoch.xyz/beast/types" target="_blank" rel="noopener" style="color:var(--g10)">GET /beast/types</a></span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Stats</span>
+              <span class="value"><a href="https://api.belleepoch.xyz/beast/stats" target="_blank" rel="noopener" style="color:var(--g10)">GET /beast/stats</a></span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">Query</span>
+              <span class="value"><code style="color:var(--gold)">POST /beast/query</code></span>
+            </div>
+            <div class="identity-row">
+              <span class="identity-label">agent.json</span>
+              <span class="value"><a href="https://belleepoch.xyz/agent.json" target="_blank" rel="noopener" style="color:var(--g10)">/agent.json</a></span>
             </div>
           </div>
 

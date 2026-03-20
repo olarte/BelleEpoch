@@ -19,7 +19,8 @@
     "register:belle": "npx hardhat run scripts/register-belle.js --network base",
     "agent": "node scripts/run-agent.js",
     "demo:x402": "node scripts/demo-x402.js",
-    "delegation": "node scripts/create-delegation.js"
+    "delegation": "node scripts/create-delegation.js",
+    "beast:backfill": "node scripts/beast-backfill.js"
   },
   "license": "MIT",
   "dependencies": {
