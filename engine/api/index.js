@@ -1156,6 +1156,9 @@ app.get('/beast/types', (req, res) => {
 // CCA-gated query endpoint
 app.post('/beast/query', beastGate, beastHandler);
 
+// Demo endpoint — bypasses CCA gate for the interactive console on the site
+app.post('/beast/demo', beastHandler);
+
 // Beast stats (for frontend)
 app.get('/beast/stats', async (req, res) => {
   const queriesCount = await redis.get('beast:queries:count');

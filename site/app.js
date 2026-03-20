@@ -2071,12 +2071,12 @@ const BelleEpoch = (() => {
     }
     if (queryType === 'price-history') body.n = 20;
 
-    consolePrint(container, 'POST /beast/query  \u2192  ' + JSON.stringify(body), 'info');
+    consolePrint(container, 'POST /beast/demo  \u2192  ' + JSON.stringify(body), 'info');
     await delay(300);
     consolePrint(container, '<span class="console-spinner"></span> Querying Beast\u2026', 'info');
 
     try {
-      const res = await fetch(API + '/beast/query', {
+      const res = await fetch(API + '/beast/demo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
