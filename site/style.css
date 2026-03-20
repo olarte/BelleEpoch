@@ -986,6 +986,121 @@ h3 {
 .sec-red .t-success       { color: #7dffc0; }
 .sec-red .t-dim           { color: rgba(255,255,255,0.4); }
 
+/* ─── Human Demo Modal ─── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.75);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fade-in .2s ease;
+}
+.modal {
+  background: var(--g80);
+  border: 1px solid var(--g50);
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 1.75rem;
+  position: relative;
+}
+.modal-close {
+  position: absolute;
+  top: .75rem; right: 1rem;
+  background: none; border: none;
+  color: var(--g30);
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+}
+.modal-close:hover { color: var(--g10); }
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--g50);
+}
+.hdm-phase-label {
+  font-family: var(--mono);
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--g30);
+  margin-bottom: .5rem;
+}
+.hdm-query-card {
+  background: var(--g90);
+  border: 1px solid var(--g50);
+  padding: 1rem 1.25rem;
+  margin-bottom: .75rem;
+  transition: border-color .15s;
+}
+.hdm-query-card.active { border-color: var(--redhi); }
+.hdm-query-card.done   { border-color: var(--green); opacity: .7; }
+.hdm-query-from {
+  font-family: var(--mono);
+  font-size: .75rem;
+  color: var(--g30);
+  margin-bottom: .5rem;
+}
+.hdm-query-text {
+  color: var(--g10);
+  font-size: .9rem;
+  line-height: 1.5;
+  margin-bottom: .75rem;
+}
+.hdm-response-wrap {
+  display: flex;
+  gap: .5rem;
+  align-items: flex-end;
+}
+.hdm-response-input {
+  flex: 1;
+  background: var(--g80);
+  border: 1px solid var(--g50);
+  color: var(--g10);
+  font-family: var(--mono);
+  font-size: .85rem;
+  padding: .5rem .75rem;
+  resize: none;
+  min-height: 38px;
+}
+.hdm-response-input:focus { outline: none; border-color: var(--g30); }
+.hdm-response-input::placeholder { color: var(--g40); }
+.hdm-response-send {
+  flex-shrink: 0;
+  background: var(--redhi);
+  border: none;
+  color: #fff;
+  font-family: var(--mono);
+  font-size: .8rem;
+  padding: .5rem 1rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.hdm-response-send:hover { opacity: .85; }
+.hdm-response-send:disabled { background: var(--g50); color: var(--g30); cursor: not-allowed; }
+.hdm-done-badge {
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: .8rem;
+  margin-top: .5rem;
+}
+.hdm-earnings-breakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: .75rem;
+  text-align: center;
+}
+.hdm-earnings-breakdown .stat-label { color: var(--g30); font-size: .75rem; }
+.hdm-earnings-breakdown .stat-value { color: var(--g10); font-size: 1rem; font-family: var(--mono); }
+
 /* ─── Prompt box (ChatGPT / Claude style) ─── */
 .prompt-box {
   max-width: 680px;

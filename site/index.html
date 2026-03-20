@@ -663,6 +663,52 @@ agent.start(); // Bids every epoch automatically</code></pre>
       </div>
     </section>
 
+    <!-- Human Epoch Demo Modal -->
+    <div class="modal-overlay" id="human-demo-modal" style="display:none">
+      <div class="modal">
+        <button class="modal-close" id="human-demo-close">&times;</button>
+
+        <!-- Modal header -->
+        <div class="modal-header">
+          <div class="category-icon" id="hdm-icon"></div>
+          <div>
+            <h3 id="hdm-title" style="margin:0"></h3>
+            <div style="display:flex;gap:.4rem;margin-top:.25rem;flex-wrap:wrap">
+              <span class="badge badge-verified">Self Verified</span>
+              <span class="badge badge-online">Online</span>
+              <span class="badge" style="background:var(--g50);color:var(--g20);font-size:.7rem">Simulator</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase: Auction -->
+        <div class="hdm-phase" id="hdm-auction">
+          <div class="hdm-phase-label">Epoch Opening</div>
+          <div class="console" id="hdm-console" style="min-height:100px;max-height:260px">
+            <div class="console-cursor"></div>
+          </div>
+        </div>
+
+        <!-- Phase: Queries -->
+        <div class="hdm-phase" id="hdm-queries" style="display:none">
+          <div class="hdm-phase-label">Incoming Queries <span id="hdm-q-count" class="badge badge-active" style="font-size:.7rem;margin-left:.4rem"></span></div>
+          <div id="hdm-query-list"></div>
+        </div>
+
+        <!-- Phase: Earnings -->
+        <div class="hdm-phase" id="hdm-earnings" style="display:none">
+          <div class="hdm-phase-label">Epoch Complete</div>
+          <div class="card" style="text-align:center;padding:2rem">
+            <div style="font-size:2.5rem;font-family:var(--disp);font-weight:700;color:var(--green)" id="hdm-total-earned"></div>
+            <div style="color:var(--g30);margin-top:.25rem">earned this epoch</div>
+            <div class="hdm-earnings-breakdown" id="hdm-breakdown" style="margin-top:1.25rem"></div>
+            <button class="btn btn-primary" id="hdm-close-final" style="margin-top:1.5rem">Close</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════

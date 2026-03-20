@@ -964,6 +964,228 @@ const BelleEpoch = (() => {
     if (textarea) setTimeout(() => textarea.focus(), 400);
   }
 
+  // --------------- Human Epoch Demo Modal ---------------
+
+  const HUMAN_DEMO_QUERIES = {
+    'physician': [
+      { agent: 'ATLAS-7', text: 'Patient is a 42-year-old male presenting with persistent chest tightness, elevated troponin (0.08 ng/mL), and a normal ECG. History of anxiety disorder. Should I escalate to cath lab or observe with serial troponins? Need decision in 15 minutes.' },
+      { agent: 'NEXUS-3', text: 'Agent managing a health insurance risk model. Need clinical interpretation: is a fasting glucose of 118 mg/dL in a 35-year-old with BMI 27 grounds for pre-diabetic classification? What follow-up labs should the model recommend?' },
+    ],
+    'attorney': [
+      { agent: 'FORGE-1', text: 'We deployed a token with a fee-on-transfer mechanism. SEC just sent an informal inquiry. Is the token a security under Howey? What should we disclose vs. withhold in our response?' },
+      { agent: 'ATLAS-7', text: 'Our DAO voted to migrate treasury from Ethereum to Base. Three token holders in the EU are claiming GDPR applies to on-chain governance votes. Do they have standing?' },
+    ],
+    'security-researcher': [
+      { agent: 'SIGMA-9', text: 'Found a potential reentrancy vector in a lending protocol\'s liquidation function. The callback happens before state update but there\'s a mutex guard. Can the mutex be bypassed via a flash loan that triggers a different entry point?' },
+      { agent: 'ATLAS-7', text: 'Our bridge relayer was compromised. Attacker has the hot wallet key but hasn\'t moved funds yet. We have a 2-of-3 multisig timelock. What\'s the fastest way to rotate keys without triggering the attacker?' },
+    ],
+    'financial-analyst': [
+      { agent: 'NEXUS-3', text: 'Evaluating a DeFi yield strategy: deposit USDC into Aave on Base, borrow ETH at 3.2%, loop 2x. Current Aave utilization is 78%. What\'s the liquidation risk if ETH drops 15% in 4 hours?' },
+      { agent: 'FORGE-1', text: 'Our treasury holds 500K USDC across 3 chains. Need an optimal allocation model that maximizes yield while keeping 48-hour liquidity above 200K. Factor in bridge risk.' },
+    ],
+    'data-scientist': [
+      { agent: 'ATLAS-7', text: 'Training an MEV prediction model on 90 days of Base mempool data. Getting high variance on block-level predictions. Should I switch from LSTM to transformer architecture, or is the issue more likely data leakage from the target variable?' },
+      { agent: 'SIGMA-9', text: 'Need to detect wash trading in our DEX analytics. Current approach uses graph clustering on address pairs. False positive rate is 34%. What features would improve precision without sacrificing recall below 70%?' },
+    ],
+  };
+
+  let humanDemoRunning = false;
+
+  function openHumanDemo(providerIndex) {
+    if (humanDemoRunning) return;
+    const providers = window._humansFiltered;
+    if (!providers || !providers[providerIndex]) return;
+
+    const provider = providers[providerIndex];
+    const modal = $('#human-demo-modal');
+    if (!modal) return;
+
+    humanDemoRunning = true;
+    modal.style.display = '';
+
+    // Set header
+    const icon = CATEGORY_ICONS[provider.category] || CATEGORY_ICONS.other;
+    const label = CATEGORY_LABELS[provider.category] || provider.category;
+    $('#hdm-icon').textContent = icon;
+    $('#hdm-title').textContent = label;
+
+    // Reset phases
+    $('#hdm-auction').style.display = '';
+    $('#hdm-queries').style.display = 'none';
+    $('#hdm-earnings').style.display = 'none';
+
+    // Clear console
+    const con = $('#hdm-console');
+    con.querySelectorAll('.console-line').forEach(l => l.remove());
+
+    // Run the demo
+    runHumanDemo(provider, con);
+  }
+
+  function closeHumanDemo() {
+    const modal = $('#human-demo-modal');
+    if (modal) modal.style.display = 'none';
+    humanDemoRunning = false;
+  }
+
+  async function runHumanDemo(provider, con) {
+    const delay = ms => new Promise(r => setTimeout(r, ms));
+    const print = (text, cls) => consolePrint(con, text, cls);
+    const price = provider.currentClearingPrice || 0.42;
+    const slots = provider.capacitySlots || 2;
+    const category = provider.category || 'physician';
+
+    // Phase 1: Auction animation
+    print('Epoch opening\u2026', 'info');
+    await delay(600);
+    print(`Provider: <strong>${CATEGORY_LABELS[category] || category}</strong> | Capacity: ${slots} slots | Chain: ${(provider.chain || 'celo').toUpperCase()}`, 'success');
+    await delay(500);
+
+    // Simulate bids arriving
+    const bidders = ['ATLAS-7', 'NEXUS-3', 'FORGE-1', 'SIGMA-9', 'ECHO-4'];
+    const bids = bidders.map(id => ({
+      id,
+      amount: parseFloat((price * (0.6 + Math.random() * 0.8)).toFixed(4)),
+    }));
+
+    print('Sealed bids arriving\u2026', 'info');
+    for (const b of bids) {
+      await delay(300);
+      print(`\u2192 ${b.id} bid received`, 'info');
+    }
+    await delay(400);
+
+    // Sort and clear
+    bids.sort((a, b) => b.amount - a.amount);
+    const winners = bids.slice(0, slots);
+    const clearingPrice = winners[winners.length - 1].amount;
+
+    print(`Epoch closed. ${bids.length} bids ranked.`, 'info');
+    await delay(500);
+    print(`Clearing price: <strong>${formatUsdc(clearingPrice)}</strong> | Winners: ${winners.map(w => w.id).join(', ')}`, 'success');
+    await delay(400);
+
+    // x402 settlement
+    for (const w of winners) {
+      await delay(300);
+      print(`x402: ${w.id} paid ${formatUsdc(clearingPrice)} USDC`, 'result');
+    }
+    await delay(400);
+    print('\u2713 All winners settled. Queries incoming.', 'success');
+    await delay(800);
+
+    // Phase 2: Show queries
+    $('#hdm-auction').style.display = 'none';
+    $('#hdm-queries').style.display = '';
+
+    const queries = (HUMAN_DEMO_QUERIES[category] || HUMAN_DEMO_QUERIES['physician']).slice(0, slots);
+    const queryList = $('#hdm-query-list');
+    const countBadge = $('#hdm-q-count');
+    let answered = 0;
+
+    countBadge.textContent = `0 / ${queries.length} answered`;
+    queryList.innerHTML = '';
+
+    // Render all query cards
+    queries.forEach((q, i) => {
+      const card = document.createElement('div');
+      card.className = 'hdm-query-card' + (i === 0 ? ' active' : '');
+      card.id = 'hdm-qcard-' + i;
+      card.innerHTML = `
+        <div class="hdm-query-from">${q.agent} &mdash; paid ${formatUsdc(clearingPrice)}</div>
+        <div class="hdm-query-text">${q.text}</div>
+        <div class="hdm-response-wrap" id="hdm-resp-${i}">
+          <textarea class="hdm-response-input" id="hdm-input-${i}" rows="2" placeholder="Type your response\u2026" ${i > 0 ? 'disabled' : ''}></textarea>
+          <button class="hdm-response-send" id="hdm-send-${i}" ${i > 0 ? 'disabled' : ''} onclick="BelleEpoch.submitHumanResponse(${i})">Send</button>
+        </div>
+      `;
+      // Enter to submit response
+      const textarea = card.querySelector(`#hdm-input-${i}`);
+      if (textarea) {
+        textarea.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            const btn = $(`#hdm-send-${i}`);
+            if (btn && !btn.disabled) btn.click();
+          }
+        });
+      }
+      queryList.appendChild(card);
+    });
+
+    // Focus first input
+    const firstInput = $('#hdm-input-0');
+    if (firstInput) setTimeout(() => firstInput.focus(), 200);
+
+    // Store state for response handler
+    window._hdmState = { queries, clearingPrice, answered: 0, total: queries.length };
+  }
+
+  function submitHumanResponse(index) {
+    const state = window._hdmState;
+    if (!state) return;
+
+    const input = $(`#hdm-input-${index}`);
+    const sendBtn = $(`#hdm-send-${index}`);
+    const card = $(`#hdm-qcard-${index}`);
+    if (!input || !input.value.trim()) return;
+
+    // Mark as done
+    sendBtn.disabled = true;
+    input.disabled = true;
+    card.classList.remove('active');
+    card.classList.add('done');
+
+    // Replace response area with confirmation
+    const respWrap = $(`#hdm-resp-${index}`);
+    respWrap.innerHTML = `<div class="hdm-done-badge">\u2713 Response sent &mdash; ${formatUsdc(state.clearingPrice)} earned</div>`;
+
+    state.answered++;
+    const countBadge = $('#hdm-q-count');
+    countBadge.textContent = `${state.answered} / ${state.total} answered`;
+
+    // Activate next card
+    const nextIndex = index + 1;
+    if (nextIndex < state.total) {
+      const nextCard = $(`#hdm-qcard-${nextIndex}`);
+      const nextInput = $(`#hdm-input-${nextIndex}`);
+      const nextSend = $(`#hdm-send-${nextIndex}`);
+      if (nextCard) nextCard.classList.add('active');
+      if (nextInput) { nextInput.disabled = false; setTimeout(() => nextInput.focus(), 100); }
+      if (nextSend) nextSend.disabled = false;
+    }
+
+    // All done → show earnings
+    if (state.answered >= state.total) {
+      setTimeout(() => showHumanEarnings(state), 600);
+    }
+  }
+
+  function showHumanEarnings(state) {
+    $('#hdm-queries').style.display = 'none';
+    $('#hdm-earnings').style.display = '';
+
+    const totalEarned = state.clearingPrice * state.total;
+    const protocolFee = totalEarned * 0.015;
+    const netEarned = totalEarned - protocolFee;
+
+    $('#hdm-total-earned').textContent = formatUsdc(netEarned);
+    $('#hdm-breakdown').innerHTML = `
+      <div>
+        <div class="stat-value">${state.total}</div>
+        <div class="stat-label">Queries answered</div>
+      </div>
+      <div>
+        <div class="stat-value">${formatUsdc(state.clearingPrice)}</div>
+        <div class="stat-label">Clearing price</div>
+      </div>
+      <div>
+        <div class="stat-value">${formatUsdc(protocolFee)}</div>
+        <div class="stat-label">Protocol fee (1.5%)</div>
+      </div>
+    `;
+  }
+
   // --------------- Belle Epoch History Table ---------------
 
   async function renderBelleEpochTable() {
@@ -1305,6 +1527,9 @@ const BelleEpoch = (() => {
       return;
     }
 
+    // Store for modal lookup
+    window._humansFiltered = filtered;
+
     grid.innerHTML = filtered.map(p => {
       const icon = CATEGORY_ICONS[p.category] || CATEGORY_ICONS.other;
       const label = CATEGORY_LABELS[p.category] || p.category;
@@ -1363,7 +1588,7 @@ const BelleEpoch = (() => {
               <div class="human-stat-value">${p.epochsServed || 0}</div>
             </div>
           </div>
-          <button class="btn btn-primary btn-sm" style="width:100%; margin-top:.5rem" onclick="showPage('belle');BelleEpoch.scrollToConsole('bid-strategy')">Bid now &rarr;</button>
+          <button class="btn btn-primary btn-sm" style="width:100%; margin-top:.5rem" onclick="${p.sim ? 'BelleEpoch.openHumanDemo(' + filtered.indexOf(p) + ')' : "showPage('belle');BelleEpoch.scrollToConsole('bid-strategy')"}">Bid now &rarr;</button>
         </div>`;
     }).join('');
   }
@@ -1682,6 +1907,17 @@ const BelleEpoch = (() => {
     initHumansFilters();
     initHumansRegistration();
 
+    // Modal close buttons
+    const closeBtn = $('#human-demo-close');
+    const closeFinal = $('#hdm-close-final');
+    if (closeBtn) closeBtn.addEventListener('click', closeHumanDemo);
+    if (closeFinal) closeFinal.addEventListener('click', closeHumanDemo);
+    // Close on overlay click
+    const overlay = $('#human-demo-modal');
+    if (overlay) overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeHumanDemo();
+    });
+
     setInterval(() => {
       fetchHumanProviders().then(p => renderHumanProviders(p));
     }, FEED_POLL_MS * 5);
@@ -1763,6 +1999,8 @@ const BelleEpoch = (() => {
     scrollToConsole,
     formatUsdc,
     formatPercent,
+    openHumanDemo,
+    submitHumanResponse,
   };
 
 })();
