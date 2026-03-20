@@ -12,6 +12,8 @@
     { "source": "/delegation",        "destination": "https://api.belleepoch.xyz/delegation" },
     { "source": "/bankr/(.*)",        "destination": "https://api.belleepoch.xyz/bankr/$1" },
     { "source": "/health",            "destination": "https://api.belleepoch.xyz/health" },
-    { "source": "/agent_log.json",    "destination": "https://api.belleepoch.xyz/agent_log.json" }
+    { "source": "/agent_log.json",    "destination": "https://api.belleepoch.xyz/agent_log.json" },
+    { "source": "/demo/(.*)",         "destination": "https://api.belleepoch.xyz/demo/$1" },
+    { "source": "/demo",              "destination": "https://api.belleepoch.xyz/demo" }
   ]
 }
