@@ -806,6 +806,7 @@ app.post('/demo/run', async (req, res) => {
     };
     const rawType = req.body.queryType || 'bid-strategy';
     const queryType = queryTypeMap[rawType] || 'bid-strategy';
+    const customPrompt = typeof req.body.prompt === 'string' ? req.body.prompt.trim() : '';
 
     // ── Step 1: Find a recent cleared epoch ────────────────────────────────
     const history = await getEpochHistory(3);
@@ -920,7 +921,11 @@ app.post('/demo/run', async (req, res) => {
         },
       };
 
-      const context = contexts[queryType] || contexts['bid-strategy'];
+      let context = contexts[queryType] || contexts['bid-strategy'];
+      // If the user provided a custom prompt, inject it into the context
+      if (customPrompt) {
+        context = { ...context, userQuery: customPrompt };
+      }
       queryId = await venice.submitQuery(queryType, context, DEMO_AGENT_ID, recentEpoch.epochId);
 
       steps.push({

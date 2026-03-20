@@ -750,10 +750,11 @@ const BelleEpoch = (() => {
     let demoData = null;
 
     try {
+      const customPrompt = ($('#console-prompt') || {}).value || '';
       const res = await fetch(API + '/demo/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ queryType }),
+        body: JSON.stringify({ queryType, prompt: customPrompt || undefined }),
       });
 
       const data = await res.json();
