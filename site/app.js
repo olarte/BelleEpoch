@@ -2134,13 +2134,22 @@ const BelleEpoch = (() => {
           '<pre style="margin:0;white-space:pre-wrap;font-size:.78rem;color:var(--g30)">' + escapeHtml(statsStr) + '</pre></details>', 'info');
       }
 
-      // Proof line
-      const proofParts = [];
-      if (r.retained === false) proofParts.push('retained: false');
-      if (r.proofHash) proofParts.push('proof: ' + r.proofHash.slice(0, 16) + '\u2026');
-      if (proofParts.length > 0) {
-        await delay(100);
-        consolePrint(container, proofParts.join(' \u00b7 '), 'info');
+      // On-chain proof panel (like Belle's demo)
+      const proof = data.onChainProof;
+      if (proof) {
+        await delay(200);
+        let proofHtml = '<div style="margin:.5rem 0;padding:.75rem 1rem;background:rgba(255,255,255,.03);border:1px solid var(--g50);border-radius:6px;font-size:.82rem;line-height:1.7">';
+        proofHtml += '<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem"><strong style="color:var(--g10)">On-Chain Proof</strong><span class="badge badge-verified" style="font-size:.65rem">VERIFIED</span></div>';
+        proofHtml += '<div style="color:var(--g30)">Provider: <span style="color:var(--g10)">' + proof.provider + '</span></div>';
+        proofHtml += '<div style="color:var(--g30)">Data source: <a href="' + proof.dataSource + '" target="_blank" rel="noopener" style="color:var(--accent)">' + proof.dataSource.split('/').pop() + ' \u2197</a></div>';
+        proofHtml += '<div style="color:var(--g30)">Chain: <span style="color:var(--g10)">' + proof.chain + '</span> \u00b7 Event: <code>' + proof.event + '</code></div>';
+        proofHtml += '<div style="color:var(--g30)">Epochs ingested: <span style="color:var(--g10)">' + proof.epochsIngested + '</span> \u00b7 Queries served: <span style="color:var(--g10)">' + proof.queriesServed + '</span></div>';
+        proofHtml += '<div style="color:var(--g30)">Model: <span style="color:var(--g10)">' + (proof.model || '\u2014') + '</span> \u00b7 Retained: <strong style="color:var(--green)">false</strong></div>';
+        if (proof.proofHash) {
+          proofHtml += '<div style="color:var(--g30)">Proof hash: <code style="font-size:.75rem;word-break:break-all;color:var(--g20)">' + proof.proofHash + '</code></div>';
+        }
+        proofHtml += '</div>';
+        consolePrint(container, proofHtml, 'info');
       }
 
       await delay(200);

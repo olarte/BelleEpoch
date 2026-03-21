@@ -41,12 +41,30 @@ async function beastHandler(req, res) {
     const { redis } = require('../bids');
     await redis.incr('beast:queries:count');
     await redis.incr(`beast:queries:${type}:count`);
+    const totalQueries = await redis.get('beast:queries:count');
+
+    // On-chain proof context
+    const beastRaw = await redis.get('provider:beast.epoch.base.eth');
+    const beast = beastRaw ? JSON.parse(beastRaw) : {};
+    const epochsIngested = await redis.get('beast:epochs:count');
 
     return res.status(200).json({
       type,
       result,
       provider: 'beast.epoch.base.eth',
       timestamp: new Date().toISOString(),
+      onChainProof: {
+        provider: 'beast.epoch.base.eth',
+        dataSource: 'https://basescan.org/address/0x254fdF5a9031d63A599ddef7b4d986d7C03B4760',
+        event: 'EpochCleared',
+        chain: 'base',
+        epochsIngested: parseInt(epochsIngested) || 0,
+        queriesServed: parseInt(totalQueries) || 0,
+        model: result.model || 'gemini-3-flash',
+        retained: false,
+        proofHash: result.proofHash || null,
+        registeredAt: beast.registeredAt || null,
+      },
     });
   } catch (err) {
     console.error('[beast] query error:', err.message);

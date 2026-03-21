@@ -10,16 +10,29 @@ async function analyzeViaBankr(systemPrompt, data) {
   try {
     const response = await bankr.chatCompletion(
       process.env.BEAST_MODEL || 'gemini-3-flash',
-      [{ role: 'user', content: systemPrompt + '\n\nData:\n' + JSON.stringify(data, null, 2) + '\n\nRespond with plain text only. No markdown. No headers.' }],
-      { temperature: 0.4, max_tokens: 512 }
+      [{
+        role: 'user',
+        content: systemPrompt +
+          '\n\nData:\n' + JSON.stringify(data, null, 2) +
+          '\n\nWrite exactly 4 complete sentences. Each sentence must end with a period. Do not use markdown, headers, or bullet points. Plain text only.'
+      }],
+      { temperature: 0.3, max_tokens: 1024 }
     );
+    const raw = response?.choices?.[0]?.message?.content || null;
+    // Trim to last complete sentence if truncated
+    let analysis = raw;
+    if (raw && !raw.trimEnd().endsWith('.')) {
+      const lastPeriod = raw.lastIndexOf('.');
+      if (lastPeriod > 0) analysis = raw.slice(0, lastPeriod + 1);
+    }
     return {
-      analysis: response?.choices?.[0]?.message?.content || null,
+      analysis,
       proofHash: response?.veniceProof || null,
+      model: response?.model || null,
       retained: false,
     };
   } catch (err) {
-    return { analysis: null, proofHash: null, retained: false, error: err.message };
+    return { analysis: null, proofHash: null, model: null, retained: false, error: err.message };
   }
 }
 
@@ -62,7 +75,7 @@ async function queryPriceHistory({ providerId, n, windowMinutes }) {
   };
 
   const venice = await analyzeViaBankr(
-    `You are Beast, a market intelligence agent. Analyze this price history for provider "${providerId}". In 3-4 sentences, explain the trend, notable price movements, volatility, and what an agent should know before bidding. Be specific with numbers.`,
+    `You are Beast, a market intelligence agent on Belle Epoch. Analyze this clearing price history for provider "${providerId}". Describe the overall trend direction and magnitude. Note the spread between min and max prices. Comment on whether volatility is high or low relative to the mean. Advise an autonomous agent on what this price history means for their next bid.`,
     { providerId, dataPoints: points.length, stats }
   );
 
@@ -161,7 +174,7 @@ async function queryDemandSignals({ providerId, windowEpochs }) {
   };
 
   const venice = await analyzeViaBankr(
-    `You are Beast, a market intelligence agent. Analyze these demand signals for provider "${providerId}". In 3-4 sentences, interpret the signal direction, momentum, and what the slope means for an agent deciding when to bid. Give a concrete recommendation based on the data.`,
+    `You are Beast, a market intelligence agent on Belle Epoch. Analyze these demand signals for provider "${providerId}". State whether demand is rising, falling, or stable and by how much. Explain what the momentum and slope per epoch mean in practical terms. Compare the current price to the historical mean and interpret the percentage difference. Give a concrete recommendation on whether to bid now or wait.`,
     signalData
   );
 
@@ -221,7 +234,7 @@ async function queryOptimalBidTiming({ providerId, timezoneOffset }) {
   };
 
   const venice = await analyzeViaBankr(
-    `You are Beast, a market intelligence agent. Analyze this bid timing data for provider "${providerId}". In 3-4 sentences, explain when an agent should bid to get the best price, what hours to avoid, and how confident the pattern is based on sample sizes. Be specific with hours and prices.`,
+    `You are Beast, a market intelligence agent on Belle Epoch. Analyze this hourly bid timing data for provider "${providerId}". State the cheapest hours to bid and their average prices. State the most expensive hours and their average prices. Comment on confidence based on sample sizes per hour. Give a specific recommendation on the best time window for an autonomous agent to bid today.`,
     timingData
   );
 
