@@ -9,7 +9,7 @@ const bankr = require('../bankr');
 async function analyzeViaBankr(systemPrompt, data) {
   try {
     const response = await bankr.chatCompletion(
-      process.env.BEAST_MODEL || 'gemini-2.0-flash',
+      process.env.BEAST_MODEL || 'gemini-3-flash',
       [{ role: 'user', content: systemPrompt + '\n\nData:\n' + JSON.stringify(data, null, 2) + '\n\nRespond with plain text only. No markdown. No headers.' }],
       { temperature: 0.4, max_tokens: 512 }
     );
