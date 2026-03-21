@@ -7,8 +7,9 @@
 // zero gas.
 
 const engine = require('./clearing');
-const { redis } = require('./bids');
+const { redis, getEpochResult, markPaid } = require('./bids');
 const { ingestEpoch: beastIngest } = require('./beast/ingest');
+const { verifyPayment, signAccessToken, PROTOCOL_FEE_RATE } = require('./x402');
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -88,14 +89,12 @@ async function startProviderLoop(provider) {
         // Provider-scoped bids (separate from Belle's global bid pool)
         const bidKey = `provider:${provider.id}:epoch:${epochId}:bids`;
 
-        // Generate sim bids for this provider if in dev mode
-        if (process.env.NODE_ENV !== 'production') {
-          const simBids = generateProviderSimBids(provider.id, epochId, provider.capacitySlots);
-          for (const bid of simBids) {
-            await redis.lpush(bidKey, JSON.stringify(bid));
-          }
-          await redis.expire(bidKey, 120);
+        // Generate sim bids so the CCA has activity (same as Belle's sim agents)
+        const simBids = generateProviderSimBids(provider.id, epochId, provider.capacitySlots);
+        for (const bid of simBids) {
+          await redis.lpush(bidKey, JSON.stringify(bid));
         }
+        await redis.expire(bidKey, 120);
 
         const raw = await redis.lrange(bidKey, 0, -1);
         const bids = raw.map(s => JSON.parse(s));
@@ -175,6 +174,33 @@ async function startProviderLoop(provider) {
           };
           await redis.set(`provider:${provider.id}:epoch:${epochId}:result`, JSON.stringify(resultObj));
           await redis.expire(`provider:${provider.id}:epoch:${epochId}:result`, 300);
+
+          // ─── x402 settlement ─────────────────────────────────────────
+          // Sim agents settle their winning bids (same flow as Belle)
+          for (const winner of winners) {
+            const simProof = `sim-payment-${winner.agentId}-${provider.id}-${epochId}`;
+            const verification = await verifyPayment(simProof, epochId, clearingPrice);
+            if (verification.valid) {
+              await markPaid(epochId, `${provider.id}:${winner.agentId}`, verification.txHash);
+            }
+          }
+
+          // Track provider earnings (protocol fee split)
+          if (winners.length > 0) {
+            const epochRevenue = clearingPrice * winners.length;
+            const epochProtocolFee = epochRevenue * PROTOCOL_FEE_RATE;
+            const providerShare = epochRevenue - epochProtocolFee;
+
+            await redis.incrbyfloat('protocol:fees:total', epochProtocolFee);
+            await redis.incrbyfloat(`provider:${provider.id}:earned`, providerShare);
+
+            if (epochId % 50 === 0) {
+              console.log(
+                `[x402] ${provider.id} epoch ${epochId} settled: ` +
+                `${winners.length} winners paid ${clearingPrice.toFixed(4)} USDC each`
+              );
+            }
+          }
 
           // Publish to feed events
           const feedEvent = {
