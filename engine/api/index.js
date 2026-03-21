@@ -541,26 +541,49 @@ app.get('/feed/agents/:id', async (req, res) => {
       }
     }
 
-    // Standard agentId lookup
+    // Venice spend from Redis
+    const veniceSpendRaw = await redis.get('bankr:inference:cost');
+    const veniceSpend = parseFloat(veniceSpendRaw || '0');
+
+    // For Belle (provider), compute earnedToday from epoch history
+    if (agentId === 'belle') {
+      const epochHistory = await getEpochHistory(100);
+      const todayUTC = new Date().toISOString().slice(0, 10);
+      const FEE_RATE = 0.015;
+
+      const earnedToday = epochHistory
+        .filter(ep => ep.timestamp && ep.timestamp.startsWith(todayUTC) && ep.slotsFilled > 0)
+        .reduce((sum, ep) => sum + (ep.clearingPrice || 0) * (ep.slotsFilled || 0) * (1 - FEE_RATE), 0);
+
+      const totalEarnedRaw = await redis.get('belle:margin:earned');
+      const totalEarned = parseFloat(totalEarnedRaw || '0');
+      const epochsServedRaw = await redis.get('belle:epochs:served');
+      const epochsServed = parseInt(epochsServedRaw || '0');
+
+      return res.json({
+        id: agentId,
+        epochs: epochHistory.slice(0, 20),
+        totalWon: epochsServed,
+        totalEarned: parseFloat(totalEarned.toFixed(6)),
+        earnedToday: parseFloat(earnedToday.toFixed(6)),
+        veniceSpend: parseFloat(veniceSpend.toFixed(6)),
+        recent: epochHistory.slice(0, 7),
+      });
+    }
+
+    // Standard agentId lookup (bidding agents)
     const history = await getAgentHistory(agentId);
 
     const totalWon = history.filter(h => h.won).length;
     const totalSpent = history.reduce((sum, h) => sum + (h.paid || 0), 0);
 
-    // Compute additional fields
     const winRate = history.length > 0 ? totalWon / history.length : 0;
 
-    // Earned today (UTC) — timestamp stored as ISO string
     const todayUTC = new Date().toISOString().slice(0, 10);
     const earnedToday = history
       .filter(h => h.won && h.timestamp && h.timestamp.startsWith(todayUTC))
       .reduce((sum, h) => sum + (h.paid || 0), 0);
 
-    // Venice spend from Redis
-    const veniceSpendRaw = await redis.get('bankr:inference:cost');
-    const veniceSpend = parseFloat(veniceSpendRaw || '0');
-
-    // Last 7 epochs
     const recent = history.slice(0, 7);
 
     if (history.length === 0) {
