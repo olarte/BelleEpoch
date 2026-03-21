@@ -2099,11 +2099,48 @@ const BelleEpoch = (() => {
       consolePrint(container, '\u2713 Response from ' + (data.provider || 'beast.epoch.base.eth'), 'success');
       await delay(200);
 
-      // Pretty-print the result
-      const resultStr = JSON.stringify(data.result, null, 2);
-      const lines = resultStr.split('\n');
-      const preview = lines.slice(0, 30).join('\n') + (lines.length > 30 ? '\n  \u2026 (' + lines.length + ' lines total)' : '');
-      consolePrint(container, '<pre style="margin:0;white-space:pre-wrap;font-size:.8rem">' + escapeHtml(preview) + '</pre>', 'result');
+      const r = data.result || {};
+
+      // Show the Venice analysis prominently
+      if (r.analysis) {
+        consolePrint(container,
+          '<div style="margin:.5rem 0;padding:.75rem 1rem;background:rgba(255,255,255,.06);border-left:3px solid var(--redhi);border-radius:4px;line-height:1.6;font-size:.9rem;color:var(--g10)">' +
+          escapeHtml(r.analysis) +
+          '</div>', 'result');
+        await delay(200);
+      }
+
+      // Show key stats in a compact grid
+      const statsToShow = {};
+      if (r.stats) Object.assign(statsToShow, r.stats);
+      if (r.signal) statsToShow.signal = r.signal;
+      if (r.momentum) statsToShow.momentum = r.momentum;
+      if (r.slopePerEpoch != null) statsToShow.slopePerEpoch = r.slopePerEpoch;
+      if (r.recentMean != null) statsToShow.recentMean = r.recentMean;
+      if (r.historicalMean != null) statsToShow.historicalMean = r.historicalMean;
+      if (r.currentVsAverage) statsToShow.currentVsAverage = r.currentVsAverage;
+      if (r.cheapestWindows) statsToShow.cheapestWindows = r.cheapestWindows;
+      if (r.mostExpensiveWindows) statsToShow.mostExpensiveWindows = r.mostExpensiveWindows;
+      if (r.bestTimeToday) statsToShow.bestTimeToday = r.bestTimeToday;
+      if (r.dataPoints != null) statsToShow.dataPoints = r.dataPoints;
+      if (r.epochsAnalyzed != null) statsToShow.epochsAnalyzed = r.epochsAnalyzed;
+      if (r.providerId) statsToShow.provider = r.providerId;
+
+      if (Object.keys(statsToShow).length > 0) {
+        const statsStr = JSON.stringify(statsToShow, null, 2);
+        consolePrint(container,
+          '<details style="margin-top:.25rem"><summary style="cursor:pointer;color:var(--g30);font-size:.8rem;margin-bottom:.25rem">View raw data</summary>' +
+          '<pre style="margin:0;white-space:pre-wrap;font-size:.78rem;color:var(--g30)">' + escapeHtml(statsStr) + '</pre></details>', 'info');
+      }
+
+      // Proof line
+      const proofParts = [];
+      if (r.retained === false) proofParts.push('retained: false');
+      if (r.proofHash) proofParts.push('proof: ' + r.proofHash.slice(0, 16) + '\u2026');
+      if (proofParts.length > 0) {
+        await delay(100);
+        consolePrint(container, proofParts.join(' \u00b7 '), 'info');
+      }
 
       await delay(200);
       consolePrint(container, '\u2713 Complete. Type: ' + data.type + ' | ' + new Date(data.timestamp).toLocaleTimeString(), 'success');
