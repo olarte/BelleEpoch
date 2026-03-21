@@ -1,10 +1,27 @@
 // engine/beast/queries.js — Beast's five query types
 //
-// Four are pure computation on Redis time-series data.
-// The fifth (market summary) uses Venice via Bankr.
+// All query types compute data from Redis, then route through
+// Venice AI via Bankr for narrative analysis. retained: false.
 
 const { redis } = require('../bids');
 const bankr = require('../bankr');
+
+async function analyzeViaBankr(systemPrompt, data) {
+  try {
+    const response = await bankr.chatCompletion(
+      process.env.VENICE_MODEL || 'llama-3.3-70b',
+      [{ role: 'user', content: systemPrompt + '\n\nData:\n' + JSON.stringify(data, null, 2) + '\n\nRespond with plain text only. No markdown. No headers.' }],
+      { temperature: 0.4, max_tokens: 512 }
+    );
+    return {
+      analysis: response?.choices?.[0]?.message?.content || null,
+      proofHash: response?.veniceProof || null,
+      retained: false,
+    };
+  } catch (err) {
+    return { analysis: null, proofHash: null, retained: false, error: err.message };
+  }
+}
 
 // ── QUERY 1: PRICE HISTORY ─────────────────────────────
 // "What has the clearing price for <provider> been over
@@ -32,21 +49,29 @@ async function queryPriceHistory({ providerId, n, windowMinutes }) {
   const mean   = prices.reduce((a, b) => a + b, 0) / prices.length;
   const sorted = [...prices].sort((a, b) => a - b);
 
+  const stats = {
+    mean:   parseFloat(mean.toFixed(6)),
+    median: sorted[Math.floor(sorted.length / 2)],
+    min:    sorted[0],
+    max:    sorted[sorted.length - 1],
+    first:  prices[0],
+    last:   prices[prices.length - 1],
+    trend:  prices[prices.length - 1] > prices[0] ? 'rising'
+          : prices[prices.length - 1] < prices[0] ? 'falling'
+          : 'flat',
+  };
+
+  const venice = await analyzeViaBankr(
+    `You are Beast, a market intelligence agent. Analyze this price history for provider "${providerId}". In 3-4 sentences, explain the trend, notable price movements, volatility, and what an agent should know before bidding. Be specific with numbers.`,
+    { providerId, dataPoints: points.length, stats }
+  );
+
   return {
     providerId,
     dataPoints: points.length,
     series: points.map(p => ({ ts: p.ts, price: p.clearingPrice, epochId: p.epochId })),
-    stats: {
-      mean:   parseFloat(mean.toFixed(6)),
-      median: sorted[Math.floor(sorted.length / 2)],
-      min:    sorted[0],
-      max:    sorted[sorted.length - 1],
-      first:  prices[0],
-      last:   prices[prices.length - 1],
-      trend:  prices[prices.length - 1] > prices[0] ? 'rising'
-            : prices[prices.length - 1] < prices[0] ? 'falling'
-            : 'flat',
-    },
+    stats,
+    ...venice,
   };
 }
 
@@ -124,7 +149,7 @@ async function queryDemandSignals({ providerId, windowEpochs }) {
   const statsRaw = await redis.get(`beast:stats:${providerId}`);
   const stats    = statsRaw ? JSON.parse(statsRaw) : {};
 
-  return {
+  const signalData = {
     providerId,
     signal,
     momentum:        slope > 0 ? 'accelerating' : slope < 0 ? 'decelerating' : 'flat',
@@ -133,11 +158,16 @@ async function queryDemandSignals({ providerId, windowEpochs }) {
     historicalMean:  parseFloat((stats.mean || earlyMean).toFixed(6)),
     currentVsAverage: parseFloat(((prices[prices.length - 1] / (stats.mean || 1) - 1) * 100).toFixed(2)) + '%',
     epochsAnalyzed:  prices.length,
-    recommendation:  slope > 0
-      ? 'Demand rising — bid sooner rather than later'
-      : slope < 0
-      ? 'Demand falling — consider waiting for lower clearing price'
-      : 'Demand stable — current price likely to hold',
+  };
+
+  const venice = await analyzeViaBankr(
+    `You are Beast, a market intelligence agent. Analyze these demand signals for provider "${providerId}". In 3-4 sentences, interpret the signal direction, momentum, and what the slope means for an agent deciding when to bid. Give a concrete recommendation based on the data.`,
+    signalData
+  );
+
+  return {
+    ...signalData,
+    ...venice,
   };
 }
 
@@ -172,7 +202,7 @@ async function queryOptimalBidTiming({ providerId, timezoneOffset }) {
   const cheapestHours = hourlyStats.slice(0, 3);
   const mostExpensive = hourlyStats.slice(-3).reverse();
 
-  return {
+  const timingData = {
     providerId,
     cheapestWindows: cheapestHours.map(h => ({
       hourUTC:   (h.hour - tzOffset + 24) % 24,
@@ -188,6 +218,16 @@ async function queryOptimalBidTiming({ providerId, timezoneOffset }) {
     })),
     bestTimeToday: `Hour ${cheapestHours[0].hour} local (${cheapestHours[0].samples} observations, avg ${cheapestHours[0].mean} USDC)`,
     dataPoints: points.length,
+  };
+
+  const venice = await analyzeViaBankr(
+    `You are Beast, a market intelligence agent. Analyze this bid timing data for provider "${providerId}". In 3-4 sentences, explain when an agent should bid to get the best price, what hours to avoid, and how confident the pattern is based on sample sizes. Be specific with hours and prices.`,
+    timingData
+  );
+
+  return {
+    ...timingData,
+    ...venice,
   };
 }
 
