@@ -1189,11 +1189,31 @@ app.get('/beast/stats', async (req, res) => {
   const providersTracked = await redis.scard('beast:providers');
   const beastRaw = await redis.get('provider:beast.epoch.base.eth');
   const beast = beastRaw ? JSON.parse(beastRaw) : {};
+  const totalEarnedRaw = await redis.get('provider:beast.epoch.base.eth:earned');
+  const totalEarned = parseFloat(totalEarnedRaw || '0');
+
+  // Earned today: sum clearing revenue from Beast's feed events today
+  const FEE_RATE = 0.015;
+  const todayUTC = new Date().toISOString().slice(0, 10);
+  const feedEvents = await redis.lrange('feed:events', 0, 999);
+  let earnedToday = 0;
+  for (const raw of feedEvents) {
+    try {
+      const ev = JSON.parse(raw);
+      if (ev.provider !== 'beast.epoch.base.eth') continue;
+      const ts = ev.timestamp ? new Date(ev.timestamp).toISOString() : '';
+      if (!ts.startsWith(todayUTC)) continue;
+      earnedToday += (ev.clearingPrice || 0) * (ev.slotsFilled || 0) * (1 - FEE_RATE);
+    } catch { /* skip */ }
+  }
+
   res.json({
     queriesAnswered: parseInt(queriesCount) || 0,
     epochsIngested: parseInt(epochsIngested) || 0,
     providersTracked,
     epochsServed: beast.epochsServed || 0,
+    totalEarned: parseFloat(totalEarned.toFixed(6)),
+    earnedToday: parseFloat(earnedToday.toFixed(6)),
     registeredAt: beast.registeredAt || null,
     erc8004Tx: beast.erc8004Tx || null,
   });

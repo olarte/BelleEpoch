@@ -2000,6 +2000,7 @@ const BelleEpoch = (() => {
           if (e) e.textContent = qCount;
         });
         $$('[data-beast-hero="queriesAnswered"]').forEach(e => { e.textContent = qCount; });
+        $$('[data-beast-hero="earnedToday"]').forEach(e => { e.textContent = formatUsdc(resp.earnedToday || 0); });
 
         if (resp.erc8004Tx) {
           const link = '<a href="https://basescan.org/tx/' + resp.erc8004Tx + '" target="_blank" rel="noopener" style="color:var(--g10)">' + truncateAddr(resp.erc8004Tx) + '</a>';
