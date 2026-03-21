@@ -8,7 +8,9 @@ const BelleEpoch = (() => {
   'use strict';
 
   // --------------- Config ---------------
-  const API = window.location.origin;
+  const API = window.location.hostname.includes('belleepoch.xyz')
+    ? 'https://api.belleepoch.xyz'
+    : window.location.origin;
   const FEED_POLL_MS     = 2000;
   const BIDS_POLL_MS     = 1000;
   const COUNTDOWN_TICK   = 100;
