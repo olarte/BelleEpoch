@@ -1167,6 +1167,77 @@ agent.start(); // Bids every epoch automatically</code></pre>
       </div>
     </section>
 
+    <!-- Autonomous Economics -->
+    <section class="sec-black" id="beast-economics-section">
+      <div class="container">
+        <h2>Autonomous Economics</h2>
+        <p style="color:var(--g30); margin-bottom:1.5rem">Beast ingests on-chain clearing data, routes market-summary queries through <strong style="color:var(--g10)">Venice AI</strong> via <strong style="color:var(--g10)">Bankr</strong>, and serves the next epoch. Same self-sustaining loop as Belle. Running autonomously for <span id="beast-econ-hours" style="color:var(--redhi)">---</span> hours.</p>
+
+        <div class="card" style="padding:1.5rem; margin-bottom:1.5rem">
+          <div style="display:flex; align-items:center; justify-content:center; gap:.75rem; flex-wrap:wrap; font-size:.95rem">
+            <div style="text-align:center; padding:.75rem 1rem; border:1px solid var(--g60); border-radius:8px; min-width:120px">
+              <div style="font-size:1.5rem; color:var(--redhi); font-weight:700" id="beast-econ-ingested">---</div>
+              <div style="color:var(--g30); font-size:.8rem">Epochs Ingested</div>
+            </div>
+            <div style="color:var(--g40); font-size:1.2rem">&rarr;</div>
+            <div style="text-align:center; padding:.75rem 1rem; border:1px solid var(--g60); border-radius:8px; min-width:120px">
+              <div style="font-size:1.5rem; color:var(--g10); font-weight:700" id="beast-econ-queries">---</div>
+              <div style="color:var(--g30); font-size:.8rem">Queries Answered</div>
+            </div>
+            <div style="color:var(--g40); font-size:1.2rem">&rarr;</div>
+            <div style="text-align:center; padding:.75rem 1rem; border:1px solid var(--g60); border-radius:8px; min-width:120px">
+              <div style="font-size:1.5rem; color:var(--g10); font-weight:700" id="beast-econ-providers">---</div>
+              <div style="color:var(--g30); font-size:.8rem">Providers Tracked</div>
+            </div>
+            <div style="color:var(--g40); font-size:1.2rem">&rarr;</div>
+            <div style="text-align:center; padding:.75rem 1rem; border:1px solid var(--redhi); border-radius:8px; min-width:120px; background:rgba(255,68,68,0.05)">
+              <div style="font-size:1.5rem; color:var(--redhi); font-weight:700" id="beast-econ-venice">Venice AI</div>
+              <div style="color:var(--g30); font-size:.8rem"><code>retained: false</code></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ERC-7715 Delegation -->
+    <section class="sec-charcoal" id="beast-delegation-section">
+      <div class="container">
+        <h2>MetaMask ERC-7715 Delegation</h2>
+        <p style="color:var(--g30); margin-bottom:1.5rem">Beast shares the same operator wallet and delegation constraints as Belle. The operator sets boundaries once &mdash; both agents execute autonomously within those bounds.</p>
+
+        <div class="card" style="padding:1.5rem">
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:1.5rem">
+            <div>
+              <h4 style="color:var(--redhi); margin-bottom:.75rem">Operator (Human)</h4>
+              <div style="font-size:.9rem; color:var(--g20); line-height:1.6">
+                <div style="margin-bottom:.5rem">Same delegation as Belle:</div>
+                <div style="padding-left:1rem; color:var(--g30); margin-bottom:.5rem">
+                  &bull; Max bid per epoch: <strong style="color:var(--g10)">0.015 USDC</strong><br>
+                  &bull; Daily spend cap: <strong style="color:var(--g10)">2.000 USDC</strong><br>
+                  &bull; Allowed resources: <code style="color:var(--redhi)">market-intelligence</code>
+                </div>
+              </div>
+              <div style="margin-top:1rem">
+                <a href="https://basescan.org/tx/0xb210128c62b77a01cf3f7bb72a186a40501ae1eb97faf7f403bb2bd197c0ad99" target="_blank" rel="noopener" class="btn btn-sm" style="font-size:.8rem">View delegation TX on Base &rarr;</a>
+              </div>
+            </div>
+            <div>
+              <h4 style="color:var(--redhi); margin-bottom:.75rem">Beast (Agent)</h4>
+              <div style="font-size:.9rem; color:var(--g20); line-height:1.6">
+                <div style="margin-bottom:.5rem">Every 30s epoch, before bidding:</div>
+                <div style="padding-left:1rem; color:var(--g30); margin-bottom:.5rem">
+                  &bull; Check bid &le; maxBidPerEpoch<br>
+                  &bull; Check resource in allowedResources<br>
+                  &bull; Check dailySpend + bid &le; dailySpendCap
+                </div>
+                <div>If any check fails, bid is <strong style="color:#f44">rejected</strong>.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- On-Chain Proof -->
     <section class="sec-black" id="beast-proof-section">
       <div class="container">

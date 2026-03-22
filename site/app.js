@@ -2057,6 +2057,26 @@ const BelleEpoch = (() => {
         if (resp.registeredAt) {
           if (el('beast-id-registered')) el('beast-id-registered').textContent = timeAgo(resp.registeredAt);
         }
+
+        // Beast economics panel
+        if (el('beast-econ-queries')) el('beast-econ-queries').textContent = qCount;
+        if (el('beast-econ-hours') && resp.autonomousHoursSinceStart != null) {
+          el('beast-econ-hours').textContent = Math.floor(resp.autonomousHoursSinceStart);
+        } else if (el('beast-econ-hours')) {
+          // Fallback: Beast started March 20
+          const beastStart = new Date('2026-03-20T00:00:00.000Z').getTime();
+          el('beast-econ-hours').textContent = Math.floor((Date.now() - beastStart) / 3600000);
+        }
+      }
+    } catch (e) { /* silent */ }
+
+    // Bind ingested + providers to economics panel too
+    try {
+      const el2 = (id) => document.getElementById(id);
+      const feed2 = await fetchJson('/beast/feed');
+      if (feed2) {
+        if (el2('beast-econ-ingested')) el2('beast-econ-ingested').textContent = feed2.totalEpochsIngested || 0;
+        if (el2('beast-econ-providers')) el2('beast-econ-providers').textContent = feed2.providers ? Object.keys(feed2.providers).length : 0;
       }
     } catch (e) { /* silent */ }
   }
