@@ -143,7 +143,6 @@ Query types: `price-history`, `provider-comparison`, `demand-signals`, `optimal-
 
 ## Identity
 - ERC-8004 for all participants (Base mainnet)
-- Self Protocol ZK for Sybil resistance
 - ERC-7715 MetaMask delegation for autonomous spending
 
 ## Settlement
@@ -153,6 +152,5 @@ Query types: `price-history`, `provider-comparison`, `demand-signals`, `optimal-
 
 ## Network
 - Base mainnet (primary)
-- Celo (secondary)
 - Domain: belleepoch.xyz
 - API: api.belleepoch.xyz

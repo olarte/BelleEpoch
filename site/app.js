@@ -234,6 +234,67 @@ const BelleEpoch = (() => {
     }
   }
 
+  // --------------- Economics + Delegation Dashboard ---------------
+
+  async function fetchEconomics() {
+    const [metrics, bankr, delegation, routing] = await Promise.all([
+      fetchJson('/feed/metrics'),
+      fetchJson('/bankr/status'),
+      fetchJson('/delegation'),
+      fetchJson('/bankr/routing'),
+    ]);
+    const el = (id) => document.getElementById(id);
+
+    if (metrics) {
+      if (el('econ-hours')) el('econ-hours').textContent = Math.floor(metrics.autonomousHoursWithoutIntervention || 0);
+      if (el('econ-protocol-fees')) el('econ-protocol-fees').textContent = formatUsdc(metrics.protocolFeeAccumulated);
+      if (el('econ-margin-pct') && metrics.belleMargin != null) {
+        el('econ-margin-pct').textContent = (metrics.belleMargin * 100).toFixed(1) + '%';
+      }
+    }
+
+    if (bankr) {
+      const earned = feedData && feedData.belle ? feedData.belle.totalEarned : 0;
+      const routed = parseFloat(bankr.totalRouted || '0');
+      const cost = parseFloat(bankr.inferenceCost || '0');
+      const margin = earned - cost;
+
+      if (el('econ-earned')) el('econ-earned').textContent = formatUsdc(earned);
+      if (el('econ-routed')) el('econ-routed').textContent = formatUsdc(routed);
+      if (el('econ-venice-cost')) el('econ-venice-cost').textContent = formatUsdc(cost);
+      if (el('econ-margin')) el('econ-margin').textContent = formatUsdc(margin);
+    }
+
+    if (routing) {
+      if (el('econ-routing-txs')) el('econ-routing-txs').textContent = (routing.log ? routing.log.length : 0).toString();
+    }
+
+    // LLM queries count from bankr usage
+    if (bankr && bankr.usage) {
+      const totalReqs = bankr.usage.totalRequests || bankr.usage.requests || 0;
+      if (el('econ-llm-queries')) el('econ-llm-queries').textContent = totalReqs.toString();
+    }
+
+    // Delegation panel
+    if (delegation) {
+      if (el('deleg-max-bid') && delegation.caveats) {
+        el('deleg-max-bid').textContent = (delegation.caveats.maxBidPerEpoch / 1e6).toFixed(3) + ' USDC';
+      }
+      if (el('deleg-daily-cap') && delegation.dailyCapUsdc != null) {
+        el('deleg-daily-cap').textContent = delegation.dailyCapUsdc.toFixed(3) + ' USDC';
+      }
+      if (el('deleg-spent-today') && delegation.dailySpendUsdc != null) {
+        el('deleg-spent-today').textContent = delegation.dailySpendUsdc.toFixed(4) + ' USDC';
+      }
+      if (el('deleg-remaining') && delegation.dailyRemaining != null) {
+        el('deleg-remaining').textContent = delegation.dailyRemaining.toFixed(4) + ' USDC';
+      }
+      if (el('deleg-status')) {
+        el('deleg-status').textContent = delegation.initialized ? 'Enforced' : 'Inactive';
+      }
+    }
+  }
+
   // --------------- Data Binding ---------------
 
   function bindFeed(data) {
@@ -2206,6 +2267,7 @@ const BelleEpoch = (() => {
     fetchFeed();
     fetchAgentData('belle');
     fetchIdentityData();
+    fetchEconomics();
     renderBelleEpochTable();
     startCountdown();
     fetchBeastData();
@@ -2214,6 +2276,7 @@ const BelleEpoch = (() => {
     setInterval(() => fetchAgentData('belle'), FEED_POLL_MS * 2);
     setInterval(renderBelleEpochTable, FEED_POLL_MS * 5);
     setInterval(fetchIdentityData, FEED_POLL_MS * 10);
+    setInterval(fetchEconomics, FEED_POLL_MS * 10);
     setInterval(fetchBeastData, FEED_POLL_MS * 10);
 
     // ─── Prompt box wiring ───────────────────────────────────────

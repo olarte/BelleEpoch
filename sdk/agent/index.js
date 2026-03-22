@@ -9,6 +9,12 @@ const { ethers } = require('ethers');
 
 const DEFAULT_ENDPOINT = 'https://api.belleepoch.xyz';
 
+// Uniswap / Token constants on Base mainnet
+const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+const WETH_BASE = '0x4200000000000000000000000000000000000006';
+const SWAP_ROUTER_02 = '0x2626664c2603336E57B271c5C0b26F421741e481';
+const PERMIT2 = '0x000000000022D473030F116dDEE9F6B43aC78BA3';
+
 class BelleAgent {
   /**
    * @param {Object} opts
@@ -16,8 +22,10 @@ class BelleAgent {
    * @param {string} opts.strategy   — 'adaptive' | 'conservative' | 'aggressive'
    * @param {number} opts.maxBid     — maximum bid in USDC (e.g. 0.05)
    * @param {string} [opts.agentId]  — agent identifier (default: derived from wallet)
+   * @param {boolean} [opts.autoSwap] — if true, swap to USDC via Uniswap before bidding (default: false)
+   * @param {string} [opts.rpcUrl]   — Base mainnet RPC URL override
    */
-  constructor({ wallet, strategy = 'adaptive', maxBid = 0.01, agentId } = {}) {
+  constructor({ wallet, strategy = 'adaptive', maxBid = 0.01, agentId, autoSwap = false, rpcUrl } = {}) {
     if (!wallet) throw new Error('wallet is required (private key or ethers.Wallet)');
 
     if (typeof wallet === 'string') {
@@ -30,6 +38,8 @@ class BelleAgent {
     this.maxBid = maxBid;
     this.agentId = agentId || `agent-${this.wallet.address.slice(2, 10)}`;
     this.feedHistory = [];
+    this.autoSwap = autoSwap;
+    this.rpcUrl = rpcUrl || process.env.BASE_RPC_URL || 'https://mainnet.base.org';
   }
 
   /**
@@ -124,7 +134,95 @@ class BelleAgent {
   }
 
   /**
+   * Ensure the agent has at least `minAmount` USDC on Base.
+   * If insufficient, swaps from `fromToken` (default WETH) to USDC via Uniswap SwapRouter02.
+   *
+   * @param {number} minAmount       — minimum USDC needed (human-readable, e.g. 0.05)
+   * @param {Object} [options]
+   * @param {string} [options.fromToken] — input token address (default: WETH on Base)
+   * @param {number} [options.poolFee]   — Uniswap pool fee tier (default: 500 = 0.05%)
+   * @returns {{ swapped: boolean, txHash: string|null, amountIn: string|null, amountOut: string|null }}
+   */
+  async ensureUsdcBalance(minAmount, options = {}) {
+    const { fromToken = WETH_BASE, poolFee = 500 } = options;
+    const provider = new ethers.JsonRpcProvider(this.rpcUrl);
+    const connected = this.wallet.connect(provider);
+
+    const usdc = new ethers.Contract(USDC_BASE, [
+      'function balanceOf(address) view returns (uint256)',
+    ], connected);
+    const balance = await usdc.balanceOf(this.wallet.address);
+    const needed = BigInt(Math.round(minAmount * 1e6));
+
+    if (balance >= needed) {
+      return { swapped: false, txHash: null, amountIn: null, amountOut: null };
+    }
+
+    const deficit = needed - balance;
+    console.log(`[uniswap] USDC deficit: ${ethers.formatUnits(deficit, 6)}. Swapping from ${fromToken}...`);
+
+    // Approve input token → Permit2
+    const inputToken = new ethers.Contract(fromToken, [
+      'function approve(address, uint256) returns (bool)',
+      'function allowance(address, address) view returns (uint256)',
+      'function balanceOf(address) view returns (uint256)',
+    ], connected);
+
+    const allowance = await inputToken.allowance(this.wallet.address, PERMIT2);
+    if (allowance < deficit * 100n) {
+      const tx = await inputToken.approve(PERMIT2, ethers.MaxUint256);
+      await tx.wait();
+    }
+
+    // Permit2 → SwapRouter02
+    const permit2 = new ethers.Contract(PERMIT2, [
+      'function approve(address token, address spender, uint160 amount, uint48 expiration)',
+      'function allowance(address, address, address) view returns (uint160, uint48, uint48)',
+    ], connected);
+    const [p2Amount] = await permit2.allowance(this.wallet.address, fromToken, SWAP_ROUTER_02);
+    if (BigInt(p2Amount) < deficit * 100n) {
+      const maxU160 = (1n << 160n) - 1n;
+      const tx = await permit2.approve(fromToken, SWAP_ROUTER_02, maxU160, Math.floor(Date.now() / 1000) + 86400 * 30);
+      await tx.wait();
+    }
+
+    // Execute exactOutputSingle swap
+    const router = new ethers.Contract(SWAP_ROUTER_02, [
+      'function exactOutputSingle((address tokenIn, address tokenOut, uint24 fee, address recipient, uint256 amountOut, uint256 amountInMaximum, uint160 sqrtPriceLimitX96)) external payable returns (uint256 amountIn)',
+    ], connected);
+
+    const inputBalance = await inputToken.balanceOf(this.wallet.address);
+    const swapTx = await router.exactOutputSingle({
+      tokenIn: fromToken,
+      tokenOut: USDC_BASE,
+      fee: poolFee,
+      recipient: this.wallet.address,
+      amountOut: deficit,
+      amountInMaximum: inputBalance,
+      sqrtPriceLimitX96: 0n,
+    });
+    const receipt = await swapTx.wait();
+
+    console.log(`[uniswap] Swap complete: ${ethers.formatUnits(deficit, 6)} USDC acquired | tx: ${swapTx.hash}`);
+    return { swapped: true, txHash: swapTx.hash, amountIn: null, amountOut: ethers.formatUnits(deficit, 6) };
+  }
+
+  /**
+   * Standalone convenience: swap any token to USDC on Base via Uniswap.
+   * @param {Object} opts
+   * @param {string|ethers.Wallet} opts.wallet — private key or ethers.Wallet
+   * @param {number} opts.amount              — USDC amount to acquire
+   * @param {string} [opts.fromToken]         — input token address (default: WETH)
+   * @param {string} [opts.rpcUrl]            — Base RPC URL
+   */
+  static async swapToUsdc({ wallet, amount, fromToken = WETH_BASE, rpcUrl } = {}) {
+    const agent = new BelleAgent({ wallet, maxBid: amount, rpcUrl });
+    return agent.ensureUsdcBalance(amount, { fromToken });
+  }
+
+  /**
    * Execute a full bid cycle: read feed → calculate bid → sign → submit → handle 402 → return token.
+   * If autoSwap is enabled, ensures sufficient USDC balance before bidding.
    *
    * @param {Object} opts
    * @param {string} opts.resource  — resource to bid on (e.g. 'private-reasoning')
@@ -133,6 +231,12 @@ class BelleAgent {
    */
   async bid({ resource, endpoint = DEFAULT_ENDPOINT } = {}) {
     if (!resource) throw new Error('resource is required');
+
+    // Pre-bid USDC swap via Uniswap if autoSwap is enabled
+    if (this.autoSwap) {
+      try { await this.ensureUsdcBalance(this.maxBid); }
+      catch (err) { console.warn(`[uniswap] Auto-swap failed: ${err.message}`); }
+    }
 
     // Step 1: Read feed
     const feed = await this.readFeed(endpoint);

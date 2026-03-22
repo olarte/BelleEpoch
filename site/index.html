@@ -830,6 +830,123 @@ agent.start(); // Bids every epoch automatically</code></pre>
       </div>
     </section>
 
+    <!-- Autonomous Economics -->
+    <section class="sec-black" id="economics-section">
+      <div class="container">
+        <h2>Autonomous Economics</h2>
+        <p style="color:var(--g30); margin-bottom:1.5rem">Belle earns USDC from clearing revenue, routes a share through <strong style="color:var(--g10)">Bankr</strong> to fund <strong style="color:var(--g10)">Venice AI</strong> inference, and serves the next epoch &mdash; no human intervention. This loop has been running for <span id="econ-hours" style="color:var(--gold)">---</span> hours.</p>
+
+        <!-- Flow diagram -->
+        <div class="card" style="padding:1.5rem; margin-bottom:1.5rem">
+          <div style="display:flex; align-items:center; justify-content:center; gap:.75rem; flex-wrap:wrap; font-size:.95rem">
+            <div style="text-align:center; padding:.75rem 1rem; border:1px solid var(--g60); border-radius:8px; min-width:120px">
+              <div style="font-size:1.5rem; color:var(--gold); font-weight:700" id="econ-earned">---</div>
+              <div style="color:var(--g30); font-size:.8rem">Clearing Revenue</div>
+            </div>
+            <div style="color:var(--g40); font-size:1.2rem">&rarr;</div>
+            <div style="text-align:center; padding:.75rem 1rem; border:1px solid var(--g60); border-radius:8px; min-width:120px">
+              <div style="font-size:1.5rem; color:var(--g10); font-weight:700" id="econ-routed">---</div>
+              <div style="color:var(--g30); font-size:.8rem">Bankr Routing</div>
+            </div>
+            <div style="color:var(--g40); font-size:1.2rem">&rarr;</div>
+            <div style="text-align:center; padding:.75rem 1rem; border:1px solid var(--g60); border-radius:8px; min-width:120px">
+              <div style="font-size:1.5rem; color:var(--g10); font-weight:700" id="econ-venice-cost">---</div>
+              <div style="color:var(--g30); font-size:.8rem">Venice Inference</div>
+            </div>
+            <div style="color:var(--g40); font-size:1.2rem">&rarr;</div>
+            <div style="text-align:center; padding:.75rem 1rem; border:1px solid var(--gold); border-radius:8px; min-width:120px; background:rgba(255,215,0,0.05)">
+              <div style="font-size:1.5rem; color:var(--gold); font-weight:700" id="econ-margin">---</div>
+              <div style="color:var(--g30); font-size:.8rem">Net Margin</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detail grid -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem">
+          <div class="card" style="text-align:center; padding:1rem">
+            <div style="font-size:1.8rem; font-weight:700; color:var(--gold)" id="econ-margin-pct">---</div>
+            <div style="color:var(--g30); font-size:.85rem">Profit Margin</div>
+          </div>
+          <div class="card" style="text-align:center; padding:1rem">
+            <div style="font-size:1.8rem; font-weight:700; color:var(--g10)" id="econ-routing-txs">---</div>
+            <div style="color:var(--g30); font-size:.85rem">Bankr Routing TXs</div>
+          </div>
+          <div class="card" style="text-align:center; padding:1rem">
+            <div style="font-size:1.8rem; font-weight:700; color:var(--g10)" id="econ-llm-queries">---</div>
+            <div style="color:var(--g30); font-size:.85rem">LLM Queries Served</div>
+          </div>
+          <div class="card" style="text-align:center; padding:1rem">
+            <div style="font-size:1.8rem; font-weight:700; color:var(--g10)" id="econ-protocol-fees">---</div>
+            <div style="color:var(--g30); font-size:.85rem">Protocol Fees (1.5%)</div>
+          </div>
+        </div>
+
+        <!-- Bankr wallet proof -->
+        <div style="margin-top:1rem; text-align:center">
+          <a href="https://basescan.org/address/0x243b0b3c87dca360ec62222c6237f3b4c58f103f" target="_blank" rel="noopener" style="color:var(--g30); font-size:.8rem; text-decoration:underline">View Bankr wallet on Base &rarr;</a>
+          &nbsp;&middot;&nbsp;
+          <a href="https://basescan.org/address/0x168025fD748b63Cc6fB3bd59F197a6c79e6812c0" target="_blank" rel="noopener" style="color:var(--g30); font-size:.8rem; text-decoration:underline">View protocol wallet &rarr;</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ERC-7715 Delegation: Operator Experience -->
+    <section class="sec-charcoal" id="delegation-section">
+      <div class="container">
+        <h2>MetaMask ERC-7715 Delegation</h2>
+        <p style="color:var(--g30); margin-bottom:1.5rem">The operator sets spending boundaries once via MetaMask. Belle then executes autonomously within those constraints &mdash; every bid is checked against the delegation before submission. No human approval needed per-epoch.</p>
+
+        <div class="card" style="padding:1.5rem">
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:1.5rem">
+            <!-- Operator side -->
+            <div>
+              <h4 style="color:var(--gold); margin-bottom:.75rem">Operator (Human)</h4>
+              <div style="font-size:.9rem; color:var(--g20); line-height:1.6">
+                <div style="margin-bottom:.5rem">1. Connect MetaMask wallet</div>
+                <div style="margin-bottom:.5rem">2. Approve delegation with constraints:</div>
+                <div style="padding-left:1rem; color:var(--g30); margin-bottom:.5rem">
+                  &bull; Max bid per epoch: <strong style="color:var(--g10)" id="deleg-max-bid">0.015 USDC</strong><br>
+                  &bull; Daily spend cap: <strong style="color:var(--g10)" id="deleg-daily-cap">2.000 USDC</strong><br>
+                  &bull; Allowed resources: <code style="color:var(--gold)">private-reasoning</code>
+                </div>
+                <div>3. Done. Belle operates within these bounds.</div>
+              </div>
+              <div style="margin-top:1rem">
+                <a href="https://basescan.org/tx/0xb210128c62b77a01cf3f7bb72a186a40501ae1eb97faf7f403bb2bd197c0ad99" target="_blank" rel="noopener" class="btn btn-sm" style="font-size:.8rem">View delegation TX on Base &rarr;</a>
+              </div>
+            </div>
+            <!-- Agent side -->
+            <div>
+              <h4 style="color:var(--gold); margin-bottom:.75rem">Belle (Agent)</h4>
+              <div style="font-size:.9rem; color:var(--g20); line-height:1.6">
+                <div style="margin-bottom:.5rem">Every epoch, before bidding:</div>
+                <div style="padding-left:1rem; color:var(--g30); margin-bottom:.5rem">
+                  &bull; Check bid &le; maxBidPerEpoch<br>
+                  &bull; Check resource in allowedResources<br>
+                  &bull; Check dailySpend + bid &le; dailySpendCap
+                </div>
+                <div style="margin-bottom:.5rem">If any check fails, bid is <strong style="color:#f44">rejected</strong>.</div>
+                <div style="display:flex; gap:1rem; margin-top:.75rem; flex-wrap:wrap">
+                  <div style="padding:.5rem .75rem; border:1px solid var(--g60); border-radius:6px; text-align:center">
+                    <div style="font-size:1.1rem; font-weight:700; color:var(--g10)" id="deleg-spent-today">---</div>
+                    <div style="color:var(--g40); font-size:.75rem">Spent today</div>
+                  </div>
+                  <div style="padding:.5rem .75rem; border:1px solid var(--g60); border-radius:6px; text-align:center">
+                    <div style="font-size:1.1rem; font-weight:700; color:var(--g10)" id="deleg-remaining">---</div>
+                    <div style="color:var(--g40); font-size:.75rem">Remaining today</div>
+                  </div>
+                  <div style="padding:.5rem .75rem; border:1px solid var(--g60); border-radius:6px; text-align:center">
+                    <div style="font-size:1.1rem; font-weight:700; color:var(--gold)" id="deleg-status">Enforced</div>
+                    <div style="color:var(--g40); font-size:.75rem">Status</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- On-Chain Proof — populated after demo run -->
     <section class="sec-black" id="demo-proof-section" style="display:none">
       <div class="container">

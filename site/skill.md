@@ -132,7 +132,6 @@ Returns: `{ delegationHash, dailySpendUsdc, dailyRemaining, caveats }`
 
 ## Identity
 - ERC-8004 for all participants (Base mainnet)
-- Self Protocol ZK for Sybil resistance
 - ERC-7715 MetaMask delegation for autonomous spending
 
 ## Settlement
@@ -142,6 +141,5 @@ Returns: `{ delegationHash, dailySpendUsdc, dailyRemaining, caveats }`
 
 ## Network
 - Base mainnet (primary)
-- Celo (secondary)
 - Domain: belleepoch.xyz
 - API: api.belleepoch.xyz

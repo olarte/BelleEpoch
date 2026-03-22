@@ -1,0 +1,134 @@
+{
+  "description": "Belle Epoch — Celo mainnet bulk epoch settlement evidence",
+  "chain": "Celo Mainnet",
+  "chainId": 42220,
+  "contract": "0x1852f4B60e64d7BBD7514260B46889236b8526b2",
+  "wallet": "0x168025fD748b63Cc6fB3bd59F197a6c79e6812c0",
+  "resourceId": "0x05be705400fa74f81ce09cfaae9f6d5be0f5d2f3b8dfcc326a5e16d194bd2932",
+  "totalEpochsAttempted": 520,
+  "totalEpochsConfirmed": 519,
+  "totalEpochsFailed": 1,
+  "epochIdRange": {
+    "start": 100000,
+    "end": 100519
+  },
+  "totalGasUsed": "73961163",
+  "elapsedSeconds": 1689.6,
+  "timestamp": "2026-03-21T02:24:27.861Z",
+  "sampleTxHashes": [
+    "0x59e1e508ebd8c5ba0cab3344b184d9c1042f34e8e3e4b25851d8f47cafc7a9a7",
+    "0xcdc5ba63809ad70829e14e7856b8cf6d964313cc6eff9221d595227cfed42152",
+    "0x311d54809e7108966f16f2e7822483cb2734bfd7a0a5e2aebe2b72dfc4fc4760",
+    "0x8c3021554ceede00ef3d8d3587052633d66f36ec9961751682e12340d295b6c2",
+    "0xb54cb2f95f154c5682031ea21e1142a719f09b3b472c338428da39708281bbb3",
+    "0xe291bf2217f1546c06271df53005a0fbf64048493bdd8a4d239bc8cc77de88f9",
+    "0xcbc26ecc6ee10080d8fd1262f6c2b8853b1347f232d32fd67df5dbfb2f3cfb65",
+    "0x02ca07d93b7fe7a6c4456c1036697f743fac001e3360f450f3737caa8c0007b1",
+    "0xec2bfa98c231290a82575fa18beb449b2bdd82878e8de7ce317c5f91b67f21fb",
+    "0x4477a405019561b926fd5056abaaa8b3627a0759d38880b140171b4f66e72dcb",
+    "0x3d783708a549c5b073d93d908ac0cdf1df9ed0f5b95ba89fe9493e874a35dcec",
+    "0xb33ed2ada74a0c6e27fae485f16cd07852d3e319711772d8648bb15a282d0e23",
+    "0x78f2b255c5fcec7e7067321c7fdd4121c91759e650ea623d70dec488c91a4753",
+    "0x5cc866887d36d9797b5fe2deb991a27abf476807d863e80cb430a58cfe3ce391"
+  ],
+  "firstFiveEpochs": [
+    {
+      "epochId": 100000,
+      "clearingPrice": "6148",
+      "totalBids": 3,
+      "winnerCount": 2,
+      "txHash": "0x59e1e508ebd8c5ba0cab3344b184d9c1042f34e8e3e4b25851d8f47cafc7a9a7",
+      "gasUsed": "141234",
+      "blockNumber": 62157423
+    },
+    {
+      "epochId": 100001,
+      "clearingPrice": "5935",
+      "totalBids": 5,
+      "winnerCount": 2,
+      "txHash": "0xcdc5ba63809ad70829e14e7856b8cf6d964313cc6eff9221d595227cfed42152",
+      "gasUsed": "141234",
+      "blockNumber": 62157425
+    },
+    {
+      "epochId": 100002,
+      "clearingPrice": "5759",
+      "totalBids": 7,
+      "winnerCount": 1,
+      "txHash": "0x311d54809e7108966f16f2e7822483cb2734bfd7a0a5e2aebe2b72dfc4fc4760",
+      "gasUsed": "118641",
+      "blockNumber": 62157427
+    },
+    {
+      "epochId": 100003,
+      "clearingPrice": "5841",
+      "totalBids": 6,
+      "winnerCount": 2,
+      "txHash": "0x8c3021554ceede00ef3d8d3587052633d66f36ec9961751682e12340d295b6c2",
+      "gasUsed": "141246",
+      "blockNumber": 62157429
+    },
+    {
+      "epochId": 100004,
+      "clearingPrice": "5802",
+      "totalBids": 5,
+      "winnerCount": 3,
+      "txHash": "0xb54cb2f95f154c5682031ea21e1142a719f09b3b472c338428da39708281bbb3",
+      "gasUsed": "163851",
+      "blockNumber": 62157430
+    }
+  ],
+  "lastFiveEpochs": [
+    {
+      "epochId": 100515,
+      "clearingPrice": "7362",
+      "totalBids": 5,
+      "winnerCount": 3,
+      "txHash": "0x684e932e6d136b12332fda3ba0641b110db963eb01670e89386c6df530b55a63",
+      "gasUsed": "163851",
+      "blockNumber": 62159101
+    },
+    {
+      "epochId": 100516,
+      "clearingPrice": "7633",
+      "totalBids": 4,
+      "winnerCount": 1,
+      "txHash": "0x3d783708a549c5b073d93d908ac0cdf1df9ed0f5b95ba89fe9493e874a35dcec",
+      "gasUsed": "118641",
+      "blockNumber": 62159103
+    },
+    {
+      "epochId": 100517,
+      "clearingPrice": "7604",
+      "totalBids": 4,
+      "winnerCount": 3,
+      "txHash": "0xb33ed2ada74a0c6e27fae485f16cd07852d3e319711772d8648bb15a282d0e23",
+      "gasUsed": "163851",
+      "blockNumber": 62159105
+    },
+    {
+      "epochId": 100518,
+      "clearingPrice": "7421",
+      "totalBids": 3,
+      "winnerCount": 1,
+      "txHash": "0x78f2b255c5fcec7e7067321c7fdd4121c91759e650ea623d70dec488c91a4753",
+      "gasUsed": "118641",
+      "blockNumber": 62159106
+    },
+    {
+      "epochId": 100519,
+      "clearingPrice": "7032",
+      "totalBids": 5,
+      "winnerCount": 2,
+      "txHash": "0x5cc866887d36d9797b5fe2deb991a27abf476807d863e80cb430a58cfe3ce391",
+      "gasUsed": "141246",
+      "blockNumber": 62159108
+    }
+  ],
+  "priceRange": {
+    "min": 3585,
+    "max": 8767,
+    "note": "micro-USDC (6 decimals). 7000 = 0.007 USDC"
+  },
+  "explorerBase": "https://celoscan.io/tx/"
+}
