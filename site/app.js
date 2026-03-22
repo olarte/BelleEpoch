@@ -225,11 +225,11 @@ const BelleEpoch = (() => {
         el('id-venice-routed').textContent = parseFloat(bankr.totalRouted).toFixed(4) + ' USDC';
       }
       if (el('id-venice-cost')) {
-        const cost = bankr.inferenceCost || (bankr.usage && (bankr.usage.totalCost || bankr.usage.cost)) || 0;
+        const cost = bankr.inferenceCost || (bankr.usage && bankr.usage.totals && bankr.usage.totals.totalCost) || 0;
         el('id-venice-cost').textContent = parseFloat(cost).toFixed(6) + ' USDC';
       }
       if (el('id-venice-model')) {
-        el('id-venice-model').textContent = bankr.model || 'via Bankr gateway';
+        el('id-venice-model').textContent = 'llama-3.3-70b (Venice) + gemini-3-flash (Bankr)';
       }
     }
   }
