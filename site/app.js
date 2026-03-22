@@ -255,15 +255,11 @@ const BelleEpoch = (() => {
 
       if (el('econ-routed')) el('econ-routed').textContent = formatUsdc(routed);
       if (el('econ-venice-cost')) el('econ-venice-cost').textContent = formatUsdc(cost);
+      if (el('econ-llm-queries')) el('econ-llm-queries').textContent = (bankr.realLLMQueries || 0).toString();
     }
 
     if (routing) {
       if (el('econ-routing-txs')) el('econ-routing-txs').textContent = (routing.log ? routing.log.length : 0).toString();
-    }
-
-    if (bankr && bankr.usage) {
-      const totalReqs = bankr.usage.totalRequests || bankr.usage.requests || 0;
-      if (el('econ-llm-queries')) el('econ-llm-queries').textContent = totalReqs.toString();
     }
 
     // Delegation panel

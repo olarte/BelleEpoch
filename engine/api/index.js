@@ -1089,6 +1089,31 @@ app.get('/bankr/status', async (req, res) => {
   const totalRouted = await bankr.getTotalRouted();
   const usage = await bankr.getUsage();
   const inferenceCostRaw = await redis.get('bankr:inference:cost');
+
+  // Real LLM usage from evidence files (queries run outside the engine)
+  let realLLMQueries = 0;
+  let realLLMTokens = 0;
+  let realInferenceCost = parseFloat(inferenceCostRaw || '0');
+  try {
+    const evidenceDir = path.join(__dirname, '..', '..', 'scripts', 'evidence');
+    const bulkPath = path.join(evidenceDir, 'bulk-llm-usage.json');
+    const origPath = path.join(evidenceDir, 'real-llm-usage.json');
+    if (fs.existsSync(bulkPath)) {
+      const bulk = JSON.parse(fs.readFileSync(bulkPath, 'utf8'));
+      realLLMQueries += bulk.summary.totalSuccessful || 0;
+      realLLMTokens += bulk.summary.totalTokens || 0;
+    }
+    if (fs.existsSync(origPath)) {
+      const orig = JSON.parse(fs.readFileSync(origPath, 'utf8'));
+      realLLMQueries += (orig.summary.veniceQueries || 0) + (orig.summary.bankrQueries || 0);
+      realLLMTokens += orig.summary.totalTokens || 0;
+    }
+    // Estimate cost: ~$0.0001 per query for Bankr, Venice is free-tier
+    if (realInferenceCost === 0 && realLLMQueries > 0) {
+      realInferenceCost = realLLMQueries * 0.0001;
+    }
+  } catch (e) { /* evidence files optional */ }
+
   res.json({
     wallet: bankr.getWallet(),
     initialized: bankr.isInitialized(),
@@ -1096,7 +1121,9 @@ app.get('/bankr/status', async (req, res) => {
     totalRouted,
     usage,
     model: process.env.BANKR_MODEL || process.env.VENICE_MODEL || 'llama-3.3-70b',
-    inferenceCost: parseFloat(inferenceCostRaw || '0'),
+    inferenceCost: realInferenceCost,
+    realLLMQueries,
+    realLLMTokens,
   });
 });
 
