@@ -247,29 +247,20 @@ const BelleEpoch = (() => {
 
     if (metrics) {
       if (el('econ-hours')) el('econ-hours').textContent = Math.floor(metrics.autonomousHoursWithoutIntervention || 0);
-      if (el('econ-protocol-fees')) el('econ-protocol-fees').textContent = formatUsdc(metrics.protocolFeeAccumulated);
-      if (el('econ-margin-pct') && metrics.belleMargin != null) {
-        el('econ-margin-pct').textContent = (metrics.belleMargin * 100).toFixed(1) + '%';
-      }
     }
 
     if (bankr) {
-      const earned = feedData && feedData.belle ? feedData.belle.totalEarned : 0;
       const routed = parseFloat(bankr.totalRouted || '0');
       const cost = parseFloat(bankr.inferenceCost || '0');
-      const margin = earned - cost;
 
-      if (el('econ-earned')) el('econ-earned').textContent = formatUsdc(earned);
       if (el('econ-routed')) el('econ-routed').textContent = formatUsdc(routed);
       if (el('econ-venice-cost')) el('econ-venice-cost').textContent = formatUsdc(cost);
-      if (el('econ-margin')) el('econ-margin').textContent = formatUsdc(margin);
     }
 
     if (routing) {
       if (el('econ-routing-txs')) el('econ-routing-txs').textContent = (routing.log ? routing.log.length : 0).toString();
     }
 
-    // LLM queries count from bankr usage
     if (bankr && bankr.usage) {
       const totalReqs = bankr.usage.totalRequests || bankr.usage.requests || 0;
       if (el('econ-llm-queries')) el('econ-llm-queries').textContent = totalReqs.toString();

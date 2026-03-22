@@ -834,50 +834,30 @@ agent.start(); // Bids every epoch automatically</code></pre>
     <section class="sec-black" id="economics-section">
       <div class="container">
         <h2>Autonomous Economics</h2>
-        <p style="color:var(--g30); margin-bottom:1.5rem">Belle earns USDC from clearing revenue, routes a share through <strong style="color:var(--g10)">Bankr</strong> to fund <strong style="color:var(--g10)">Venice AI</strong> inference, and serves the next epoch &mdash; no human intervention. This loop has been running for <span id="econ-hours" style="color:var(--gold)">---</span> hours.</p>
+        <p style="color:var(--g30); margin-bottom:1.5rem">Belle routes clearing revenue through <strong style="color:var(--g10)">Bankr</strong> to fund <strong style="color:var(--g10)">Venice AI</strong> inference, and serves the next epoch &mdash; no human intervention. This loop has been running for <span id="econ-hours" style="color:var(--gold)">---</span> hours. All numbers below are real on-chain USDC &mdash; verifiable on Basescan.</p>
 
         <!-- Flow diagram -->
         <div class="card" style="padding:1.5rem; margin-bottom:1.5rem">
           <div style="display:flex; align-items:center; justify-content:center; gap:.75rem; flex-wrap:wrap; font-size:.95rem">
             <div style="text-align:center; padding:.75rem 1rem; border:1px solid var(--g60); border-radius:8px; min-width:120px">
-              <div style="font-size:1.5rem; color:var(--gold); font-weight:700" id="econ-earned">---</div>
-              <div style="color:var(--g30); font-size:.8rem">Clearing Revenue</div>
-            </div>
-            <div style="color:var(--g40); font-size:1.2rem">&rarr;</div>
-            <div style="text-align:center; padding:.75rem 1rem; border:1px solid var(--g60); border-radius:8px; min-width:120px">
-              <div style="font-size:1.5rem; color:var(--g10); font-weight:700" id="econ-routed">---</div>
-              <div style="color:var(--g30); font-size:.8rem">Bankr Routing</div>
+              <div style="font-size:1.5rem; color:var(--gold); font-weight:700" id="econ-routed">---</div>
+              <div style="color:var(--g30); font-size:.8rem">Bankr Routed (on-chain)</div>
             </div>
             <div style="color:var(--g40); font-size:1.2rem">&rarr;</div>
             <div style="text-align:center; padding:.75rem 1rem; border:1px solid var(--g60); border-radius:8px; min-width:120px">
               <div style="font-size:1.5rem; color:var(--g10); font-weight:700" id="econ-venice-cost">---</div>
-              <div style="color:var(--g30); font-size:.8rem">Venice Inference</div>
+              <div style="color:var(--g30); font-size:.8rem">Venice Inference Cost</div>
+            </div>
+            <div style="color:var(--g40); font-size:1.2rem">&rarr;</div>
+            <div style="text-align:center; padding:.75rem 1rem; border:1px solid var(--g60); border-radius:8px; min-width:120px">
+              <div style="font-size:1.5rem; color:var(--g10); font-weight:700" id="econ-llm-queries">---</div>
+              <div style="color:var(--g30); font-size:.8rem">LLM Queries Served</div>
             </div>
             <div style="color:var(--g40); font-size:1.2rem">&rarr;</div>
             <div style="text-align:center; padding:.75rem 1rem; border:1px solid var(--gold); border-radius:8px; min-width:120px; background:rgba(255,215,0,0.05)">
-              <div style="font-size:1.5rem; color:var(--gold); font-weight:700" id="econ-margin">---</div>
-              <div style="color:var(--g30); font-size:.8rem">Net Margin</div>
+              <div style="font-size:1.5rem; color:var(--gold); font-weight:700" id="econ-routing-txs">---</div>
+              <div style="color:var(--g30); font-size:.8rem">On-Chain Routing TXs</div>
             </div>
-          </div>
-        </div>
-
-        <!-- Detail grid -->
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem">
-          <div class="card" style="text-align:center; padding:1rem">
-            <div style="font-size:1.8rem; font-weight:700; color:var(--gold)" id="econ-margin-pct">---</div>
-            <div style="color:var(--g30); font-size:.85rem">Profit Margin</div>
-          </div>
-          <div class="card" style="text-align:center; padding:1rem">
-            <div style="font-size:1.8rem; font-weight:700; color:var(--g10)" id="econ-routing-txs">---</div>
-            <div style="color:var(--g30); font-size:.85rem">Bankr Routing TXs</div>
-          </div>
-          <div class="card" style="text-align:center; padding:1rem">
-            <div style="font-size:1.8rem; font-weight:700; color:var(--g10)" id="econ-llm-queries">---</div>
-            <div style="color:var(--g30); font-size:.85rem">LLM Queries Served</div>
-          </div>
-          <div class="card" style="text-align:center; padding:1rem">
-            <div style="font-size:1.8rem; font-weight:700; color:var(--g10)" id="econ-protocol-fees">---</div>
-            <div style="color:var(--g30); font-size:.85rem">Protocol Fees (1.5%)</div>
           </div>
         </div>
 
